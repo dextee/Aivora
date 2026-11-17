@@ -1,12 +1,10 @@
 import type { ConnSource } from "./lib";
 
-export type View = "chats" | "call" | "translate" | "docs";
+export type View = "talk" | "docs";
 
 const NAV: { id: View; icon: string; label: string; sub: string }[] = [
-  { id: "chats", icon: "💬", label: "Chats", sub: "All AIVORA services" },
-  { id: "call", icon: "📞", label: "Live Call", sub: "Voice partner · 113 languages & dialects" },
-  { id: "translate", icon: "🎙", label: "Real-time Translate", sub: "Speech-to-speech interpreter" },
-  { id: "docs", icon: "📄", label: "Document Translation", sub: "Text, photos & voice notes" },
+  { id: "talk", icon: "🎙", label: "Talk to AIVORA", sub: "voice partner — interprets & routes itself" },
+  { id: "docs", icon: "📄", label: "Document Translation", sub: "text, photos & voice notes" },
 ];
 
 export function Menu({ open, view, conn, onClose, onGo, onSettings, onAbout }: {
@@ -35,7 +33,7 @@ export function Menu({ open, view, conn, onClose, onGo, onSettings, onAbout }: {
             <span className="dic">🔐</span>
             <span style={{ flex: 1 }}>API connection<small>
               {conn === "env" ? "Stored on the Page server (recommended)"
-                : conn === "browser" ? "Browser key connected ✓" : "No key — demo mode"}
+                : conn === "browser" ? "Browser key connected ✓" : "No key yet — add one"}
             </small></span>
           </button>
           <button className="ditem" onClick={onAbout}>

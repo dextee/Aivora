@@ -96,6 +96,9 @@ const server = createServer(async (request, response) => {
     if (url.pathname === "/api/analyze" && request.method === "POST")
       return analyze(request, response);
 
+    if (url.pathname === "/api/webrtc/sdp" && request.method === "POST")
+      return sdpProxy(request, response, url);
+
     if (request.method !== "GET" && request.method !== "HEAD") {
       response.setHeader("allow", "GET, HEAD");
       return send(response, 405, "Method Not Allowed", "text/plain; charset=utf-8");
@@ -109,6 +112,34 @@ const server = createServer(async (request, response) => {
     send(response, 500, "Internal Server Error", "text/plain; charset=utf-8");
   }
 });
+
+/* POST /api/webrtc/sdp?model=… → forward the browser's Offer SDP to Model Studio
+   with the server-side key and return the Answer SDP unmodified (plain text).
+   Media flows browser ⇄ Model Studio directly afterwards; the key never leaves here. */
+async function sdpProxy(request, response, url) {
+  const k = KEY();
+  let auth = null;
+  try { auth = JSON.parse(decodeURIComponent(request.headers["x-aivora-auth"] || "null")); } catch { /* optional */ }
+  const useKey = k || auth?.key;
+  if (!useKey)
+    return send(response, 503, JSON.stringify({ error: "No Model Studio key — set the Page env var or connect one under 🔐." }), "application/json; charset=utf-8");
+  const model = url.searchParams.get("model") || MODELS.omni;
+  if (!Object.values(MODELS).includes(model)) return send(response, 400, "unknown model", "text/plain; charset=utf-8");
+  let offer = "";
+  for await (const c of request) { offer += c; if (offer.length > 64_000) return send(response, 413, "offer too large", "text/plain; charset=utf-8"); }
+  const wsId = auth?.ws || WORKSPACE(), region = auth?.region || REGION();
+  let upstream;
+  try {
+    upstream = await fetch(`https://${wsId}.${region}.maas.aliyuncs.com/api/v1/webrtc/realtime?model=${model}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${useKey}`, "content-type": "application/sdp" },
+      body: offer,
+    });
+  } catch { return send(response, 502, "SDP exchange unreachable", "text/plain; charset=utf-8"); }
+  const text = await upstream.text();
+  if (!upstream.ok) return send(response, 502, `Model Studio: ${upstream.status} ${text.slice(0, 200)}`, "text/plain; charset=utf-8");
+  send(response, 200, text, "application/sdp");
+}
 
 /* POST /api/analyze → qwen3.8-omni-flash. Body {messages:[...]} (image_url parts may be
    data: URLs). Streams upstream SSE through untouched. Key never echoed. */

@@ -43,113 +43,17 @@ export async function testKey(c: AiConfig): Promise<{ ok: boolean; detail: strin
   }
 }
 
-/* ---------------- realtime voice engine ---------------- */
-const WORKLET = `class Pcm16k extends AudioWorkletProcessor {
-  process(inputs){ const ch=inputs[0]&&inputs[0][0]; if(ch){
-    const i16=new Int16Array(ch.length);
-    for(let i=0;i<ch.length;i++){const s=Math.max(-1,Math.min(1,ch[i]));i16[i]=s<0?s*0x8000:s*0x7FFF;}
-    this.port.postMessage(i16.buffer,[i16.buffer]); } return true; }
-}
-registerProcessor('pcm16k',Pcm16k);`;
-
+/* ---------------- shared realtime event vocabulary (WebRTC engine in rtc.ts) ---------------- */
 export type LiveEvent =
   | { kind: "ready" }
   | { kind: "user"; text: string }
   | { kind: "reply"; text: string }
   | { kind: "translated"; text: string }
   | { kind: "objective"; data: { summary?: string; growth_pct?: number; horizon_days?: number; language?: string; action_items?: string[] } }
+  | { kind: "interpret"; target: string }
+  | { kind: "route_docs" }
   | { kind: "error"; msg: string }
   | { kind: "closed" };
-
-export function openRealtime(mode: "omni" | "translate", target: string, onEvent: (e: LiveEvent) => void) {
-  const proto = location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(`${proto}://${location.host}/realtime?mode=${mode}&target=${encodeURIComponent(target)}`);
-  let dead = false;
-  let gotDelta = false;
-  const emit = (e: LiveEvent) => { if (!dead) onEvent(e); };
-
-  ws.onopen = () => {
-    const c = loadConfig();
-    ws.send(c ? JSON.stringify({ type: "__auth", key: c.key, ws: c.ws, region: c.region }) : JSON.stringify({ type: "__hello" }));
-  };
-  ws.onclose = () => emit({ kind: "closed" });
-  ws.onerror = () => emit({ kind: "error", msg: "relay connection failed (offline or demo mode)" });
-  ws.onmessage = (m) => {
-    let ev: Record<string, any>;
-    try { ev = JSON.parse(m.data as string); } catch { return; }
-    switch (ev.type) {
-      case "session.updated": emit({ kind: "ready" }); break;
-      case "conversation.item.input_audio_transcription.completed": emit({ kind: "user", text: ev.transcript }); break;
-      case "response.audio_transcript.delta": gotDelta = true; emit({ kind: "translated", text: ev.delta }); break;
-      case "response.audio_transcript.done":
-        if (mode === "translate") { if (gotDelta) { gotDelta = false; break; } emit({ kind: "translated", text: ev.transcript }); }
-        else emit({ kind: "reply", text: ev.transcript });
-        break;
-      case "response.text.delta": if (mode === "translate") { gotDelta = true; emit({ kind: "translated", text: ev.delta }); } break;
-      case "response.function_call_arguments.done":
-        if (ev.name === "log_call") { try { emit({ kind: "objective", data: JSON.parse(ev.arguments || "{}") }); } catch { /* bad json */ } }
-        break;
-      case "response.audio.delta": playPcm(b64bytes(ev.delta)); break;
-      case "error": emit({ kind: "error", msg: ev.error?.message ?? "realtime error" }); break;
-    }
-  };
-
-  let ctx: AudioContext | null = null;
-  let stream: MediaStream | null = null;
-  let playAt = 0;
-  let muted = false;
-
-  async function ensureCtx() {
-    if (ctx) return ctx;
-    ctx = new AudioContext({ sampleRate: 16000 });
-    const url = URL.createObjectURL(new Blob([WORKLET], { type: "application/javascript" }));
-    await ctx.audioWorklet.addModule(url);
-    return ctx;
-  }
-
-  const playPcm = (u8: Uint8Array) => {
-    if (!ctx) return;
-    const buf = ctx.createBuffer(1, Math.floor(u8.length / 2), 24000);
-    const ch = buf.getChannelData(0);
-    const i16 = new Int16Array(u8.buffer.slice(0, u8.byteLength) as ArrayBuffer);
-    for (let i = 0; i < i16.length; i++) ch[i] = i16[i] / 0x8000;
-    const src = ctx.createBufferSource(); src.buffer = buf; src.connect(ctx.destination);
-    playAt = Math.max(playAt, ctx.currentTime || 0); src.start(playAt); playAt += buf.duration;
-  };
-
-  return {
-    get socket() { return ws; },
-    async startMic() {
-      const c = await ensureCtx();
-      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-      const node = new AudioWorkletNode(c, "pcm16k");
-      c.createMediaStreamSource(stream).connect(node);
-      node.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
-        if (muted) return;
-        if (ws.readyState === 1)
-          ws.send(JSON.stringify({ type: "input_audio_buffer.append", audio: b64(e.data) }));
-      };
-    },
-    setMuted(v: boolean) { muted = v; },
-    playPcm,
-    stop() {
-      dead = true;
-      try { if (ws.readyState === 1) ws.send(JSON.stringify({ type: "session.stop" })); } catch { /* noop */ }
-      stream?.getTracks().forEach((t) => t.stop());
-      try { ws.close(); } catch { /* noop */ }
-      void ctx?.close().catch(() => undefined);
-      ctx = null; stream = null;
-    },
-  };
-}
-
-const b64 = (b: ArrayBuffer) => {
-  const u = new Uint8Array(b); let s = "";
-  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000));
-  return btoa(s);
-};
-export const b64bytes = (s: string) => { const bin = atob(s); const u = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
 
 /* ---------------- analyze (document translation) ---------------- */
 export function fileToDataUrl(f: Blob): Promise<string> {

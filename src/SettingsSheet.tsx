@@ -36,7 +36,7 @@ export function SettingsSheet({ conn, onClose, onChanged }: {
     setStatus({ ok: true, detail: "Removed from this browser." });
     onChanged();
   }
-  // demo-only guard for the browser-paste path (the real key lives server-side as an env var)
+  // format sanity guard for the browser-paste path
   function onBlur() {
     if (!key.trim()) return;
     if (!looksValid) setHint("This doesn't look like a Model Studio key (expected sk-…). Double-check it.");
@@ -94,8 +94,8 @@ export function SettingsSheet({ conn, onClose, onChanged }: {
           {!serverMode && <button className="mab solid" onClick={save}>Save</button>}
         </div>
         <p className="modal-note">
-          Precedence: Page server key &gt; browser key &gt; demo. Rotate keys anytime in the
-          Model Studio console.
+          Precedence: Page server key &gt; browser key &gt; none (voice disabled until a key exists).
+          Rotate keys anytime in the Model Studio console.
         </p>
       </div>
     </div>

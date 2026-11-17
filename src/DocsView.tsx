@@ -5,12 +5,7 @@ import { analyzeStream, fileToDataUrl } from "./lib";
 const TARGETS = [["en", "English"], ["zh-Hant", "繁體中文"], ["ms", "Bahasa Melayu"], ["th", "ไทย"], ["id", "Bahasa Indonesia"], ["ta", "தமிழ்"]] as const;
 type Mode = "text" | "photo" | "voice";
 
-const DEMO_OUT: Record<string, string> = {
-  en: "SUPPLY AGREEMENT (EXTRACT)\n1. Unit price: USD 4.20 per kg, FOB Singapore.\n2. Delivery: 30 days after deposit received.\n3. Quality:Grade A robusta; moisture below 12%.\nEither party may cancel with 60 days' written notice.",
-  "zh-Hant": "供應合約（節錄）\n一、單價：每公斤 4.20 美元，新加坡離岸價（FOB）。\n二、交貨：按金收妥後 30 日內。\n三、品質：A 級羅布斯塔豆；含水量 12% 以下。\n任何一方可提前 60 日書面通知解約。",
-};
-
-export function DocsView({ live }: { live: boolean }) {
+export function DocsView() {
   const [mode, setMode] = useState<Mode>("text");
   const [text, setText] = useState("");
   const [img, setImg] = useState<{ url: string; name: string } | null>(null);
@@ -61,7 +56,6 @@ export function DocsView({ live }: { live: boolean }) {
 
   async function go() {
     setErr(null); setOut(""); setRunning(true);
-    if (!live) { await typeDemo(); setRunning(false); return; }
     const instr =
       `You are AIVORA's professional translator. Translate the user's ${mode === "photo" ? "photo of a document" : mode === "voice" ? "voice note (speech)" : "text"} into ${TARGETS.find(([v]) => v === target)?.[1] ?? target}. Source may be in ${srcLang}. ` +
       (mode === "voice" ? "First output '### TRANSCRIPTION' with the original speech written down, then '### TRANSLATION' with the translation. " : "") +
@@ -76,11 +70,6 @@ export function DocsView({ live }: { live: boolean }) {
       if (!acc) setErr("Empty response from qwen3.8-omni-flash.");
     } catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
     finally { setRunning(false); }
-  }
-
-  async function typeDemo() {
-    const full = DEMO_OUT[target] ?? DEMO_OUT.en;
-    for (let i = 0; i <= full.length; i += 7) { setOut(full.slice(0, i)); await new Promise((r) => setTimeout(r, 18)); }
   }
 
   return (
@@ -128,7 +117,7 @@ export function DocsView({ live }: { live: boolean }) {
       </div>
 
       <button className="gobtn" disabled={!canGo} onClick={go}>
-        {running ? "Translating…" : live ? "✨ Translate with qwen3.8-omni-flash" : "▶ Translate (demo sample)"}
+        {running ? "Translating…" : "✨ Translate with AIVORA"}
       </button>
 
       {err && <p className="mstat bad" style={{ marginTop: 12 }}>✕ {err}</p>}
@@ -141,7 +130,6 @@ export function DocsView({ live }: { live: boolean }) {
             return <><div className="from">{tran?.trim()}</div><div className="result stream">{rest?.trimStart()}</div></>;
           })()}
           {!(mode === "voice" && out.startsWith("###")) && <div className={`result${running ? " stream" : ""}`}>{running && !out ? "" : out}</div>}
-          {!live && <p className="dnote">DEMO output — connect a Model Studio key under <b>🔐 Menu → API connection</b> to translate real documents.</p>}
         </div>
       )}
       <p className="dnote">One request per document — this tab runs the batch model <b>qwen3.8-omni-flash</b> (understands printed text, photos and speech); the call &amp; interpreter tabs use the realtime models.</p>
