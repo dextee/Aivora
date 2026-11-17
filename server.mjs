@@ -22,7 +22,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65_535) throw new Error("PORT 
 const WORKSPACE = () => process.env.WORKSPACE_ID || "ws-lj7gmtttiltwjlyv";
 const REGION = () => process.env.QWEN_REGION || "ap-southeast-1";
 const KEY = () => process.env.DASHSCOPE_API_KEY || null;
-const MODELS = { omni: "qwen3.8-omni-flash-realtime", translate: "qwen3.8-livetranslate-flash-realtime", analyze: "qwen3.8-omni-flash" };
+const MODELS = { omni: "qwen3.8-omni-flash-realtime", translate: "qwen3.8-livetranslate-flash-realtime", analyze: "qwen3.8-omni-flash", audio: "qwen-audio-3.1-realtime-flash" };
 
 /* ---------------- static (scaffold) ---------------- */
 const clientRoot = fileURLToPath(new URL("./dist/", import.meta.url));
@@ -60,6 +60,14 @@ const AIVORA_INSTRUCTIONS =
   "log_call with the details AND a one-line summary. Reply in the language the user used.";
 
 function sessionUpdate(mode, q) {
+  if (mode === "audio")
+    // qwen-audio-3.1-realtime-flash (owner reference client, 2026-11-18):
+    // speech-to-speech audio model, voice longanqian, classic server_vad.
+    return { type: "session.update", session: {
+      modalities: ["text", "audio"],
+      voice: "longanqian",
+      turn_detection: { type: "server_vad", threshold: 0.5, silence_duration_ms: 500 },
+    } };
   if (mode === "translate") {
     return { type: "session.update", session: {
       input_modalities: ["audio"], output_modalities: ["text", "audio"],
@@ -175,7 +183,7 @@ server.on("upgrade", (req, socket, head) => {
 });
 
 function relay(browser, q) {
-  const mode = q.get("mode") === "translate" ? "translate" : "omni";
+  const mode = q.get("mode") === "translate" ? "translate" : q.get("mode") === "audio" ? "audio" : "omni";
   let model = null, pingTimer = null, settle = null;
   const hangUp = () => { clearInterval(pingTimer); clearTimeout(settle);
     try { model?.close(); } catch {} try { browser.close(); } catch {} };

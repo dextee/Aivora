@@ -48,3 +48,4 @@
 - Model names may change per snapshot — server keeps them in one MODELS map.
 - `npm run typecheck && npm test` must pass before publish; test boots the
   staged bundle (health check) — never bypass the publisher gate.
+- **Route 4 (dev reference)**: `qwen-audio-3.1-realtime-flash` — WS `/realtime?mode=audio` (voice longanqian, server_vad); the Pages gateway still blocks browser WS, so this route serves native clients, server-side legs and A/B testing; owner's Python reference client lives in the template skill's INTEGRATION.md. Same DASHSCOPE_API_KEY.
