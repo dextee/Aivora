@@ -19,6 +19,13 @@
 - **One screen, one action**: TalkView = hero + single big green button
   (press = live WebRTC session with AIVORA; press again = end). No demo modes
   or scripted fallbacks anywhere — no key, clean server error.
+- **Partner engine (owner decision 2026-11-18): `qwen-audio-3.1-realtime-flash`**
+  — voice longanqian, server_vad (0.5/500) per owner's tested client; WebRTC +
+  function calling confirmed on the model page. `src/rtc.ts` sends instructions +
+  ROUTING_TOOLS; if the audio engine rejects the session shape it degrades once to
+  the bare owner config and TalkView flips to keyword routing (interpret/
+document phrases → same actions). qwen3.8-omni-flash-realtime remains available
+  on the relay (`mode=omni`) and docs route — swap PARTNER_MODEL to revert.
 - **Intelligent routing lives in the model**: session.update registers three
   tools (rtc.ts ROUTING_TOOLS): log_call (objective card),
   start_interpreter (target_language (app tears down the omni session and

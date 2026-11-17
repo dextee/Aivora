@@ -50,21 +50,35 @@ function sessionUpdate(mode: string, target: string) {
   if (mode === "translate")
     // 3.8 livetranslate over WebRTC: media format comes from the track; only the
     // translation semantic fields travel on the event channel.
-    return { modalities: ["text", "audio"], voice: "Tina",
+    return { modalities: ["text", "audio"],
       output_modalities: ["text", "audio"],
       turn_detection: { type: "server_vad" },
       translation: { language: target } };
-  return { modalities: ["text", "audio"], voice: "Tina", instructions: AIVORA_INSTRUCTIONS,
-    turn_detection: { type: "semantic_vad", silence_duration_ms: 800 },
+  return { modalities: ["text", "audio"], voice: "longanqian", instructions: AIVORA_INSTRUCTIONS,
+    turn_detection: { type: "server_vad", threshold: 0.5, silence_duration_ms: 500 },
     tools: ROUTING_TOOLS };
+}
+
+/* bare owner-verified config — last resort if the full session is rejected */
+export function bareSession() {
+  return { modalities: ["text", "audio"], voice: "longanqian",
+    turn_detection: { type: "server_vad", threshold: 0.5, silence_duration_ms: 500 } };
 }
 
 export type RtcHandle = { stop(): void; setMuted(v: boolean): void };
 
+/* Owner decision 2026-11-18: partner calls run qwen-audio-3.1-realtime-flash
+ * (voice longanqian, server_vad 0.5/500 — owner's tested client config), NOT
+ * qwen3.8-omni-flash-realtime. Model page confirms WebRTC + function calling,
+ * but audio-family session schema is stricter, so if the full config is
+ * rejected we retry once with the bare owner-verified payload and lose only
+ * the routing tools (TalkView keeps a keyword fallback). */
+export const PARTNER_MODEL = "qwen-audio-3.1-realtime-flash";
+
 export function openRealtimeRtc(
   mode: "omni" | "translate", target: string, onEvent: (e: LiveEvent) => void,
 ): RtcHandle {
-  let dead = false, sessionCreated = false, updateSent = false, modelReady = false;
+  let dead = false, sessionCreated = false, updateSent = false, modelReady = false, triedBare = false;
   let eventChannel: RTCDataChannel | null = null;
   let local: MediaStream | null = null;
   const audioSender = { current: null as RTCRtpSender | null };
@@ -117,8 +131,13 @@ export function openRealtimeRtc(
         break;
       case "error": {
         const m = ev.error?.message ?? "realtime error";
-        // one-shot graceful degrade: 3.8 semantic_vad rejected → retry with server_vad
-        if (/turn_detection|semantic/i.test(m) && mode === "omni" && !updateSent) { /* leave as error, user retries */ }
+        // one-shot degrade: full session rejected by audio model → retry bare owner config
+        if (mode === "omni" && updateSent && !modelReady && !triedBare && eventChannel?.readyState === "open") {
+          triedBare = true;
+          emit({ kind: "error", msg: "routing tools rejected by audio engine — retried with base voice config" });
+          eventChannel.send(JSON.stringify({ event_id: `event_${crypto.randomUUID()}`, type: "session.update", session: bareSession() }));
+          break;
+        }
         emit({ kind: "error", msg: m }); break;
       }
     }
@@ -154,7 +173,7 @@ export function openRealtimeRtc(
     });
     if (dead) return;
     const c = loadConfig();
-    const res = await fetch(`/api/webrtc/sdp?model=${mode === "translate" ? "qwen3.8-livetranslate-flash-realtime" : "qwen3.8-omni-flash-realtime"}`, {
+    const res = await fetch(`/api/webrtc/sdp?model=${mode === "translate" ? "qwen3.8-livetranslate-flash-realtime" : PARTNER_MODEL}`, {
       method: "POST",
       headers: { "content-type": "application/sdp", ...(c ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}) },
       body: pc.localDescription!.sdp,

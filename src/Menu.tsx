@@ -41,7 +41,7 @@ export function Menu({ open, view, conn, onClose, onGo, onSettings, onAbout }: {
             <span style={{ flex: 1 }}>About AIVORA<small>ODAI 6.0 · Model Studio realtime</small></span>
           </button>
         </nav>
-        <div className="drawer-foot">Powered by qwen3.8-omni-flash-realtime · livetranslate · omni-flash</div>
+        <div className="drawer-foot">Powered by qwen-audio-3.1-realtime-flash · livetranslate · omni-flash</div>
       </aside>
     </>
   );

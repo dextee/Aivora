@@ -25,6 +25,7 @@ export function TalkView({ onOpenDocs }: { onOpenDocs(): void }) {
   const feedRef = useRef<HTMLDivElement>(null);
   const outBuf = useRef("");
   const pairOpen = useRef(false);
+  const toollessRef = useRef(false);
 
   useEffect(() => { feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight }); }, [rows, state]);
   useEffect(() => () => { try { engRef.current?.stop(); } catch { /* unmount */ } }, []);
@@ -37,6 +38,28 @@ export function TalkView({ onOpenDocs }: { onOpenDocs(): void }) {
   const isOn = state === "partner" || state === "interpreter";
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
+  /* keyword router — only active if the audio engine rejected the routing tools */
+  function keywordRoute(text: string) {
+    if (!toollessRef.current) return false;
+    const tg = /廣東話|粤|cantonese/i.test(text) ? "yue" : /英文|english/i.test(text) ? "en"
+      : /中文|普通话|mandarin|chinese/i.test(text) ? "zh" : /malay|马来|melayu/i.test(text) ? "ms" : "en";
+    if (/interpret|interpreter|翻译|翻譯|speaks? .{0,12}(language|english|chinese)|另一.?种语言/i.test(text)) {
+      setTarget(tg);
+      setRows((r) => [...r, { who: "sys", text: `🎧 Interpreter engaged → ${LNAME[tg] ?? tg}. Speak; AIVORA voices the translation. Press the button to stop.` }]);
+      try { engRef.current?.stop(); } catch { /* swap */ }
+      window.setTimeout(() => connect("translate"), 350);
+      return true;
+    }
+    if (/document|contract|photo|paper|invoice|文件|合约|合約|合同|照片|单据/i.test(text)) {
+      setRows((r) => [...r, { who: "sys", text: "📄 Opening Document Translation…" }]);
+      try { engRef.current?.stop(); } catch { /* handoff */ }
+      setState("idle");
+      window.setTimeout(onOpenDocs, 500);
+      return true;
+    }
+    return false;
+  }
+
   function connect(mode: "omni" | "translate") {
     setState("connecting"); setSecs(0);
     const eng = openRealtimeRtc(mode, target, (e: LiveEvent) => {
@@ -44,7 +67,7 @@ export function TalkView({ onOpenDocs }: { onOpenDocs(): void }) {
         case "ready": setState(mode === "translate" ? "interpreter" : "partner"); break;
         case "user":
           if (mode === "translate") { outBuf.current = ""; pairOpen.current = true; setRows((r) => [...r, { who: "pair", src: e.text, out: "" }]); }
-          else setRows((r) => [...r, { who: "me", text: e.text }]);
+          else { setRows((r) => [...r, { who: "me", text: e.text }]); void keywordRoute(e.text); }
           break;
         case "reply": setRows((r) => [...r, { who: "ai", text: e.text }]); break;
         case "translated": {
@@ -75,7 +98,13 @@ export function TalkView({ onOpenDocs }: { onOpenDocs(): void }) {
           setState("idle");
           window.setTimeout(onOpenDocs, 500);
           break;
-        case "error": setRows((r) => [...r, { who: "err", text: e.msg }]); setState("idle"); break;
+        case "error":
+          if (e.msg.includes("routing tools rejected")) {
+            toollessRef.current = true;
+            setRows((r) => [...r, { who: "sys", text: "ℹ️ Voice engine active; say “interpret …” or “translate this document” and AIVORA routes by keywords." }]);
+            break;
+          }
+          setRows((r) => [...r, { who: "err" as const, text: e.msg }]); setState("idle"); break;
         case "closed": setState((s) => (s === "connecting" || s === "idle" ? "idle" : s)); break;
       }
     });
