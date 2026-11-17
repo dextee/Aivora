@@ -1,0 +1,175 @@
+import { useRef, useState } from "react";
+import { analyzeStream, fileToDataUrl } from "./lib";
+
+/* AIVORA document / photo / voice-note translation via qwen3.8-omni-flash (HTTP proxy). */
+const TARGETS = [["en", "English"], ["zh-Hant", "繁體中文"], ["ms", "Bahasa Melayu"], ["th", "ไทย"], ["id", "Bahasa Indonesia"], ["ta", "தமிழ்"]] as const;
+type Mode = "text" | "photo" | "voice";
+
+const DEMO_OUT: Record<string, string> = {
+  en: "SUPPLY AGREEMENT (EXTRACT)\n1. Unit price: USD 4.20 per kg, FOB Singapore.\n2. Delivery: 30 days after deposit received.\n3. Quality:Grade A robusta; moisture below 12%.\nEither party may cancel with 60 days' written notice.",
+  "zh-Hant": "供應合約（節錄）\n一、單價：每公斤 4.20 美元，新加坡離岸價（FOB）。\n二、交貨：按金收妥後 30 日內。\n三、品質：A 級羅布斯塔豆；含水量 12% 以下。\n任何一方可提前 60 日書面通知解約。",
+};
+
+export function DocsView({ live }: { live: boolean }) {
+  const [mode, setMode] = useState<Mode>("text");
+  const [text, setText] = useState("");
+  const [img, setImg] = useState<{ url: string; name: string } | null>(null);
+  const [recSecs, setRecSecs] = useState<number | null>(null);
+  const [wav, setWav] = useState<{ url: string; name: string } | null>(null);
+  const [target, setTarget] = useState("en");
+  const [running, setRunning] = useState(false);
+  const [out, setOut] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const mediaRef = useRef<MediaRecorder | null>(null);
+  const chunks = useRef<Blob[]>([]);
+  const timerRef = useRef<number | null>(null);
+
+  const srcLang = target === "en" ? "its original language (may be Chinese, Malay, Tamil or a dialect)" : "its original language";
+  const canGo = !running && (mode === "text" ? text.trim().length > 0 : mode === "photo" ? !!img : !!wav);
+
+  async function pickPhoto(f: File | null) {
+    if (!f) return;
+    setWav(null);
+    setImg({ url: await fileToDataUrl(f.slice(0, 3_500_000)), name: f.name || "camera.jpg" });
+  }
+  async function startVoice() {
+    setErr(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rec = new MediaRecorder(stream);
+      chunks.current = [];
+      rec.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);
+      rec.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = await blobsToWav(chunks.current);
+        setWav({ url: await fileToDataUrl(blob), name: `voice-note ${new Date().toLocaleTimeString()}` });
+      };
+      rec.start();
+      mediaRef.current = rec;
+      let n = 0; setRecSecs(0);
+      timerRef.current = window.setInterval(() => {
+        setRecSecs(++n);
+        if (n >= 45) stopVoice();
+      }, 1000);
+    } catch { setErr("Microphone unavailable — record a voice note on a device with a granted mic."); }
+  }
+  function stopVoice() {
+    try { mediaRef.current?.state === "recording" && mediaRef.current.stop(); } catch { /* noop */ }
+    if (timerRef.current) window.clearInterval(timerRef.current);
+    setRecSecs(null);
+  }
+
+  async function go() {
+    setErr(null); setOut(""); setRunning(true);
+    if (!live) { await typeDemo(); setRunning(false); return; }
+    const instr =
+      `You are AIVORA's professional translator. Translate the user's ${mode === "photo" ? "photo of a document" : mode === "voice" ? "voice note (speech)" : "text"} into ${TARGETS.find(([v]) => v === target)?.[1] ?? target}. Source may be in ${srcLang}. ` +
+      (mode === "voice" ? "First output '### TRANSCRIPTION' with the original speech written down, then '### TRANSLATION' with the translation. " : "") +
+      "Preserve layout, numbers, names and units. No commentary.";
+    const content: unknown[] = [{ type: "text", text: instr }];
+    if (mode === "text") content.push({ type: "text", text: `\n---\n${text}` });
+    if (mode === "photo" && img) content.push({ type: "image_url", image_url: { url: img.url } });
+    if (mode === "voice" && wav) content.push({ type: "input_audio", input_audio: { data: wav.url, format: "wav" } });
+    try {
+      let acc = "";
+      await analyzeStream([{ role: "user", content }], (d) => { acc += d; setOut(acc); });
+      if (!acc) setErr("Empty response from qwen3.8-omni-flash.");
+    } catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
+    finally { setRunning(false); }
+  }
+
+  async function typeDemo() {
+    const full = DEMO_OUT[target] ?? DEMO_OUT.en;
+    for (let i = 0; i <= full.length; i += 7) { setOut(full.slice(0, i)); await new Promise((r) => setTimeout(r, 18)); }
+  }
+
+  return (
+    <div className="docspad">
+      <div className="optcard">
+        <h4>1 · WHAT ARE WE TRANSLATING?</h4>
+        <div className="optrow">
+          {(["text", "photo", "voice"] as Mode[]).map((m) => (
+            <button key={m} className={`lpill${mode === m ? " sel" : ""}`} onClick={() => setMode(m)}>
+              {m === "text" ? "⌨️ Text" : m === "photo" ? "📷 Photo" : "🎙 Voice note"}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ marginTop: 11 }}>
+          {mode === "text" && (
+            <textarea className="darea" placeholder="Paste a supplier message, contract extract, email…" value={text} onChange={(e) => setText(e.target.value)} />
+          )}
+          {mode === "photo" && (
+            <label className="thumbwrap" style={{ cursor: "pointer" }}>
+              <input className="hidden-file" type="file" accept="image/*" capture="environment" onChange={(e) => pickPhoto(e.target.files?.[0] ?? null)} />
+              {img ? <img src={img.url} alt="document to translate" />
+                : <span className="lpill" style={{ alignItems: "center", gap: 8 }}>＋ Capture / choose a photo</span>}
+              <small>{img ? img.name : "A photo of the document — receipts, letters, whiteboards. JPG up to ~3.5 MB."}</small>
+            </label>
+          )}
+          {mode === "voice" && (
+            <div className="optrow" style={{ alignItems: "center" }}>
+              {recSecs === null
+                ? <button className="lpill" onClick={startVoice}>● Record voice note</button>
+                : <button className="lpill sel" onClick={stopVoice}>■ Stop · {String(Math.floor(recSecs / 60))}:{String(recSecs % 60).padStart(2, "0")}</button>}
+              {wav && <small style={{ color: "var(--wa-teal)", fontWeight: 700 }}>✓ {wav.name} ready</small>}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="optcard">
+        <h4>2 · TRANSLATE INTO</h4>
+        <div className="optrow">
+          {TARGETS.map(([v, l]) => (
+            <button key={v} className={`lpill${target === v ? " sel" : ""}`} onClick={() => setTarget(v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      <button className="gobtn" disabled={!canGo} onClick={go}>
+        {running ? "Translating…" : live ? "✨ Translate with qwen3.8-omni-flash" : "▶ Translate (demo sample)"}
+      </button>
+
+      {err && <p className="mstat bad" style={{ marginTop: 12 }}>✕ {err}</p>}
+
+      {(out || running) && (
+        <div className="transout" style={{ marginTop: 14 }}>
+          <span className="chip2">RESULT → {TARGETS.find(([v]) => v === target)?.[1]}</span>
+          {mode === "voice" && out.startsWith("###") && (() => {
+            const [, tran, rest] = out.split(/###\s*TRANSLATION/);
+            return <><div className="from">{tran?.trim()}</div><div className="result stream">{rest?.trimStart()}</div></>;
+          })()}
+          {!(mode === "voice" && out.startsWith("###")) && <div className={`result${running ? " stream" : ""}`}>{running && !out ? "" : out}</div>}
+          {!live && <p className="dnote">DEMO output — connect a Model Studio key under <b>🔐 Menu → API connection</b> to translate real documents.</p>}
+        </div>
+      )}
+      <p className="dnote">One request per document — this tab runs the batch model <b>qwen3.8-omni-flash</b> (understands printed text, photos and speech); the call &amp; interpreter tabs use the realtime models.</p>
+    </div>
+  );
+}
+
+/* webm/opus chunks → 16 kHz mono WAV data URL (the format omni-flash accepts) */
+async function blobsToWav(parts: Blob[]): Promise<Blob> {
+  const audio = new Blob(parts, { type: MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4" });
+  const arr = await audio.arrayBuffer();
+  const ctx = new OfflineAudioContext(1, 44100, 44100);
+  const buf = await ctx.decodeAudioData(arr);
+  const sr = 16000;
+  const off = new OfflineAudioContext(1, Math.ceil(buf.duration * sr), sr);
+  const rendered = await (async () => {
+    const src = off.createBufferSource();
+    src.buffer = buf; src.connect(off.destination); src.start();
+    return off.startRendering();
+  })();
+  const pcm = rendered.getChannelData(0);
+  const w16 = new Int16Array(pcm.length);
+  for (let i = 0; i < pcm.length; i++) w16[i] = Math.max(-32768, Math.min(32767, pcm[i] * 32767));
+  const header = new ArrayBuffer(44); const v = new DataView(header);
+  const ascii = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  ascii(0, "RIFF"); v.setUint32(4, 36 + w16.byteLength, true); ascii(8, "WAVE");
+  ascii(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  ascii(36, "data"); v.setUint32(40, w16.byteLength, true);
+  return new Blob([header, w16.buffer], { type: "audio/wav" });
+}
