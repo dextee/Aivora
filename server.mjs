@@ -14,6 +14,9 @@ import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
 import { storeRun, storeDiag, BUILD } from "./server/hashmeta.mjs";
+import { startRun, decideSpend, userView, managementView, securityView } from "./server/odai/workflow.mjs";
+import { modeAccess, POLICY_VERSION, UNAVAILABLE_RULE_SETS } from "./server/odai/policy.mjs";
+import { get, DEMO_TENANT } from "./server/odai/store.mjs";
 
 const host = process.env.HOST;
 const port = Number(process.env.PORT);
@@ -110,6 +113,8 @@ const server = createServer(async (request, response) => {
 
     if (url.pathname === "/api/store/generate" && request.method === "POST")
       return storeStream(request, response);
+
+    if (url.pathname.startsWith("/api/odai/")) return odaiRoute(url, request, response);
 
     if (url.pathname === "/api/store/diag")
       return storeRoute(request, response, storeDiag, false);
@@ -211,6 +216,35 @@ async function storeStream(request, response) {
   clearInterval(hb);
   response.write(`data: ${JSON.stringify(out)}\n\n`);
   response.end();
+}
+
+/* ---------------- ODAI 9.0 routes: modes, governed demo, projections ---------------- */
+async function odaiRoute(url, request, response) {
+  const tenant = url.searchParams.get("tenant") || DEMO_TENANT;
+  const json = (obj, status = 200) => send(response, status, JSON.stringify(obj), "application/json; charset=utf-8");
+  const path = url.pathname.replace("/api/odai", "");
+  try {
+    if (path === "/modes") return json({ contract: "ui_modes_9_0", policy_version: POLICY_VERSION, unavailable_rule_sets: UNAVAILABLE_RULE_SETS, modes: ["user", "management", "security"], mode_change_grants_permission: false });
+    if (path === "/view") {
+      const mode = url.searchParams.get("mode");
+      const authz = modeAccess(mode, { tenantId: tenant });   // staging demo session; production auth: WO-90-SEC-004
+      if (!authz.ok) return json({ error: authz.reason }, 403);
+      const body = mode === "user" ? userView(tenant) : mode === "management" ? managementView(tenant) : securityView(tenant);
+      return json({ mode, tenant_id: tenant, grants: authz.grants, data_mode: "TEST", ...body });
+    }
+    if (path === "/demo/start" && request.method === "POST") {
+      let raw = ""; for await (const c of request) raw += c;
+      const { objective } = JSON.parse(raw || "{}");
+      return json({ tenant_id: tenant, ...startRun(tenant, String(objective || "Sell FNYGlobal wellness products to 100 customers").slice(0, 300)) });
+    }
+    if (path === "/demo/approve" && request.method === "POST") {
+      let raw = ""; for await (const c of request) raw += c;
+      const { runId, approve, cap } = JSON.parse(raw || "{}");
+      return json(decideSpend(tenant, String(runId), !!approve, Number(cap) || 200));
+    }
+    if (path === "/catalog") return json({ tenant_id: tenant, review_mode: "QUARANTINE_REVIEW_REQUIRED", products: get(tenant).products.map((p) => ({ id: p.id, name: p.name, currency: p.currency, price: p.website_price, price_type: p.price_type, reseller_authorized: p.reseller_authorized, regulatory: p.regulatory_review_status, review_state: p.review_state })) });
+    return json({ error: "unknown odai path" }, 404);
+  } catch (e) { return json({ error: String(e?.message || e) }, 400); }
 }
 
 /* glue for the Hashmeta bridge: read body, build env, send module response */

@@ -1,0 +1,35 @@
+{
+  "version": "9.0",
+  "modes": {
+    "user": {
+      "reference": "USER MODE.png",
+      "features": [
+        "voice",
+        "results",
+        "tasks_done"
+      ],
+      "technical_detail": false
+    },
+    "management": {
+      "reference": "MANAGEMENT MODE.png",
+      "features": [
+        "voice",
+        "qwenwork_orchestration",
+        "specialists",
+        "execution_trace"
+      ],
+      "private_chain_of_thought": false
+    },
+    "security": {
+      "reference": "SECURITY MODE.png",
+      "features": [
+        "shield_simulation",
+        "six_defenses",
+        "incident_log"
+      ],
+      "simulation_label_required": true
+    }
+  },
+  "shared_backend": true,
+  "mode_change_grants_permission": false
+}

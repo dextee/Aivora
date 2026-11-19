@@ -1,0 +1,82 @@
+[
+  {
+    "shot": 1,
+    "id": "voice_objective",
+    "start": "00:00",
+    "end": "00:12",
+    "demo_mode": "TEST",
+    "requires_evidence": true
+  },
+  {
+    "shot": 2,
+    "id": "qwenwork_orchestration",
+    "start": "00:12",
+    "end": "00:28",
+    "demo_mode": "TEST",
+    "requires_evidence": true
+  },
+  {
+    "shot": 3,
+    "id": "product_research",
+    "start": "00:28",
+    "end": "00:45",
+    "demo_mode": "TEST",
+    "requires_evidence": true
+  },
+  {
+    "shot": 4,
+    "id": "catalog_hashmeta_preview",
+    "start": "00:45",
+    "end": "01:12",
+    "demo_mode": "TEST",
+    "requires_evidence": true
+  },
+  {
+    "shot": 5,
+    "id": "spending_approval",
+    "start": "01:12",
+    "end": "01:32",
+    "demo_mode": "TEST",
+    "requires_evidence": true
+  },
+  {
+    "shot": 6,
+    "id": "marketing_assets",
+    "start": "01:32",
+    "end": "01:46",
+    "demo_mode": "TEST",
+    "requires_evidence": true
+  },
+  {
+    "shot": 7,
+    "id": "watch_invalid_data",
+    "start": "01:46",
+    "end": "02:04",
+    "demo_mode": "TEST",
+    "requires_evidence": true
+  },
+  {
+    "shot": 8,
+    "id": "channel_drafts",
+    "start": "02:04",
+    "end": "02:20",
+    "demo_mode": "TEST",
+    "requires_evidence": true
+  },
+  {
+    "shot": 9,
+    "id": "test_order_dropship",
+    "start": "02:20",
+    "end": "02:38",
+    "demo_mode": "TEST",
+    "requires_evidence": true
+  },
+  {
+    "shot": 10,
+    "id": "results_profit",
+    "start": "02:38",
+    "end": "03:00",
+    "demo_mode": "TEST",
+    "requires_evidence": true
+  }
+]

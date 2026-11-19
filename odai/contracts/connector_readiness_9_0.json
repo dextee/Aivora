@@ -1,0 +1,47 @@
+{
+  "qwenwork": {
+    "status": "UNVERIFIED",
+    "external_writes_enabled": false,
+    "approval_required": true
+  },
+  "hashmeta": {
+    "status": "UNVERIFIED",
+    "external_writes_enabled": false,
+    "approval_required": true
+  },
+  "fnyglobal": {
+    "status": "UNVERIFIED",
+    "external_writes_enabled": false,
+    "approval_required": true
+  },
+  "shopee": {
+    "status": "UNVERIFIED",
+    "external_writes_enabled": false,
+    "approval_required": true
+  },
+  "facebook": {
+    "status": "UNVERIFIED",
+    "external_writes_enabled": false,
+    "approval_required": true
+  },
+  "whatsapp": {
+    "status": "UNVERIFIED",
+    "external_writes_enabled": false,
+    "approval_required": true
+  },
+  "email": {
+    "status": "UNVERIFIED",
+    "external_writes_enabled": false,
+    "approval_required": true
+  },
+  "payment": {
+    "status": "UNVERIFIED",
+    "external_writes_enabled": false,
+    "approval_required": true
+  },
+  "domain": {
+    "status": "UNVERIFIED",
+    "external_writes_enabled": false,
+    "approval_required": true
+  }
+}

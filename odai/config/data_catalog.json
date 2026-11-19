@@ -1,0 +1,194 @@
+{
+  "tenant_id": "demo-lumen-studio",
+  "records": [
+    {
+      "path": "data/admin/client_list.README.md",
+      "classification": "regulated",
+      "sha256": "77f64431f4e7786080744b150fafca99a6aae9135dbf1be71dfeed3ccc01dae2",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/admin/client_list.csv",
+      "classification": "regulated",
+      "sha256": "8be5a75fbe6a192371935586564b2cc35672b3b456de6c484665e1c178c56d78",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/admin/owner_records.md",
+      "classification": "regulated",
+      "sha256": "dcdc4ef293dad7ee31794fb34467bd09ba8a7e94c0b4a66af8e4f2ca028bb351",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/admin/supplier_list.md",
+      "classification": "internal",
+      "sha256": "afbc7be24091e46457c67211bfcb11d5bbd6c77bdb35609b1eb5ca7644aa9d4c",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/clients/contract_ferro_logistics_2026.md",
+      "classification": "client-confidential",
+      "sha256": "8b6db2bc550d6e5f24bf211b70141510a657aaa6067aa565acb5b16911095c28",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/clients/contract_harbourbean_2025.md",
+      "classification": "client-confidential",
+      "sha256": "0f2556be5ec593f51847d4bc065afa3ceb2aeed602b88b66365c297dcb9701ba",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/clients/contract_nimbus_health_2026.md",
+      "classification": "client-confidential",
+      "sha256": "1eaa86ecac8a0c8857a38626fccbb51e41e27c74d96780054eb3c7fd507e73c7",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/clients/proposal_ferro_logistics.md",
+      "classification": "client-confidential",
+      "sha256": "60059d0a767ba6cf29bc03f7d415814e4778d75377e5b8ff8c78fcb02ca1c122",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/clients/proposal_greenstep_tuition.md",
+      "classification": "client-confidential",
+      "sha256": "60bf766a3f0232b8bf0fb43f280f7fb34be367e6fb3e47042d8b1e28c9495e09",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/finance/bank_details.md",
+      "classification": "regulated",
+      "sha256": "eb17a65e294d8346deb6acc5a134288a72bd9da855c8e3137e4be5de650c64da",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/finance/cashflow_notes_nov2026.md",
+      "classification": "regulated",
+      "sha256": "5ff76039746a4cf2825f0e2916d0e12cfbd4c1ba6cb9ea484579b8b17eb1cc4d",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/finance/invoice_2026-031_harbourbean.md",
+      "classification": "internal",
+      "sha256": "4892859fa816ca5e48ec091501a3b889881f58ffd28473bf27572aa6206cc68b",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/finance/invoice_2026-034_nimbus_health.md",
+      "classification": "internal",
+      "sha256": "298f8807dc602bc04ec79790d560e227f20f14b1be5fa7795329e316d9eb1499",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/finance/invoice_2026-036_ferro_logistics.md",
+      "classification": "internal",
+      "sha256": "af20c05c71b836ee7dedc9696da8818d21266d73855f11655b486003aa352dbc",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/finance/invoice_2026-037_quickprint.md",
+      "classification": "internal",
+      "sha256": "f42ab777889df7d011f952e14f62056b9d106f9eca3eafca53d5bc9ee2084088",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/inbox/2026-11-10_ferro_dispute.md",
+      "classification": "client-confidential",
+      "sha256": "0d36370a6b06214371316c542725541ba27420819cb35f560fa88d5c0fa160a1",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/inbox/2026-11-12_harbourbean_reminder.md",
+      "classification": "internal",
+      "sha256": "a94ae22b28a05b0eced93f936da60178761788ba9d1b37c91cd08ea7aa47b51b",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/inbox/2026-11-13_nimbus_patient_data_in_error.md",
+      "classification": "regulated",
+      "sha256": "8b096fe32fb50cbace7c4f6009947663a95f33149bd49bf21a62255f7d8de001",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/inbox/2026-11-14_greenstep_followup.md",
+      "classification": "client-confidential",
+      "sha256": "f3ca1c00bd3cb80ce5591dd8953d40e05edcc4ec89d3f8e9fbc66641f78928a4",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/inbox/2026-11-15_newsletter_tool_offer.md",
+      "classification": "public",
+      "sha256": "83d3219df4250d1df9c4b1d86f478e4fbae789b46a182fa08513ba2a4d9786e8",
+      "eligible_for_public_profile": true,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/inbox/2026-11-15_quickprint_reprint.md",
+      "classification": "internal",
+      "sha256": "b99b7c5476ecea17cc0e8cf8290f61cc7c0119c2b86b6ff2e21271454b83cd17",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/marketing/case_study_harbourbean.md",
+      "classification": "public",
+      "sha256": "96100a4f4a583a3b560927400a02f428f6ee6a3ca04cdc20a1b5b1e6db43f4b7",
+      "eligible_for_public_profile": true,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/marketing/price_list_2026.md",
+      "classification": "public",
+      "sha256": "3b14cb0f8cd6ff1e8d515405b4786b9d95745d43fe214b443b72a1c2eada2604",
+      "eligible_for_public_profile": true,
+      "content_imported_to_public_profile": true
+    },
+    {
+      "path": "data/marketing/website_about.md",
+      "classification": "public",
+      "sha256": "59723d6f2fbbb79743ce0eab0c9c4957906848cdd089ca2043f5118a4f54c167",
+      "eligible_for_public_profile": true,
+      "content_imported_to_public_profile": true
+    },
+    {
+      "path": "data/notes/2026-11-05_call_harbourbean.md",
+      "classification": "client-confidential",
+      "sha256": "4192cc75089d4ac6a654dc1a46442ca960fa0cec00f97606c7e2b60c6a9d080d",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/notes/2026-11-08_call_nimbus.md",
+      "classification": "client-confidential",
+      "sha256": "216e46ec8002a6be456dec105169c4fdb3cc4a26d3df43b35c8dfd703ca7ce01",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    },
+    {
+      "path": "data/notes/2026-11-15_weekly_plan.md",
+      "classification": "internal",
+      "sha256": "7c55e1d333dde45eaebc77a9f969f41b0dc351cc57a3668d12a98fd9db52ba68",
+      "eligible_for_public_profile": false,
+      "content_imported_to_public_profile": false
+    }
+  ]
+}

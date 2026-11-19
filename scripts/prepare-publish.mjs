@@ -32,6 +32,13 @@ await Promise.all([
 ]);
 
 try {
+  await access(new URL("odai/", projectRoot));
+  await cp(new URL("odai/", projectRoot), new URL("odai/", publishRoot), { recursive: true });
+} catch (error) {
+  if (error?.code !== "ENOENT") throw error;
+}
+
+try {
   await access(new URL("server/", projectRoot));
   await cp(new URL("server/", projectRoot), new URL("server/", publishRoot), {
     recursive: true,

@@ -1,0 +1,11 @@
+{
+  "profile_allowed_classifications": [
+    "public"
+  ],
+  "require_explicit_tenant_id": true,
+  "unknown_classification": "quarantine",
+  "regulated_to_cloud_models": false,
+  "external_effects_enabled": false,
+  "source_policy_mode": "REFERENCE_ONLY_NOT_AUTHORIZED",
+  "profile_review_required_before_real_publication": true
+}

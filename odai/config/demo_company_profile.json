@@ -1,0 +1,31 @@
+{
+  "schema_version": "8.5.0",
+  "tenant_id": "demo-lumen-studio",
+  "is_synthetic": true,
+  "company_name": "Lumen Studio",
+  "business_type": "One-person brand and web design studio",
+  "location": "Singapore",
+  "founded_year": 2022,
+  "description": "Singapore design studio serving small businesses with brand identity, websites, pitch decks and launch campaigns.",
+  "services": [
+    "Brand identity",
+    "Websites",
+    "Decks and documents",
+    "Launch campaigns"
+  ],
+  "typical_project_duration": "2–6 weeks",
+  "published_starting_prices_sgd": {
+    "brand_identity": 6500,
+    "website_up_to_6_pages": 8000,
+    "pitch_deck_up_to_20_slides": 2800,
+    "launch_campaign_kit": 4200,
+    "day_rate": 950
+  },
+  "price_valid_until": "2026-12-31",
+  "source_paths": [
+    "data/marketing/website_about.md",
+    "data/marketing/price_list_2026.md"
+  ],
+  "verification_status": "source-derived synthetic demo; not independently verified",
+  "public_profile_only": true
+}

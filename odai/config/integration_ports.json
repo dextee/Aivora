@@ -1,0 +1,9 @@
+{
+  "CatalogImportPort": "read-only source ingestion + approval",
+  "ShopeeStorePort": "seller-authenticated draft listing; publish requires permissions and human approval",
+  "HashmetaContentPort": "authorized reference-site draft; no unlicensed clone or live publish",
+  "SupplierFulfillmentPort": "order export / webhook only after signed agreement and verification",
+  "SettlementPort": "actual platform settlement and fees; no inferred payout",
+  "ProfitLedgerPort": "reconciled cash/fee/COGS/returns ledger",
+  "VoiceBriefingPort": "Cantonese summary from reconciled actuals"
+}

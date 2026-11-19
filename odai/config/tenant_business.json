@@ -1,0 +1,19 @@
+{
+  "tenant_id": "demo-uncle-coffee-wellness",
+  "demo_only": true,
+  "seller_type": "elderly_voice_first",
+  "source_supplier": "FNYGlobal",
+  "source_catalog_count": 10,
+  "product_categories": [
+    "FNYGlobal wellness",
+    "Coffee (catalog pending)"
+  ],
+  "shopee": "NOT_CONNECTED",
+  "hashmeta": "NOT_CONNECTED",
+  "dropshipping": "NOT_VERIFIED",
+  "marketing": "DRAFT_ONLY",
+  "live_publishing": false,
+  "live_order_routing": false,
+  "device_security_center": "UI_PLACEHOLDER_ONLY",
+  "currency_reporting": "MYR_WITH_PER_CURRENCY_SEPARATION"
+}

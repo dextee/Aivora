@@ -91,6 +91,7 @@ test("build emits a standalone dynamic QW Page and serves healthy root", async (
   const publishedEntries = (await readdir(publishRoot)).sort();
   assert.deepEqual(publishedEntries, [
     "dist",
+    "odai",
     "package-lock.json",
     "package.json",
     "server",
