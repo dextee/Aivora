@@ -88,19 +88,35 @@ export async function blobsToWav(parts: Blob[]): Promise<Blob> {
 /* ---------------- store pages (AIVORA ⇄ Hashmeta bridge) ---------------- */
 export type StoreSpec = { storeName: string; products: string; market?: string; language?: string };
 export type StoreResult = { mode?: string; tool?: string; result?: string; note?: string; error?: string };
-export async function storeGenerate(spec: StoreSpec): Promise<StoreResult> {
+
+const authHeader = (): Record<string, string> => {
   const c = loadConfig();
+  return c?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {};
+};
+
+/** Starts the server job and polls until done — long generations can't hit the gateway timeout. */
+export async function storeGenerate(spec: StoreSpec, onTick?: (seconds: number) => void): Promise<StoreResult> {
   const res = await fetch(`/api/store/generate?_t=${Date.now()}`, {
     method: "POST",
-    headers: { "content-type": "application/json", ...(c ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}) },
+    headers: { "content-type": "application/json", ...authHeader() },
     body: JSON.stringify(spec),
   });
-  const j = (await res.json().catch(() => ({}))) as StoreResult;
-  if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
-  return j;
+  const start = (await res.json().catch(() => ({}))) as { jobId?: string; error?: string };
+  if (!res.ok || !start.jobId) throw new Error(start.error || `HTTP ${res.status}`);
+  const t0 = Date.now();
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 1600));
+    onTick?.(Math.round((Date.now() - t0) / 1000));
+    const jr = await fetch(`/api/store/job?id=${encodeURIComponent(start.jobId)}&_t=${Date.now()}`, { headers: authHeader() });
+    const j = (await jr.json().catch(() => ({}))) as { state?: string } & StoreResult;
+    if (!jr.ok) throw new Error((j as { error?: string }).error || `job poll HTTP ${jr.status}`);
+    if (j.state === "done") return j;
+    if (j.state === "error") throw new Error(j.error || "generation failed");
+    if (Date.now() - t0 > 240000) throw new Error("generation timed out — try a shorter product list");
+  }
 }
 export async function storeDiag(): Promise<{ hashmeta_token: boolean; tools?: { name: string; desc: string }[] | null; error?: string }> {
-  const res = await fetch(`/api/store/diag?_t=${Date.now()}`);
+  const res = await fetch(`/api/store/diag?_t=${Date.now()}`, { headers: authHeader() });
   return res.json();
 }
 

@@ -16,6 +16,7 @@ export function StoreView({ seed, onBack }: { seed: StoreSeed; onBack(): void })
   const [market, setMarket] = useState(seed?.market || "Singapore");
   const [language, setLanguage] = useState(seed?.language || "en");
   const [busy, setBusy] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const [out, setOut] = useState<{ mode: string; tool: string; result: string; note?: string } | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [engine, setEngine] = useState<string | null>(null);
@@ -31,6 +32,7 @@ export function StoreView({ seed, onBack }: { seed: StoreSeed; onBack(): void })
     setErr(null); setOut(null); setBusy(true);
     try {
       const spec: StoreSpec = { storeName: storeName.trim(), products, market, language };
+      setElapsed(0);
       const j = await storeGenerate({ ...spec, language: LANGS.find(([v]) => v === language)?.[1] || language } as StoreSpec);
       if (j.result) {
         setOut({ mode: j.mode || "?", tool: j.tool || "?", result: j.result, note: j.note });
@@ -85,7 +87,7 @@ export function StoreView({ seed, onBack }: { seed: StoreSeed; onBack(): void })
         </div>
 
         <button className="gobtn" disabled={busy || (!storeName.trim() && !products.trim())} onClick={generate}>
-          {busy ? "Contacting connector & generating…" : "🛒 Generate catalog page"}
+          {busy ? `Generating… ${elapsed}s` : "🛒 Generate catalog page"}
         </button>
 
         {err && <p className="mstat bad" style={{ marginTop: 12 }}>✕ {err}</p>}

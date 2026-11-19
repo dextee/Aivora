@@ -13,7 +13,7 @@ import { readFile, stat } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
-import { storeGenerate, storeDiag } from "./server/hashmeta.mjs";
+import { storeStart, storeJob, storeDiag } from "./server/hashmeta.mjs";
 
 const host = process.env.HOST;
 const port = Number(process.env.PORT);
@@ -106,7 +106,10 @@ const server = createServer(async (request, response) => {
       return analyze(request, response);
 
     if (url.pathname === "/api/store/generate" && request.method === "POST")
-      return storeRoute(request, response, storeGenerate, true);
+      return storeRoute(request, response, storeStart, true);
+
+    if (url.pathname === "/api/store/job")
+      return sendResponse(response, storeJob(url.searchParams.get("id") || ""));
 
     if (url.pathname === "/api/store/diag")
       return storeRoute(request, response, storeDiag, false);
@@ -180,6 +183,10 @@ async function analyze(request, response) {
   response.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache" });
   upstream.body.pipeTo(new WritableStream({ write: (c) => response.write(c), close: () => response.end(), abort: () => response.end() }))
     .catch(() => response.end());
+}
+
+function sendResponse(response, out) {
+  return send(response, out.status, out.body, out.type);
 }
 
 /* glue for the Hashmeta bridge: read body, build env, send module response */

@@ -111,7 +111,7 @@ async function localGenerate(spec, env) {
     headers: { Authorization: `Bearer ${env.modelStudioKey}`, "content-type": "application/json" },
     body: JSON.stringify({
       model: env.analyzeModel,
-      messages: [{ role: "user", content: buildStorePrompt(spec) + " Output ONLY a complete single-file HTML document in one ```html fence." }],
+      messages: [{ role: "user", content: buildStorePrompt(spec) + " Output ONLY a complete, compact single-file HTML document in one ```html fence (inline CSS, no external assets, minimal length)." }],
       modalities: ["text"], stream: true,
     }),
   });
@@ -136,21 +136,55 @@ async function localGenerate(spec, env) {
 const J = (v) => ({ status: 200, type: "application/json; charset=utf-8", body: JSON.stringify(v) });
 const E = (status, msg) => ({ status, type: "application/json; charset=utf-8", body: JSON.stringify({ error: msg }) });
 
-export async function storeGenerate(spec, env) {
+/* Job queue: generation can exceed the public gateway's request timeout, so the
+ * route returns a jobId instantly and the client polls. Entries expire after 30 min. */
+const jobs = new Map();
+let jobSeq = 0;
+function reapJobs() {
+  const cut = Date.now() - 30 * 60 * 1000;
+  for (const [id, j] of jobs) if (j.ts < cut) jobs.delete(id);
+  if (jobs.size > 24) { const first = jobs.keys().next().value; jobs.delete(first); }
+}
+
+export function storeJob(id) {
+  const j = jobs.get(id);
+  if (!j) return E(404, "job not found or expired");
+  return J({ state: j.state, mode: j.mode, tool: j.tool, result: j.result, note: j.note, error: j.error });
+}
+
+export async function storeStart(spec, env) {
   if (!String(spec?.products || "").trim() && !String(spec?.storeName || "").trim())
     return E(400, "storeName or products required");
+  const id = `job-${++jobSeq}-${Date.now().toString(36)}`;
+  jobs.set(id, { state: "running", ts: Date.now() });
+  reapJobs();
+  runJob(id, spec, env); // fire and forget
+  return J({ jobId: id });
+}
+
+async function runJob(id, spec, env) {
+  const job = jobs.get(id);
+  if (!job) return;
+  job.ts = Date.now();
   let err = null;
   if (env.hashmetaToken) {
     try {
       const out = await callCatalog(spec, env);
-      return J({ mode: "hashmeta", tool: out.tool, result: out.result });
+      Object.assign(job, { state: "done", mode: "hashmeta", tool: out.tool, result: out.result });
+      return;
     } catch (e) { err = e.message; }
   }
   try {
     const out = await localGenerate(spec, env);
-    if (out) return J({ mode: env.hashmetaToken ? "aivora-fallback" : "aivora-local", tool: out.tool, result: out.result, note: err || undefined });
+    if (out) {
+      Object.assign(job, {
+        state: "done", mode: env.hashmetaToken ? "aivora-fallback" : "aivora-local",
+        tool: out.tool, result: out.result, note: err || undefined,
+      });
+      return;
+    }
   } catch (e) { err = (err ? err + " | " : "") + e.message; }
-  return E(503, err || "Add HASHMETA_API_TOKEN or the Model Studio key to enable store generation");
+  Object.assign(job, { state: "error", error: err || "Add HASHMETA_API_TOKEN or the Model Studio key to enable store generation" });
 }
 
 export async function storeDiag(env) {
