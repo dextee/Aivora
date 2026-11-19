@@ -109,7 +109,7 @@ async function callCatalog(spec, env) {
 async function localGenerate(spec, env) {
   if (!env.modelStudioKey) return null;
   const ctl = new AbortController();
-  const kill = setTimeout(() => ctl.abort(), 50_000);
+  const kill = setTimeout(() => ctl.abort(), 100_000);
   let upstream;
   try {
     upstream = await fetch(`https://${env.workspace}.${env.region}.maas.aliyuncs.com/compatible-mode/v1/chat/completions`, {
@@ -151,34 +151,40 @@ async function localGenerate(spec, env) {
   return { tool: "aivora-local", result: html };
 }
 
-export const BUILD = "v18";
 const J = (v) => ({ status: 200, type: "application/json; charset=utf-8", body: JSON.stringify(v) });
 const E = (status, msg) => ({ status, type: "application/json; charset=utf-8", body: JSON.stringify({ error: msg }) });
 
-/* Synchronous generate with layered deadlines (gateway cuts requests ~100s):
-   hashmeta tool ≤35s, then local builder ≤55s; caller always gets an answer. */
-async function withTimeout(p, ms, label) {
+/* Streaming generate: keep bytes flowing (heartbeat) so the gateway's ~30s
+   buffered-response timeout never fires; the final event carries the JSON.
+   Layered deadlines: hashmeta tool ≤70s, then local builder ≤110s. */
+async function withTimeout(p, ms, label, onMs) {
   let t;
   try {
     return await Promise.race([p, new Promise((_, rej) => { t = setTimeout(() => rej(new Error(`${label} timed out`)), ms); })]);
-  } finally { clearTimeout(t); }
+  } catch (e) { onMs?.(); throw e; }
+  finally { clearTimeout(t); }
 }
 
-export async function storeGenerate(spec, env) {
+export const BUILD = "v18-stream";
+
+export async function storeRun(spec, env) {
   if (!String(spec?.products || "").trim() && !String(spec?.storeName || "").trim())
-    return E(400, "storeName or products required");
+    return { error: "storeName or products required" };
   let err = null;
   if (env.hashmetaToken) {
     try {
-      const out = await withTimeout(callCatalog(spec, env), 35000, "hashmeta tool");
-      return J({ build: BUILD, mode: "hashmeta", tool: out.tool, result: out.result });
+      const out = await withTimeout(callCatalog(spec, env), 70000, "hashmeta tool");
+      return { build: BUILD, mode: "hashmeta", tool: out.tool, result: out.result };
     } catch (e) { err = e.message; }
   }
   try {
-    const out = await withTimeout(localGenerate(spec, env), 55000, "local generation");
-    if (out) return J({ build: BUILD, mode: env.hashmetaToken ? "aivora-fallback" : "aivora-local", tool: out.tool, result: out.result, note: err || undefined });
-  } catch (e) { err = (err ? err + " | " : "") + e.message; }
-  return E(504, err || "Generation timed out — shorten the product list and retry");
+    const out = await withTimeout(localGenerate(spec, env), 110000, "local generation");
+    if (out) return { build: BUILD, mode: env.hashmetaToken ? "aivora-fallback" : "aivora-local", tool: out.tool, result: out.result, note: err || undefined };
+  } catch (e) {
+    err = (err ? err + " | " : "") + e.message;
+    try { } catch { /* */ }
+  }
+  return { error: err || "Generation timed out — shorten the product list and retry" };
 }
 
 export async function storeDiag(env) {

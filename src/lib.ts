@@ -94,7 +94,7 @@ const authHeader = (): Record<string, string> => {
   return c?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {};
 };
 
-/** One synchronous call; server keeps its internal deadlines under the gateway limit. */
+/** One POST; the answer arrives as one SSE `data:` event (heartbeats keep it alive). */
 export async function storeGenerate(spec: StoreSpec, onTick?: (seconds: number) => void): Promise<StoreResult> {
   const t0 = Date.now();
   const tick = onTick ? window.setInterval(() => onTick(Math.round((Date.now() - t0) / 1000)), 1000) : 0;
@@ -103,15 +103,30 @@ export async function storeGenerate(spec: StoreSpec, onTick?: (seconds: number) 
       method: "POST",
       headers: { "content-type": "application/json", ...authHeader() },
       body: JSON.stringify(spec),
-      signal: AbortSignal.timeout(120000),
+      signal: AbortSignal.timeout(220000),
     });
-    const j = (await res.json().catch(() => ({}))) as StoreResult;
-    if (!res.ok) {
-      let msg = j.error || "";
-      if (!msg) { const t = await res.text().catch(() => ""); msg = t.slice(0, 140) || `HTTP ${res.status}`; }
-      throw new Error(msg);
+    if (!res.ok || !res.body) {
+      const j = (await res.json().catch(() => ({}))) as StoreResult;
+      throw new Error(j.error || `HTTP ${res.status}`);
     }
-    return j;
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const m = buf.match(/^data: (.+)$/m);
+      if (m) {
+        try {
+          const j = JSON.parse(m[1]) as StoreResult & { error?: string };
+          if (j.error) throw new Error(j.error);
+          if (j.mode || j.result) return j;
+        } catch (e) { if (e instanceof Error && !/JSON/.test(e.message)) throw e; }
+        buf = buf.replace(/^data: .+$/m, "");
+      }
+    }
+    throw new Error("generation stream ended without a result");
   } finally { if (tick) window.clearInterval(tick); }
 }
 export async function storeDiag(): Promise<{ hashmeta_token: boolean; tools?: { name: string; desc: string }[] | null; error?: string }> {

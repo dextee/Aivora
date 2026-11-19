@@ -13,7 +13,7 @@ import { readFile, stat } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
-import { storeGenerate, storeDiag, BUILD } from "./server/hashmeta.mjs";
+import { storeRun, storeDiag, BUILD } from "./server/hashmeta.mjs";
 
 const host = process.env.HOST;
 const port = Number(process.env.PORT);
@@ -106,7 +106,7 @@ const server = createServer(async (request, response) => {
       return analyze(request, response);
 
     if (url.pathname === "/api/store/generate" && request.method === "POST")
-      return storeRoute(request, response, storeGenerate, true);
+      return storeStream(request, response);
 
     if (url.pathname === "/api/store/diag")
       return storeRoute(request, response, storeDiag, false);
@@ -184,6 +184,30 @@ async function analyze(request, response) {
 
 function sendResponse(response, out) {
   return send(response, out.status, out.body, out.type);
+}
+
+async function storeStream(request, response) {
+  let raw = "";
+  for await (const c of request) raw += c;
+  let auth = null;
+  try { auth = JSON.parse(decodeURIComponent(request.headers["x-aivora-auth"] || "null")); } catch { /* optional */ }
+  let spec = null;
+  try { spec = JSON.parse(raw || "{}"); } catch { spec = null; }
+  response.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", "x-accel-buffering": "no" });
+  const hb = setInterval(() => { try { response.write(": hb\n\n"); } catch { /* closed */ } }, 4000);
+  const env = {
+    hashmetaToken: process.env.HASHMETA_API_TOKEN || null,
+    hashmetaUrl: process.env.HASHMETA_MCP_URL || null,
+    storeTool: process.env.HASHMETA_STORE_TOOL || null,
+    modelStudioKey: KEY() || auth?.key || null,
+    workspace: auth?.ws || WORKSPACE(), region: auth?.region || REGION(), analyzeModel: MODELS.analyze,
+  };
+  let out;
+  try { out = await storeRun(spec || {}, env); }
+  catch (e) { out = { error: String(e?.message || e) }; }
+  clearInterval(hb);
+  response.write(`data: ${JSON.stringify(out)}\n\n`);
+  response.end();
 }
 
 /* glue for the Hashmeta bridge: read body, build env, send module response */
