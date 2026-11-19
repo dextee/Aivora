@@ -95,7 +95,7 @@ export function StoreView({ seed, onBack }: { seed: StoreSeed; onBack(): void })
         {out && (
           <div ref={resultRef} style={{ marginTop: 14 }}>
             <div className="transout">
-              <span className="chip2">{out.mode === "hashmeta" ? "✓ VIA HASHMETA CONNECTOR" : out.mode === "aivora-fallback" ? "HASHMETA UNAVAILABLE → AIVORA BUILT" : "AIVORA LOCAL BUILDER"}</span>
+              <span className="chip2">{out.mode === "hashmeta" ? "✓ VIA HASHMETA CONNECTOR" : out.mode === "aivora-fallback" ? "HASHMETA UNAVAILABLE → AIVORA BUILT" : "AIVORA LOCAL BUILDER"}{(out as { partial?: boolean }).partial ? " · quick draft (still useful — regenerate anytime)" : ""}</span>
               <p style={{ fontSize: 12, color: "var(--ink2)", margin: "6px 0 10px" }}>tool: <b>{out.tool}</b>{out.note ? ` · note: ${out.note.slice(0, 120)}` : ""}</p>
               {isHtml
                 ? <iframe title="catalog preview" sandbox="allow-scripts" srcDoc={out.result}

@@ -111,6 +111,7 @@ async function callCatalog(spec, env) {
 async function localGenerate(spec, env) {
   if (!env.modelStudioKey) return null;
   const ctl = new AbortController();
+  let timedOut = false;
   const kill = setTimeout(() => ctl.abort(), 100_000);
   let upstream;
   try {
@@ -121,8 +122,8 @@ async function localGenerate(spec, env) {
       body: JSON.stringify({
         model: env.analyzeModel,
         enable_thinking: false,
-        max_tokens: 3500,
-        messages: [{ role: "user", content: buildStorePrompt(spec) + " Output ONLY a complete, compact single-file HTML document in one ```html fence (lean inline CSS, no comments, no JS)." }],
+        max_tokens: 2200,
+        messages: [{ role: "user", content: buildStorePrompt(spec) + " Output ONLY a very compact single-file HTML document in one ```html fence: 100-140 lines total, minimal inline CSS, no comments, no JS, no long reasoning — just emit the page." }],
         modalities: ["text"], stream: true,
       }),
     });
@@ -142,6 +143,9 @@ async function localGenerate(spec, env) {
       try { const j = JSON.parse(p); acc += j.choices?.[0]?.delta?.content || ""; } catch { /* partial */ }
     }
   }
+  } catch (e) {
+    if (!/abort/i.test(String(e?.name || e?.message)) || !/<html|<!doctype/i.test(acc)) { clearTimeout(kill); throw e; }
+    timedOut = true; // abort mid-stream: salvage what arrived
   } finally { clearTimeout(kill); }
   let html = acc.match(/```(?:html)?\s*([\s\S]*?)```/i)?.[1];
   if (!html) {
@@ -150,7 +154,7 @@ async function localGenerate(spec, env) {
     if (!/<html|<!doctype/i.test(html)) return null;
     if (!/<\/html>/i.test(html)) html += "\n</body>\n</html>";
   }
-  return { tool: "aivora-local", result: html };
+  return { tool: "aivora-local", result: html, partial: timedOut };
 }
 
 const J = (v) => ({ status: 200, type: "application/json; charset=utf-8", body: JSON.stringify(v) });
@@ -181,7 +185,7 @@ export async function storeRun(spec, env) {
   }
   try {
     const out = await withTimeout(localGenerate(spec, env), 110000, "local generation");
-    if (out) return { build: BUILD, mode: env.hashmetaToken ? "aivora-fallback" : "aivora-local", tool: out.tool, result: out.result, note: err || undefined };
+    if (out) return { build: BUILD, mode: env.hashmetaToken ? "aivora-fallback" : "aivora-local", tool: out.tool, result: out.result, partial: out.partial || undefined, note: err || undefined };
   } catch (e) {
     err = (err ? err + " | " : "") + e.message;
     try { } catch { /* */ }
