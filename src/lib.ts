@@ -108,7 +108,14 @@ export async function blobsToWav(parts: Blob[]): Promise<Blob> {
   const src = off.createBufferSource();
   src.buffer = buf; src.connect(off.destination); src.start();
   const rendered = await off.startRendering();
-  const pcm = rendered.getChannelData(0);
+  const full = rendered.getChannelData(0);
+  /* silence-trim: cut lead/tail dead air (speeds up batch ASR noticeably) */
+  const TH = 0.02, pad = Math.floor(sr * 0.08);
+  let a = 0, b = full.length - 1;
+  while (a < full.length && Math.abs(full[a]) < TH) a++;
+  while (b > a && Math.abs(full[b]) < TH) b--;
+  a = Math.max(0, a - pad); b = Math.min(full.length - 1, b + pad);
+  const pcm = full.subarray(a, b + 1);
   const w16 = new Int16Array(pcm.length);
   for (let i = 0; i < pcm.length; i++) w16[i] = Math.max(-32768, Math.min(32767, pcm[i] * 32767));
   const header = new ArrayBuffer(44); const v = new DataView(header);
@@ -118,6 +125,28 @@ export async function blobsToWav(parts: Blob[]): Promise<Blob> {
   v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
   ascii(36, "data"); v.setUint32(40, w16.byteLength, true);
   return new Blob([header, w16.buffer], { type: "audio/wav" });
+}
+
+export const b64bytes = (s: string) => { const bin = atob(s); const u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
+
+/* one-shot voice reply from the server (/api/talk): text → { spoken audio,
+   transcript, optional log_call tool }. No browser WebRTC needed. */
+export type TalkResult = { text: string; audio: Uint8Array | null; tool: Record<string, unknown> | null };
+export async function talkReply(text: string): Promise<TalkResult> {
+  const c = loadConfig();
+  const res = await fetch("/api/talk", {
+    method: "POST",
+    headers: { "content-type": "application/json", ...(c ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}) },
+    body: JSON.stringify({ text }),
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((j as { error?: string }).error || `HTTP ${res.status}`);
+  return {
+    text: (j as { text?: string }).text ?? "",
+    audio: (j as { audio?: string }).audio ? b64bytes((j as { audio: string }).audio) : null,
+    tool: (j as { tool?: Record<string, unknown> | null }).tool ?? null,
+  };
 }
 
 /* ---------------- analyze (document translation) ---------------- */
