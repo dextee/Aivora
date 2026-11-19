@@ -19,7 +19,7 @@ type Row =
 
 const LNAME: Record<string, string> = { en: "English", zh: "中文", yue: "廣東話", ms: "Bahasa Melayu", id: "Bahasa Indonesia", th: "ไทย", ta: "தமிழ்" };
 
-export function TalkView({ onOpenDocs }: { onOpenDocs(): void }) {
+export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOpenStore(seed: { storeName?: string; products?: string; market?: string; language?: string }): void }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"idle" | "connecting" | "partner" | "interpreter">("idle");
   const [target, setTarget] = useState("en");
@@ -52,6 +52,13 @@ export function TalkView({ onOpenDocs }: { onOpenDocs(): void }) {
       setRows((r) => [...r, { who: "sys", text: `🎧 Interpreter engaged → ${LNAME[tg] ?? tg}. Speak; AIVORA voices the translation. Press the button to stop.` }]);
       try { engRef.current?.stop(); } catch { /* swap */ }
       window.setTimeout(() => connect("translate"), 350);
+      return true;
+    }
+    if (/online store|store ?(page|front)|shop ?front|product catalog(?:ue)?|catalog(?:ue)? page|ecommerce|e-commerce|landing ?page|网店|開店|商店?页面?|頁面|产品目录|產品目錄|上架|做个网页?|做個網頁/i.test(text)) {
+      setRows((r) => [...r, { who: "sys", text: "🛒 Building your store page — opening the Store Builder…" }]);
+      try { engRef.current?.stop(); } catch { /* handoff */ }
+      setState("idle");
+      window.setTimeout(() => onOpenStore({ products: text }), 500);
       return true;
     }
     if (/document|contract|photo|paper|invoice|文件|合约|合約|合同|照片|单据/i.test(text)) {
@@ -101,6 +108,13 @@ export function TalkView({ onOpenDocs }: { onOpenDocs(): void }) {
           try { engRef.current?.stop(); } catch { /* handoff */ }
           setState("idle");
           window.setTimeout(onOpenDocs, 500);
+          break;
+        case "store":
+          setRows((r) => [...r, { who: "sys", text: "🛒 Building your store page — opening the Store Builder…" }]);
+          try { engRef.current?.stop(); } catch { /* handoff */ }
+          setState("idle");
+          window.setTimeout(() => onOpenStore({
+            storeName: e.data.store_name, products: e.data.products, market: e.data.market, language: e.data.language }), 500);
           break;
         case "error":
           if (e.msg.includes("routing tools rejected")) {

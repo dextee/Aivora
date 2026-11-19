@@ -13,6 +13,7 @@ import { readFile, stat } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
+import { storeGenerate, storeDiag } from "./server/hashmeta.mjs";
 
 const host = process.env.HOST;
 const port = Number(process.env.PORT);
@@ -104,6 +105,12 @@ const server = createServer(async (request, response) => {
     if (url.pathname === "/api/analyze" && request.method === "POST")
       return analyze(request, response);
 
+    if (url.pathname === "/api/store/generate" && request.method === "POST")
+      return storeRoute(request, response, storeGenerate, true);
+
+    if (url.pathname === "/api/store/diag")
+      return storeRoute(request, response, storeDiag, false);
+
     if (url.pathname === "/api/webrtc/sdp" && request.method === "POST")
       return sdpProxy(request, response, url);
 
@@ -173,6 +180,31 @@ async function analyze(request, response) {
   response.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache" });
   upstream.body.pipeTo(new WritableStream({ write: (c) => response.write(c), close: () => response.end(), abort: () => response.end() }))
     .catch(() => response.end());
+}
+
+/* glue for the Hashmeta bridge: read body, build env, send module response */
+async function storeRoute(request, response, fn, hasBody) {
+  let spec = {};
+  if (hasBody) {
+    let raw = "";
+    for await (const c of request) { raw += c; if (raw.length > 200_000) return send(response, 413, "payload too large", "text/plain; charset=utf-8"); }
+    try { spec = JSON.parse(raw || "{}"); } catch { return send(response, 400, '{"error":"bad json"}', "application/json; charset=utf-8"); }
+  }
+  let auth = null;
+  try { auth = JSON.parse(decodeURIComponent(request.headers["x-aivora-auth"] || "null")); } catch { /* optional */ }
+  const env = {
+    hashmetaToken: process.env.HASHMETA_API_TOKEN || null,
+    hashmetaUrl: process.env.HASHMETA_MCP_URL || null,
+    storeTool: process.env.HASHMETA_STORE_TOOL || null,
+    modelStudioKey: KEY() || auth?.key || null,
+    workspace: auth?.ws || WORKSPACE(), region: auth?.region || REGION(), analyzeModel: MODELS.analyze,
+  };
+  try {
+    const out = await fn(spec, env);
+    return send(response, out.status, out.body, out.type);
+  } catch (e) {
+    return send(response, 500, JSON.stringify({ error: String(e?.message || e) }), "application/json; charset=utf-8");
+  }
 }
 
 const wss = new WebSocketServer({ noServer: true });

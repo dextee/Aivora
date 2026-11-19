@@ -13,7 +13,9 @@ const AIVORA_INSTRUCTIONS =
   "stated, call log_call with details and a one-line summary; (2) when the user asks you to " +
   "interpret or translate live speech for them or another person, call start_interpreter with the " +
   "target language (ask by voice first if unclear; default en); (3) when the user wants a document, " +
-  "photo or written text translated, call open_document_translator. Reply in the language the user used.";
+  "photo or written text translated, call open_document_translator; (4) when the user wants an " +
+  "online store, ecommerce or product-catalog page built, call generate_store_page. " +
+  "Reply in the language the user used.";
 
 const ROUTING_TOOLS = [
   { type: "function", function: {
@@ -43,6 +45,16 @@ const ROUTING_TOOLS = [
     name: "open_document_translator",
     description: "Open the document/photo/text translation screen. Use when the user wants a written document, photo or file translated (not live speech).",
     parameters: { type: "object", properties: {} },
+  } },
+  { type: "function", function: {
+    name: "generate_store_page",
+    description: "Open the Online Store builder to generate an ecommerce product-catalog page (uses the Hashmeta connector when configured). Use when the user wants an online store, storefront, or product catalog page made.",
+    parameters: { type: "object", properties: {
+      store_name: { type: "string" },
+      products: { type: "string", description: "Name / price / short description per line as heard" },
+      market: { type: "string" },
+      language: { type: "string" },
+    } },
   } },
 ];
 
@@ -134,6 +146,16 @@ export function openRealtimeRtc(
         if (ev.name === "log_call") { try { emit({ kind: "objective", data: JSON.parse(ev.arguments || "{}") }); } catch { /* bad json */ } }
         else if (ev.name === "start_interpreter") { try { emit({ kind: "interpret", target: (JSON.parse(ev.arguments || "{}").target_language) || "en" }); } catch { emit({ kind: "interpret", target: "en" }); } }
         else if (ev.name === "open_document_translator") emit({ kind: "route_docs" });
+        else if (ev.name === "generate_store_page") {
+          let d: Record<string, unknown> = {};
+          try { d = JSON.parse(ev.arguments || "{}"); } catch { /* empty */ }
+          emit({ kind: "store", data: {
+            store_name: typeof d.store_name === "string" ? d.store_name : undefined,
+            products: typeof d.products === "string" ? d.products : undefined,
+            market: typeof d.market === "string" ? d.market : undefined,
+            language: typeof d.language === "string" ? d.language : undefined,
+          } });
+        }
         break;
       case "error": {
         const m = ev.error?.message ?? "realtime error";

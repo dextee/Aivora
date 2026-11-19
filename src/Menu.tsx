@@ -1,9 +1,10 @@
 import type { ConnSource } from "./lib";
 
-export type View = "talk" | "docs";
+export type View = "talk" | "docs" | "store";
 
 const NAV: { id: View; icon: string; label: string; sub: string }[] = [
   { id: "talk", icon: "🎙", label: "Talk to AIVORA", sub: "voice partner — interprets & routes itself" },
+  { id: "store", icon: "🛒", label: "Online Store Page", sub: "ecommerce catalog · Hashmeta connector" },
   { id: "docs", icon: "📄", label: "Document Translation", sub: "text, photos & voice notes" },
 ];
 

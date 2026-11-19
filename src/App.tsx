@@ -3,15 +3,19 @@ import { Menu, type View } from "./Menu";
 import { SettingsSheet } from "./SettingsSheet";
 import { TalkView } from "./TalkView";
 import { DocsView } from "./DocsView";
+import { StoreView } from "./StoreView";
+import type { StoreSpec } from "./lib";
 import { probeKey, type ConnSource } from "./lib";
 
 const TITLES: Record<View, { t: string; s: string }> = {
   talk: { t: "AIVORA", s: "Objective-Driven Autonomous Intelligence" },
   docs: { t: "Document Translation", s: "text · photo · voice note" },
+  store: { t: "Online Store Builder", s: "ecommerce catalog pages" },
 };
 
 export function App() {
   const [view, setView] = useState<View>("talk");
+  const [storeSeed, setStoreSeed] = useState<Partial<StoreSpec> | null>(null);
   const [menu, setMenu] = useState(false);
   const [settings, setSettings] = useState(false);
   const [about, setAbout] = useState(false);
@@ -44,8 +48,9 @@ export function App() {
         </button>
       </header>
 
-      {view === "talk" && <TalkView onOpenDocs={() => setView("docs")} />}
+      {view === "talk" && <TalkView onOpenDocs={() => setView("docs")} onOpenStore={(sd) => { setStoreSeed(sd); setView("store"); }} />}
       {view === "docs" && <DocsView />}
+      {view === "store" && <StoreView seed={storeSeed} onBack={() => setView("talk")} />}
 
       <Menu open={menu} view={view} conn={conn}
         onClose={() => setMenu(false)}

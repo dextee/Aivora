@@ -52,6 +52,7 @@ export type LiveEvent =
   | { kind: "objective"; data: { summary?: string; growth_pct?: number; horizon_days?: number; language?: string; action_items?: string[] } }
   | { kind: "interpret"; target: string }
   | { kind: "route_docs" }
+  | { kind: "store"; data: { store_name?: string; products?: string; market?: string; language?: string } }
   | { kind: "error"; msg: string }
   | { kind: "closed" };
 
@@ -82,6 +83,25 @@ export async function blobsToWav(parts: Blob[]): Promise<Blob> {
   v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
   ascii(36, "data"); v.setUint32(40, w16.byteLength, true);
   return new Blob([header, w16.buffer], { type: "audio/wav" });
+}
+
+/* ---------------- store pages (AIVORA ⇄ Hashmeta bridge) ---------------- */
+export type StoreSpec = { storeName: string; products: string; market?: string; language?: string };
+export type StoreResult = { mode?: string; tool?: string; result?: string; note?: string; error?: string };
+export async function storeGenerate(spec: StoreSpec): Promise<StoreResult> {
+  const c = loadConfig();
+  const res = await fetch(`/api/store/generate?_t=${Date.now()}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", ...(c ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}) },
+    body: JSON.stringify(spec),
+  });
+  const j = (await res.json().catch(() => ({}))) as StoreResult;
+  if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+  return j;
+}
+export async function storeDiag(): Promise<{ hashmeta_token: boolean; tools?: { name: string; desc: string }[] | null; error?: string }> {
+  const res = await fetch(`/api/store/diag?_t=${Date.now()}`);
+  return res.json();
 }
 
 /* ---------------- analyze (document translation) ---------------- */
