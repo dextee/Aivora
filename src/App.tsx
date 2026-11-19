@@ -66,8 +66,7 @@ export function App() {
             </div>
             <p style={{ fontSize: 12.5, color: "var(--ink2)", lineHeight: 1.65 }}>
               One button, three Model Studio engines that AIVORA switches between by itself:
-              <b> qwen-audio-3.1-realtime-flash</b> (hears your voice — including Min Nan — and
-              answers out loud), <b> qwen3.8-livetranslate-flash-realtime</b> (live interpreter, on
+              <b> qwen-audio-3.1-realtime-flash</b> (hears your voice and answers out loud), <b> qwen3.8-livetranslate-flash-realtime</b> (live interpreter, on
               request) and <b> qwen3.8-omni-flash</b> (documents & photos). Voice is WebRTC; your key
               only lives on the Page server.
             </p>

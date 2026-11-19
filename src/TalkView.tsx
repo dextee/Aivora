@@ -133,9 +133,9 @@ export function TalkView({ onOpenDocs }: { onOpenDocs(): void }) {
           <div className="talk-hero">
             <img src="/logo.png" alt="AIVORA" />
             <h2>Talk to AIVORA</h2>
-            <p>One press. Speak naturally — <b>福建話 · 廣東話 ·普通话 · English</b>.<br />
+            <p>One press. Speak naturally — <b>廣東話 · 普通话 · English</b>.<br />
               Ask for goals, interpretation or a document — AIVORA routes itself.</p>
-            <span className="tryline">try: “帮我，我想90工赞加三成生意” · “interpret for my supplier” · “translate this contract”</span>
+            <span className="tryline">try: “我想90天内业绩增长三成” · “interpret for my supplier” · “translate this contract”</span>
           </div>
         )}
         {rows.map((r, i) => (
