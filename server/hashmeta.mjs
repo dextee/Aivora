@@ -151,6 +151,7 @@ async function localGenerate(spec, env) {
   return { tool: "aivora-local", result: html };
 }
 
+export const BUILD = "v18";
 const J = (v) => ({ status: 200, type: "application/json; charset=utf-8", body: JSON.stringify(v) });
 const E = (status, msg) => ({ status, type: "application/json; charset=utf-8", body: JSON.stringify({ error: msg }) });
 
@@ -170,12 +171,12 @@ export async function storeGenerate(spec, env) {
   if (env.hashmetaToken) {
     try {
       const out = await withTimeout(callCatalog(spec, env), 35000, "hashmeta tool");
-      return J({ mode: "hashmeta", tool: out.tool, result: out.result });
+      return J({ build: BUILD, mode: "hashmeta", tool: out.tool, result: out.result });
     } catch (e) { err = e.message; }
   }
   try {
     const out = await withTimeout(localGenerate(spec, env), 55000, "local generation");
-    if (out) return J({ mode: env.hashmetaToken ? "aivora-fallback" : "aivora-local", tool: out.tool, result: out.result, note: err || undefined });
+    if (out) return J({ build: BUILD, mode: env.hashmetaToken ? "aivora-fallback" : "aivora-local", tool: out.tool, result: out.result, note: err || undefined });
   } catch (e) { err = (err ? err + " | " : "") + e.message; }
   return E(504, err || "Generation timed out — shorten the product list and retry");
 }
@@ -186,5 +187,5 @@ export async function storeDiag(env) {
     try { toolList = (await listTools(env, true)).map((t) => ({ name: t.name, desc: String(t.description || "").slice(0, 120) })); }
     catch (e) { error = e.message; }
   }
-  return J({ hashmeta_token: !!env.hashmetaToken, mcp_session: !!session, tools: toolList, error: error || undefined });
+  return J({ build: BUILD, hashmeta_token: !!env.hashmetaToken, mcp_session: !!session, tools: toolList, error: error || undefined });
 }
