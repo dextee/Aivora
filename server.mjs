@@ -20,12 +20,9 @@ if (!host) throw new Error("HOST is required");
 if (!Number.isInteger(port) || port < 1 || port > 65_535) throw new Error("PORT must be 1-65535");
 
 const WORKSPACE = () => process.env.WORKSPACE_ID || "ws-lj7gmtttiltwjlyv";
-/* ASR shares the SAME API + workspace as everything else (owner note 2026-11-19);
-   ASR_WORKSPACE_ID exists only as an escape hatch if the account ever splits. */
-const ASR_WORKSPACE = () => process.env.ASR_WORKSPACE_ID || WORKSPACE();
 const REGION = () => process.env.QWEN_REGION || "ap-southeast-1";
 const KEY = () => process.env.DASHSCOPE_API_KEY || null;
-const MODELS = { omni: "qwen3.8-omni-flash-realtime", translate: "qwen3.8-livetranslate-flash-realtime", analyze: "qwen3.8-omni-flash", audio: "qwen-audio-3.1-realtime-flash", asr: "qwen-audio-3.1-asr-flash" };
+const MODELS = { omni: "qwen3.8-omni-flash-realtime", translate: "qwen3.8-livetranslate-flash-realtime", analyze: "qwen3.8-omni-flash", audio: "qwen-audio-3.1-realtime-flash" };
 
 /* ---------------- static (scaffold) ---------------- */
 const clientRoot = fileURLToPath(new URL("./dist/", import.meta.url));
@@ -110,12 +107,6 @@ const server = createServer(async (request, response) => {
     if (url.pathname === "/api/webrtc/sdp" && request.method === "POST")
       return sdpProxy(request, response, url);
 
-    if (url.pathname === "/api/asr" && request.method === "POST")
-      return asr(request, response);
-
-    if (url.pathname === "/api/talk" && request.method === "POST")
-      return talk(request, response);
-
     if (request.method !== "GET" && request.method !== "HEAD") {
       response.setHeader("allow", "GET, HEAD");
       return send(response, 405, "Method Not Allowed", "text/plain; charset=utf-8");
@@ -182,119 +173,6 @@ async function analyze(request, response) {
   response.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache" });
   upstream.body.pipeTo(new WritableStream({ write: (c) => response.write(c), close: () => response.end(), abort: () => response.end() }))
     .catch(() => response.end());
-}
-
-/* DORMANT since V9 (owner retired batch ASR for the green button 2026-11-19 — Min Nan
-   unreliable; direct-listening qwen-audio-3.1-realtime-flash restored). Endpoints kept for
-   diagnostics/re-enablement; no UI calls them.
-
-/* POST /api/asr {audio: "<data: URL or https URL>"} → qwen-audio-3.1-asr-flash
-   (DashScope native multimodal-generation format, HTTP sync — owner's curl shape).
-   Min-Nan specialist ear for the green button. Returns upstream JSON untouched. */
-async function asr(request, response) {
-  const k = KEY();
-  let auth = null;
-  try { auth = JSON.parse(decodeURIComponent(request.headers["x-aivora-auth"] || "null")); } catch { /* optional */ }
-  const useKey = k || auth?.key;
-  if (!useKey)
-    return send(response, 503, JSON.stringify({ error: "No Model Studio key — set the Page env var or connect one under 🔐." }), "application/json; charset=utf-8");
-  let raw = "";
-  for await (const c of request) { raw += c; if (raw.length > 14_000_000) return send(response, 413, "audio payload too large", "text/plain; charset=utf-8"); }
-  let audio;
-  try { audio = JSON.parse(raw || "{}").audio; } catch { return send(response, 400, "bad json", "text/plain; charset=utf-8"); }
-  if (!audio) return send(response, 400, JSON.stringify({ error: "audio (URL or data:audio/wav;base64 URL) required" }), "application/json; charset=utf-8");
-  const region = auth?.region || REGION();
-  let upstream;
-  try {
-    upstream = await fetch(`https://${ASR_WORKSPACE()}.${region}.maas.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${useKey}`, "content-type": "application/json", "X-DashScope-SSE": "disable" },
-      body: JSON.stringify({
-        model: MODELS.asr,
-        input: { messages: [{ role: "user", content: [{ type: "input_audio", input_audio: { data: audio } }] }] },
-        parameters: { format: "wav", sample_rate: "16000" },
-      }),
-    });
-  } catch { return send(response, 502, JSON.stringify({ error: "ASR endpoint unreachable" }), "application/json; charset=utf-8"); }
-  const text = await upstream.text();
-  if (!upstream.ok) return send(response, 502, text.slice(0, 600), "text/plain; charset=utf-8");
-  send(response, 200, text, "application/json; charset=utf-8");
-}
-
-/* POST /api/talk {text} -> one-shot spoken reply from qwen-audio-3.1-realtime-flash.
-   Server opens the realtime WebSocket (owner's client pattern), feeds the ASR
-   transcript as a text item, collects voice reply + transcript + log_call tool
-   args, returns one JSON. Removes the fragile browser-RTC reply leg entirely. */
-async function talk(request, response) {
-  const k = KEY();
-  let auth = null;
-  try { auth = JSON.parse(decodeURIComponent(request.headers["x-aivora-auth"] || "null")); } catch { /* optional */ }
-  const useKey = k || auth?.key;
-  if (!useKey)
-    return send(response, 503, JSON.stringify({ error: "No Model Studio key — set the Page env var or connect one under \u{1F510}." }), "application/json; charset=utf-8");
-  let raw = "";
-  for await (const c of request) raw += c;
-  let text = "";
-  try { text = String(JSON.parse(raw || "{}").text ?? "").slice(0, 4000); } catch { /* malformed */ }
-  if (!text.trim()) return send(response, 400, JSON.stringify({ error: "text required" }), "application/json; charset=utf-8");
-
-  const url = `wss://${WORKSPACE()}.${REGION()}.maas.aliyuncs.com/api-ws/v1/realtime?model=${MODELS.audio}`;
-  const model = new WebSocket(url, { headers: { Authorization: `Bearer ${useKey}` } });
-  let settled = false;
-  const out = { text: "", audio: "", tool: null };
-  const audioParts = [];
-  const killer = setTimeout(() => { try { model.close(); } catch {} finish(new Error("reply timed out")); }, 30000);
-  function finish(err) {
-    if (settled) return; settled = true;
-    clearTimeout(killer);
-    try { model.close(); } catch {}
-    if (err && !out.text) return send(response, 502, JSON.stringify({ error: err.message || String(err) }), "application/json; charset=utf-8");
-    send(response, 200, JSON.stringify(out), "application/json; charset=utf-8");
-  }
-  const wait = (pred, ms, what) => new Promise((res, rej) => {
-    const t = setTimeout(() => { model.off("message", h); rej(new Error(`timeout: ${what}`)); }, ms);
-    function h(ev) { let e; try { e = JSON.parse(ev.toString()); } catch { return; } if (!pred(e)) return; clearTimeout(t); model.off("message", h); res(); }
-    model.on("message", h);
-  });
-
-  try {
-    await new Promise((res, rej) => { model.once("open", res); model.once("error", () => rej(new Error("model link failed"))); });
-    model.send(JSON.stringify({
-      type: "session.update",
-      session: {
-        modalities: ["text", "audio"], voice: "longanqian",
-        turn_detection: null,
-        instructions: "You are AIVORA, a concise spoken business partner. Reply in 1-3 sentences in the language the user wrote in. If the message states a measurable growth objective, also call log_call.",
-        tools: [
-          { type: "function", function: {
-            name: "log_call",
-            description: "Objective captured from user message.",
-            parameters: {
-              type: "object",
-              properties: {
-                summary: { type: "string" },
-                growth_pct: { type: "number" },
-                horizon_days: { type: "number" },
-                language: { type: "string" },
-                action_items: { type: "array", items: { type: "string" } },
-              },
-            },
-          } },
-        ],
-      },
-    }));
-    await wait((e) => e.type === "session.updated", 8000, "session.updated");
-    model.on("message", (ev) => {
-      let e; try { e = JSON.parse(ev.toString()); } catch { return; }
-      if (e.type === "response.audio.delta") audioParts.push(Buffer.from(e.delta, "base64"));
-      else if (e.type === "response.audio_transcript.done") out.text = e.transcript ?? out.text;
-      else if (e.type === "response.function_call_arguments.done" && e.name === "log_call") { try { out.tool = JSON.parse(e.arguments || "null"); } catch {} }
-      else if (e.type === "error" && !settled) { out.text ||= e.error?.message || ""; finish(new Error(e.error?.message || "realtime error")); }
-      else if (e.type === "response.done" && !settled) { out.audio = audioParts.length ? Buffer.concat(audioParts).toString("base64") : ""; finish(null); }
-    });
-    model.send(JSON.stringify({ type: "conversation.item.create", item: { type: "message", role: "user", content: [{ type: "input_text", text }] } }));
-    model.send(JSON.stringify({ type: "response.create" }));
-  } catch (e) { finish(e); }
 }
 
 const wss = new WebSocketServer({ noServer: true });
