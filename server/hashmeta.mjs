@@ -103,21 +103,32 @@ async function callCatalog(spec, env) {
   return { tool: tool.name, result: text };
 }
 
-/* AIVORA composes the page itself (streaming chat completion, HTML extracted). */
+/* AIVORA composes the page itself (streaming chat completion, HTML extracted).
+ * Thinking mode off + length discipline: page scaffolding does not need a long
+ * reasoning chain, and omni's default thinking made generation run past 2 min. */
 async function localGenerate(spec, env) {
   if (!env.modelStudioKey) return null;
-  const upstream = await fetch(`https://${env.workspace}.${env.region}.maas.aliyuncs.com/compatible-mode/v1/chat/completions`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${env.modelStudioKey}`, "content-type": "application/json" },
-    body: JSON.stringify({
-      model: env.analyzeModel,
-      messages: [{ role: "user", content: buildStorePrompt(spec) + " Output ONLY a complete, compact single-file HTML document in one ```html fence (inline CSS, no external assets, minimal length)." }],
-      modalities: ["text"], stream: true,
-    }),
-  });
-  if (!upstream.ok) return null;
+  const ctl = new AbortController();
+  const kill = setTimeout(() => ctl.abort(), 90_000);
+  let upstream;
+  try {
+    upstream = await fetch(`https://${env.workspace}.${env.region}.maas.aliyuncs.com/compatible-mode/v1/chat/completions`, {
+      method: "POST",
+      signal: ctl.signal,
+      headers: { Authorization: `Bearer ${env.modelStudioKey}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        model: env.analyzeModel,
+        enable_thinking: false,
+        max_tokens: 2600,
+        messages: [{ role: "user", content: buildStorePrompt(spec) + " Output ONLY a complete, compact single-file HTML document in one ```html fence (lean inline CSS, no comments, no JS)." }],
+        modalities: ["text"], stream: true,
+      }),
+    });
+  } catch (e) { clearTimeout(kill); throw e; }
+  if (!upstream.ok) { clearTimeout(kill); return null; }
   let acc = "", buf = "";
   const dec = new TextDecoder();
+  try {
   for await (const chunk of upstream.body) {
     buf += dec.decode(chunk, { stream: true });
     const lines = buf.split("\n"); buf = lines.pop() || "";
@@ -129,6 +140,7 @@ async function localGenerate(spec, env) {
       try { const j = JSON.parse(p); acc += j.choices?.[0]?.delta?.content || ""; } catch { /* partial */ }
     }
   }
+  } finally { clearTimeout(kill); }
   const html = acc.match(/```(?:html)?\s*([\s\S]*?)```/i)?.[1] || (/<!doctype|<html/i.test(acc) ? acc : null);
   return html ? { tool: "aivora-local", result: html } : null;
 }
