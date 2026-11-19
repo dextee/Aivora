@@ -105,6 +105,33 @@ async function callCatalog(spec, env) {
   return { tool: tool.name, result: text };
 }
 
+/* Deterministic product assembly: the model designs the shell; the cards are
+   built here from the EXACT lines the user gave, so nothing is dropped. */
+function esc(s){ return s.replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+function parseLines(spec) {
+  const raw = Array.isArray(spec.products) ? spec.products.join("\n") : String(spec.products || "");
+  return raw.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
+    const p = l.split(/\s*(?:—|–|\s-\s|\|)\s*/);
+    return { name: esc((p[0] || "").trim()), price: esc((p[1] || "").trim()), note: esc((p[2] || "").trim()) };
+  });
+}
+function cardsHtml(spec) {
+  const items = parseLines(spec);
+  return `<section class="catalog"><h2>Our Products</h2><div class="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">` +
+    items.map((p) => `<article class="pcard" style="background:#fff;border:1px solid #e2e7e2;border-radius:16px;overflow:hidden;display:flex;flex-direction:column">
+<div style="height:110px;background:linear-gradient(135deg,#0b8a52,#25d366);opacity:.85"></div>
+<div style="padding:12px;display:flex;flex-direction:column;gap:6px;flex:1">
+<b style="font-size:14px">${p.name}</b>${p.price ? `<span style="font:700 16px system-ui;color:#075e54">${p.price}</span>` : ""}
+${p.note ? `<small style="color:#667781;font-size:12px">${p.note}</small>` : ""}
+<a href="https://wa.me/?text=${encodeURIComponent("Hi, I'd like to order: " + p.name)}" style="margin-top:auto;text-align:center;background:#25d366;color:#fff;font:700 13px system-ui;padding:9px;border-radius:10px;text-decoration:none">💬 WhatsApp order</a>
+</div></article>`).join("") + `</div></section>`;
+}
+function injectCards(html, spec) {
+  if (/<!--\s*PRODUCTS\s*-->|<!--PRODUCTS_PLACEHOLDER-->|<!--\s*products\s*-->/i.test(html))
+    return html.replace(/<!--\s*PRODUCTS(?:_PLACEHOLDER)?\s*-->/gi, cardsHtml(spec));
+  return html.replace(/<\/body>/i, cardsHtml(spec) + "\n</body>");
+}
+
 /* AIVORA composes the page itself (streaming chat completion, HTML extracted).
  * Thinking mode off + length discipline: page scaffolding does not need a long
  * reasoning chain, and omni's default thinking made generation run past 2 min. */
@@ -123,7 +150,7 @@ async function localGenerate(spec, env) {
         model: env.analyzeModel,
         enable_thinking: false,
         max_tokens: 2200,
-        messages: [{ role: "user", content: buildStorePrompt(spec) + " Output ONLY a very compact single-file HTML document in one ```html fence: 100-140 lines total, minimal inline CSS, no comments, no JS, no long reasoning — just emit the page." }],
+        messages: [{ role: "user", content: buildStorePrompt(spec) + " Output ONLY a compact single-file HTML page in one ```html fence: max ~80 lines, inline CSS, no product cards (placeholder only)." }],
         modalities: ["text"], stream: true,
       }),
     });
@@ -154,7 +181,7 @@ async function localGenerate(spec, env) {
     if (!/<html|<!doctype/i.test(html)) return null;
     if (!/<\/html>/i.test(html)) html += "\n</body>\n</html>";
   }
-  return { tool: "aivora-local", result: html, partial: timedOut };
+  return { tool: "aivora-local", result: injectCards(html, spec), partial: timedOut };
 }
 
 const J = (v) => ({ status: 200, type: "application/json; charset=utf-8", body: JSON.stringify(v) });
