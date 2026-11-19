@@ -18,7 +18,7 @@ export const clearConfig = () => localStorage.removeItem(STORE);
 export type ConnSource = "checking" | "env" | "browser" | "none";
 export async function probeKey(): Promise<ConnSource> {
   try {
-    const r = await fetch("/api/keyinfo");
+    const r = await fetch(`/api/keyinfo?_t=${Date.now()}`);
     if (!r.ok) throw new Error("http");
     const j = (await r.json()) as { source?: string };
     return j.source === "env" ? "env" : loadConfig() ? "browser" : "none";
@@ -60,7 +60,7 @@ export type LiveEvent =
    longest plausible text field if none match. */
 export async function asrTranscribe(audioDataUrl: string): Promise<string> {
   const c = loadConfig();
-  const res = await fetch("/api/asr", {
+  const res = await fetch(`/api/asr?_t=${Date.now()}`, {
     method: "POST",
     headers: { "content-type": "application/json", ...(c ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}) },
     body: JSON.stringify({ audio: audioDataUrl }),
@@ -135,7 +135,7 @@ export const b64bytes = (s: string) => { const bin = atob(s); const u = new Uint
 export type TalkResult = { text: string; audio: Uint8Array | null; tool: Record<string, unknown> | null };
 export async function talkReply(text: string): Promise<TalkResult> {
   const c = loadConfig();
-  const res = await fetch("/api/talk", {
+  const res = await fetch(`/api/talk?_t=${Date.now()}`, {
     method: "POST",
     headers: { "content-type": "application/json", ...(c ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}) },
     body: JSON.stringify({ text }),
@@ -160,7 +160,7 @@ export async function analyzeStream(
   signal?: AbortSignal,
 ): Promise<string> {
   const c = loadConfig();
-  const res = await fetch("/api/analyze", {
+  const res = await fetch(`/api/analyze?_t=${Date.now()}`, {
     method: "POST",
     headers: { "content-type": "application/json", ...(c ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}) },
     body: JSON.stringify({ messages }),
