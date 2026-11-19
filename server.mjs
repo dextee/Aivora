@@ -20,8 +20,9 @@ if (!host) throw new Error("HOST is required");
 if (!Number.isInteger(port) || port < 1 || port > 65_535) throw new Error("PORT must be 1-65535");
 
 const WORKSPACE = () => process.env.WORKSPACE_ID || "ws-lj7gmtttiltwjlyv";
-/* ASR runs in the owner's other workspace (per curl sample 2026-11-19); separate env override. */
-const ASR_WORKSPACE = () => process.env.ASR_WORKSPACE_ID || "ws-1r19x1m4e2fa144f";
+/* ASR shares the SAME API + workspace as everything else (owner note 2026-11-19);
+   ASR_WORKSPACE_ID exists only as an escape hatch if the account ever splits. */
+const ASR_WORKSPACE = () => process.env.ASR_WORKSPACE_ID || WORKSPACE();
 const REGION = () => process.env.QWEN_REGION || "ap-southeast-1";
 const KEY = () => process.env.DASHSCOPE_API_KEY || null;
 const MODELS = { omni: "qwen3.8-omni-flash-realtime", translate: "qwen3.8-livetranslate-flash-realtime", analyze: "qwen3.8-omni-flash", audio: "qwen-audio-3.1-realtime-flash", asr: "qwen-audio-3.1-asr-flash" };
