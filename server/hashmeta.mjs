@@ -66,8 +66,8 @@ function buildStorePrompt(spec) {
   const items = Array.isArray(spec.products) ? spec.products.join("\n") : String(spec.products || "");
   return `Generate an ecommerce product catalog page for the online store "${spec.storeName || "My Store"}". ` +
     `Products:\n${items.trim()}\nTarget market: ${spec.market || "Singapore"}. Page language: ${spec.language || "English"}. ` +
-    `Requirements: single responsive mobile-first HTML page, hero with store name, product grid cards ` +
-    `with placeholder images, prices, add-to-cart / WhatsApp enquiry buttons, trust badges, footer.`;
+    `Requirements: single responsive mobile-first HTML page, hero with store name, a product grid card ` +
+    `for EVERY listed product showing its EXACT name and price, WhatsApp enquiry buttons, trust badges, footer.`;
 }
 
 /* Map our generic spec onto whatever schema the discovered tool declares. */
@@ -119,7 +119,7 @@ async function localGenerate(spec, env) {
       body: JSON.stringify({
         model: env.analyzeModel,
         enable_thinking: false,
-        max_tokens: 2600,
+        max_tokens: 3500,
         messages: [{ role: "user", content: buildStorePrompt(spec) + " Output ONLY a complete, compact single-file HTML document in one ```html fence (lean inline CSS, no comments, no JS)." }],
         modalities: ["text"], stream: true,
       }),
