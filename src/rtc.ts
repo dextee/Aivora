@@ -65,7 +65,12 @@ export function bareSession() {
     turn_detection: { type: "server_vad", threshold: 0.5, silence_duration_ms: 500 } };
 }
 
-export type RtcHandle = { stop(): void; setMuted(v: boolean): void };
+export type RtcHandle = {
+  stop(): void;
+  setMuted(v: boolean): void;
+  sendTextTurn?(text: string): boolean;
+  waitForReady?(timeoutMs?: number): Promise<boolean>;
+};
 
 /* Owner decision 2026-11-18: partner calls run qwen-audio-3.1-realtime-flash
  * (voice longanqian, server_vad 0.5/500 — owner's tested client config), NOT
@@ -77,6 +82,7 @@ export const PARTNER_MODEL = "qwen-audio-3.1-realtime-flash";
 
 export function openRealtimeRtc(
   mode: "omni" | "translate", target: string, onEvent: (e: LiveEvent) => void,
+  opts?: { mutedInput?: boolean },
 ): RtcHandle {
   let dead = false, sessionCreated = false, updateSent = false, modelReady = false, triedBare = false;
   let eventChannel: RTCDataChannel | null = null;
@@ -155,6 +161,7 @@ export function openRealtimeRtc(
   async function attachTrack() {
     if (!local) return;
     for (const t of local.getAudioTracks()) await audioSender.current?.replaceTrack(t);
+    if (opts?.mutedInput) local.getAudioTracks().forEach((t) => (t.enabled = false));
   }
 
   async function connect() {
@@ -196,6 +203,23 @@ export function openRealtimeRtc(
   connect().catch((e) => { if (!dead) { emit({ kind: "error", msg: e instanceof Error ? e.message : String(e) }); markDead(); } });
 
   return {
+    sendTextTurn(text: string): boolean {
+      if (dead || !modelReady || eventChannel?.readyState !== "open") return false;
+      eventChannel.send(JSON.stringify({ type: "conversation.item.create",
+        item: { type: "message", role: "user", content: [{ type: "input_text", text }] } }));
+      eventChannel.send(JSON.stringify({ type: "response.create" }));
+      return true;
+    },
+    waitForReady(timeoutMs = 12000): Promise<boolean> {
+      if (modelReady) return Promise.resolve(true);
+      return new Promise((res) => {
+        const t0 = Date.now();
+        const poll = window.setInterval(() => {
+          if (modelReady) { window.clearInterval(poll); res(true); }
+          else if (dead || Date.now() - t0 > timeoutMs) { window.clearInterval(poll); res(false); }
+        }, 150);
+      });
+    },
     stop() {
       if (dead) return;
       try { eventChannel?.readyState === "open" && eventChannel.send(JSON.stringify({ type: mode === "translate" ? "session.finish" : "response.cancel" })); } catch { /* noop */ }

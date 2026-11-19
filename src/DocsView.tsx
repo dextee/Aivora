@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { analyzeStream, fileToDataUrl } from "./lib";
+import { analyzeStream, blobsToWav, fileToDataUrl } from "./lib";
 
 /* AIVORA document / photo / voice-note translation via qwen3.8-omni-flash (HTTP proxy). */
 const TARGETS = [["en", "English"], ["zh-Hant", "繁體中文"], ["ms", "Bahasa Melayu"], ["th", "ไทย"], ["id", "Bahasa Indonesia"], ["ta", "தமிழ்"]] as const;
@@ -135,29 +135,4 @@ export function DocsView() {
       <p className="dnote">One request per document — this tab runs the batch model <b>qwen3.8-omni-flash</b> (understands printed text, photos and speech); the call &amp; interpreter tabs use the realtime models.</p>
     </div>
   );
-}
-
-/* webm/opus chunks → 16 kHz mono WAV data URL (the format omni-flash accepts) */
-async function blobsToWav(parts: Blob[]): Promise<Blob> {
-  const audio = new Blob(parts, { type: MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4" });
-  const arr = await audio.arrayBuffer();
-  const ctx = new OfflineAudioContext(1, 44100, 44100);
-  const buf = await ctx.decodeAudioData(arr);
-  const sr = 16000;
-  const off = new OfflineAudioContext(1, Math.ceil(buf.duration * sr), sr);
-  const rendered = await (async () => {
-    const src = off.createBufferSource();
-    src.buffer = buf; src.connect(off.destination); src.start();
-    return off.startRendering();
-  })();
-  const pcm = rendered.getChannelData(0);
-  const w16 = new Int16Array(pcm.length);
-  for (let i = 0; i < pcm.length; i++) w16[i] = Math.max(-32768, Math.min(32767, pcm[i] * 32767));
-  const header = new ArrayBuffer(44); const v = new DataView(header);
-  const ascii = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
-  ascii(0, "RIFF"); v.setUint32(4, 36 + w16.byteLength, true); ascii(8, "WAVE");
-  ascii(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
-  ascii(36, "data"); v.setUint32(40, w16.byteLength, true);
-  return new Blob([header, w16.buffer], { type: "audio/wav" });
 }
