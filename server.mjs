@@ -13,7 +13,7 @@ import { readFile, stat } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
-import { storeStart, storeJob, storeDiag } from "./server/hashmeta.mjs";
+import { storeGenerate, storeDiag } from "./server/hashmeta.mjs";
 
 const host = process.env.HOST;
 const port = Number(process.env.PORT);
@@ -106,10 +106,7 @@ const server = createServer(async (request, response) => {
       return analyze(request, response);
 
     if (url.pathname === "/api/store/generate" && request.method === "POST")
-      return storeRoute(request, response, storeStart, true);
-
-    if (url.pathname === "/api/store/job")
-      return sendResponse(response, storeJob(url.searchParams.get("id") || ""));
+      return storeRoute(request, response, storeGenerate, true);
 
     if (url.pathname === "/api/store/diag")
       return storeRoute(request, response, storeDiag, false);

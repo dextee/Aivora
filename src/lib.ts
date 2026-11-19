@@ -94,26 +94,25 @@ const authHeader = (): Record<string, string> => {
   return c?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {};
 };
 
-/** Starts the server job and polls until done — long generations can't hit the gateway timeout. */
+/** One synchronous call; server keeps its internal deadlines under the gateway limit. */
 export async function storeGenerate(spec: StoreSpec, onTick?: (seconds: number) => void): Promise<StoreResult> {
-  const res = await fetch(`/api/store/generate?_t=${Date.now()}`, {
-    method: "POST",
-    headers: { "content-type": "application/json", ...authHeader() },
-    body: JSON.stringify(spec),
-  });
-  const start = (await res.json().catch(() => ({}))) as { jobId?: string; error?: string };
-  if (!res.ok || !start.jobId) throw new Error(start.error || `HTTP ${res.status}`);
   const t0 = Date.now();
-  for (;;) {
-    await new Promise((r) => setTimeout(r, 1600));
-    onTick?.(Math.round((Date.now() - t0) / 1000));
-    const jr = await fetch(`/api/store/job?id=${encodeURIComponent(start.jobId)}&_t=${Date.now()}`, { headers: authHeader() });
-    const j = (await jr.json().catch(() => ({}))) as { state?: string } & StoreResult;
-    if (!jr.ok) throw new Error((j as { error?: string }).error || `job poll HTTP ${jr.status}`);
-    if (j.state === "done") return j;
-    if (j.state === "error") throw new Error(j.error || "generation failed");
-    if (Date.now() - t0 > 240000) throw new Error("generation timed out — try a shorter product list");
-  }
+  const tick = onTick ? window.setInterval(() => onTick(Math.round((Date.now() - t0) / 1000)), 1000) : 0;
+  try {
+    const res = await fetch(`/api/store/generate?_t=${Date.now()}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", ...authHeader() },
+      body: JSON.stringify(spec),
+      signal: AbortSignal.timeout(120000),
+    });
+    const j = (await res.json().catch(() => ({}))) as StoreResult;
+    if (!res.ok) {
+      let msg = j.error || "";
+      if (!msg) { const t = await res.text().catch(() => ""); msg = t.slice(0, 140) || `HTTP ${res.status}`; }
+      throw new Error(msg);
+    }
+    return j;
+  } finally { if (tick) window.clearInterval(tick); }
 }
 export async function storeDiag(): Promise<{ hashmeta_token: boolean; tools?: { name: string; desc: string }[] | null; error?: string }> {
   const res = await fetch(`/api/store/diag?_t=${Date.now()}`, { headers: authHeader() });

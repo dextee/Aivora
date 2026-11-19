@@ -109,7 +109,7 @@ async function callCatalog(spec, env) {
 async function localGenerate(spec, env) {
   if (!env.modelStudioKey) return null;
   const ctl = new AbortController();
-  const kill = setTimeout(() => ctl.abort(), 90_000);
+  const kill = setTimeout(() => ctl.abort(), 50_000);
   let upstream;
   try {
     upstream = await fetch(`https://${env.workspace}.${env.region}.maas.aliyuncs.com/compatible-mode/v1/chat/completions`, {
@@ -154,55 +154,30 @@ async function localGenerate(spec, env) {
 const J = (v) => ({ status: 200, type: "application/json; charset=utf-8", body: JSON.stringify(v) });
 const E = (status, msg) => ({ status, type: "application/json; charset=utf-8", body: JSON.stringify({ error: msg }) });
 
-/* Job queue: generation can exceed the public gateway's request timeout, so the
- * route returns a jobId instantly and the client polls. Entries expire after 30 min. */
-const jobs = new Map();
-let jobSeq = 0;
-function reapJobs() {
-  const cut = Date.now() - 30 * 60 * 1000;
-  for (const [id, j] of jobs) if (j.ts < cut) jobs.delete(id);
-  if (jobs.size > 24) { const first = jobs.keys().next().value; jobs.delete(first); }
+/* Synchronous generate with layered deadlines (gateway cuts requests ~100s):
+   hashmeta tool ≤35s, then local builder ≤55s; caller always gets an answer. */
+async function withTimeout(p, ms, label) {
+  let t;
+  try {
+    return await Promise.race([p, new Promise((_, rej) => { t = setTimeout(() => rej(new Error(`${label} timed out`)), ms); })]);
+  } finally { clearTimeout(t); }
 }
 
-export function storeJob(id) {
-  const j = jobs.get(id);
-  if (!j) return E(404, "job not found or expired");
-  return J({ state: j.state, mode: j.mode, tool: j.tool, result: j.result, note: j.note, error: j.error });
-}
-
-export async function storeStart(spec, env) {
+export async function storeGenerate(spec, env) {
   if (!String(spec?.products || "").trim() && !String(spec?.storeName || "").trim())
     return E(400, "storeName or products required");
-  const id = `job-${++jobSeq}-${Date.now().toString(36)}`;
-  jobs.set(id, { state: "running", ts: Date.now() });
-  reapJobs();
-  runJob(id, spec, env); // fire and forget
-  return J({ jobId: id });
-}
-
-async function runJob(id, spec, env) {
-  const job = jobs.get(id);
-  if (!job) return;
-  job.ts = Date.now();
   let err = null;
   if (env.hashmetaToken) {
     try {
-      const out = await callCatalog(spec, env);
-      Object.assign(job, { state: "done", mode: "hashmeta", tool: out.tool, result: out.result });
-      return;
+      const out = await withTimeout(callCatalog(spec, env), 35000, "hashmeta tool");
+      return J({ mode: "hashmeta", tool: out.tool, result: out.result });
     } catch (e) { err = e.message; }
   }
   try {
-    const out = await localGenerate(spec, env);
-    if (out) {
-      Object.assign(job, {
-        state: "done", mode: env.hashmetaToken ? "aivora-fallback" : "aivora-local",
-        tool: out.tool, result: out.result, note: err || undefined,
-      });
-      return;
-    }
+    const out = await withTimeout(localGenerate(spec, env), 55000, "local generation");
+    if (out) return J({ mode: env.hashmetaToken ? "aivora-fallback" : "aivora-local", tool: out.tool, result: out.result, note: err || undefined });
   } catch (e) { err = (err ? err + " | " : "") + e.message; }
-  Object.assign(job, { state: "error", error: err || "Add HASHMETA_API_TOKEN or the Model Studio key to enable store generation" });
+  return E(504, err || "Generation timed out — shorten the product list and retry");
 }
 
 export async function storeDiag(env) {
