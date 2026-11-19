@@ -3,7 +3,7 @@ import type { ConnSource } from "./lib";
 export type View = "talk" | "docs";
 
 const NAV: { id: View; icon: string; label: string; sub: string }[] = [
-  { id: "talk", icon: "🎙", label: "Talk to AIVORA", sub: "Minnan-tuned ASR ears · spoken replies" },
+  { id: "talk", icon: "🎙", label: "Talk to AIVORA", sub: "voice partner — interprets & routes itself" },
   { id: "docs", icon: "📄", label: "Document Translation", sub: "text, photos & voice notes" },
 ];
 

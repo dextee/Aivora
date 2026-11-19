@@ -184,6 +184,10 @@ async function analyze(request, response) {
     .catch(() => response.end());
 }
 
+/* DORMANT since V9 (owner retired batch ASR for the green button 2026-11-19 — Min Nan
+   unreliable; direct-listening qwen-audio-3.1-realtime-flash restored). Endpoints kept for
+   diagnostics/re-enablement; no UI calls them.
+
 /* POST /api/asr {audio: "<data: URL or https URL>"} → qwen-audio-3.1-asr-flash
    (DashScope native multimodal-generation format, HTTP sync — owner's curl shape).
    Min-Nan specialist ear for the green button. Returns upstream JSON untouched. */

@@ -65,12 +65,11 @@ export function App() {
               <p style={{ fontSize: 11, color: "var(--ink2)" }}>Objective-Driven Autonomous Intelligence</p>
             </div>
             <p style={{ fontSize: 12.5, color: "var(--ink2)", lineHeight: 1.65 }}>
-              One button, five Model Studio engines that AIVORA switches between by itself:
-              <b> qwen-audio-3.1-asr-flash</b> (the ear — Min-Nan/Hokkien specialist transcription),
-              <b> qwen-audio-3.1-realtime-flash</b> (the voice that answers you),
-              <b> qwen3.8-livetranslate-flash-realtime</b> (live interpreter, on request) and
-              <b> qwen3.8-omni-flash</b> (documents & photos). Voice is WebRTC + HTTP; your key only
-              lives on the Page server.
+              One button, three Model Studio engines that AIVORA switches between by itself:
+              <b> qwen-audio-3.1-realtime-flash</b> (hears your voice — including Min Nan — and
+              answers out loud), <b> qwen3.8-livetranslate-flash-realtime</b> (live interpreter, on
+              request) and <b> qwen3.8-omni-flash</b> (documents & photos). Voice is WebRTC; your key
+              only lives on the Page server.
             </p>
             <button className="gobtn" style={{ marginTop: 12 }} onClick={() => setAbout(false)}>Back</button>
           </div>

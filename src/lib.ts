@@ -55,49 +55,7 @@ export type LiveEvent =
   | { kind: "error"; msg: string }
   | { kind: "closed" };
 
-/* POST /api/asr → qwen-audio-3.1-asr-flash (Min-Nan specialist ear).
-   Lenient extraction across known DashScope output shapes; falls back to the
-   longest plausible text field if none match. */
-export async function asrTranscribe(audioDataUrl: string): Promise<string> {
-  const c = loadConfig();
-  const res = await fetch(`/api/asr?_t=${Date.now()}`, {
-    method: "POST",
-    headers: { "content-type": "application/json", ...(c ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}) },
-    body: JSON.stringify({ audio: audioDataUrl }),
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(/No Model Studio key/.test(t) ? "add a key under 🔐 to wake the ears" : t.slice(0, 160));
-  }
-  const j = await res.json();
-  const o = (j?.output ?? j ?? {}) as Record<string, any>;
-  const picks: unknown[] = [
-    o.text,
-    o.choices?.[0]?.message?.content,
-    o.sentence?.text,
-    Array.isArray(o.sentences) ? o.sentences.map((s: any) => s?.text ?? s?.sentence ?? "").join("") : null,
-    o.result,
-  ];
-  for (const p of picks) {
-    if (typeof p === "string" && p.trim()) return p.trim();
-    if (Array.isArray(p)) {
-      const txt = p.map((x: any) => (typeof x === "string" ? x : x?.text ?? "")).join("").trim();
-      if (txt) return txt;
-    }
-  }
-  // deep hunt: longest string value in the payload that isn't a URL/id
-  let best = "";
-  const walk = (v: unknown) => {
-    if (typeof v === "string") { if (v.length > best.length && !/^https?:|^data:|^[a-f0-9-]{20,}$/i.test(v)) best = v; return; }
-    if (Array.isArray(v)) v.forEach(walk);
-    else if (v && typeof v === "object") Object.values(v).forEach(walk);
-  };
-  walk(j);
-  if (best.trim()) return best.trim();
-  throw new Error("ASR returned no recognizable transcript");
-}
-
-/* webm/opus chunks → 16 kHz mono WAV blob (accepted by asr + omni-flash) */
+/* webm/opus chunks → 16 kHz mono WAV blob, silence-trimmed (Docs voice notes) */
 export async function blobsToWav(parts: Blob[]): Promise<Blob> {
   const audio = new Blob(parts, { type: MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4" });
   const arr = await audio.arrayBuffer();
@@ -109,7 +67,6 @@ export async function blobsToWav(parts: Blob[]): Promise<Blob> {
   src.buffer = buf; src.connect(off.destination); src.start();
   const rendered = await off.startRendering();
   const full = rendered.getChannelData(0);
-  /* silence-trim: cut lead/tail dead air (speeds up batch ASR noticeably) */
   const TH = 0.02, pad = Math.floor(sr * 0.08);
   let a = 0, b = full.length - 1;
   while (a < full.length && Math.abs(full[a]) < TH) a++;
@@ -125,28 +82,6 @@ export async function blobsToWav(parts: Blob[]): Promise<Blob> {
   v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
   ascii(36, "data"); v.setUint32(40, w16.byteLength, true);
   return new Blob([header, w16.buffer], { type: "audio/wav" });
-}
-
-export const b64bytes = (s: string) => { const bin = atob(s); const u = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
-
-/* one-shot voice reply from the server (/api/talk): text → { spoken audio,
-   transcript, optional log_call tool }. No browser WebRTC needed. */
-export type TalkResult = { text: string; audio: Uint8Array | null; tool: Record<string, unknown> | null };
-export async function talkReply(text: string): Promise<TalkResult> {
-  const c = loadConfig();
-  const res = await fetch(`/api/talk?_t=${Date.now()}`, {
-    method: "POST",
-    headers: { "content-type": "application/json", ...(c ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}) },
-    body: JSON.stringify({ text }),
-  });
-  const j = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((j as { error?: string }).error || `HTTP ${res.status}`);
-  return {
-    text: (j as { text?: string }).text ?? "",
-    audio: (j as { audio?: string }).audio ? b64bytes((j as { audio: string }).audio) : null,
-    tool: (j as { tool?: Record<string, unknown> | null }).tool ?? null,
-  };
 }
 
 /* ---------------- analyze (document translation) ---------------- */
