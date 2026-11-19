@@ -17,7 +17,7 @@ type Row =
   | { who: "pair"; src: string; out: string }
   | { who: "log"; log: Record<string, unknown> };
 
-const LNAME: Record<string, string> = { en: "English", zh: "中文", yue: "廣東話", ms: "Malay", id: "Bahasa Indonesia", th: "ไทย", ta: "தமிழ்" };
+const LNAME: Record<string, string> = { en: "English", zh: "中文", yue: "廣東話", ms: "Bahasa Melayu", id: "Bahasa Indonesia", th: "ไทย", ta: "தமிழ்" };
 
 export function TalkView({ onOpenDocs }: { onOpenDocs(): void }) {
   const [rows, setRows] = useState<Row[]>([]);
@@ -45,7 +45,8 @@ export function TalkView({ onOpenDocs }: { onOpenDocs(): void }) {
   function keywordRoute(text: string) {
     if (!toollessRef.current) return false;
     const tg = /廣東話|粤|cantonese/i.test(text) ? "yue" : /英文|english/i.test(text) ? "en"
-      : /中文|普通话|mandarin|chinese/i.test(text) ? "zh" : /malay|马来|melayu/i.test(text) ? "ms" : "en";
+      : /中文|普通话|mandarin|chinese/i.test(text) ? "zh" : /马来|melayu|malay|malaysia| malaysia/i.test(text) ? "ms"
+      : /tamil|தமிழ்|泰米尔/i.test(text) ? "ta" : "en";
     if (/interpret|interpreter|翻译|翻譯|speaks? .{0,12}(language|english|chinese)|另一.?种语言/i.test(text)) {
       setTarget(tg);
       setRows((r) => [...r, { who: "sys", text: `🎧 Interpreter engaged → ${LNAME[tg] ?? tg}. Speak; AIVORA voices the translation. Press the button to stop.` }]);
@@ -133,7 +134,7 @@ export function TalkView({ onOpenDocs }: { onOpenDocs(): void }) {
           <div className="talk-hero">
             <img src="/logo.png" alt="AIVORA" />
             <h2>Talk to AIVORA</h2>
-            <p>One press. Speak naturally — <b>廣東話 · 普通话 · English</b>.<br />
+            <p>One press. Speak naturally — <b>廣東話 · 普通话 · English · Bahasa Melayu · தமிழ்</b>.<br />
               Ask for goals, interpretation or a document — AIVORA routes itself.</p>
             <span className="tryline">try: “我想90天内业绩增长三成” · “interpret for my supplier” · “translate this contract”</span>
           </div>

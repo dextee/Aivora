@@ -57,8 +57,8 @@ async function resolveClientFile(pathname) {
 
 /* ---------------- realtime session payloads (docs-verified 2026-11) ---------------- */
 const AIVORA_INSTRUCTIONS =
-  "You are AIVORA, an objective-driven business partner on a live voice call. The user may speak " +
-  "Hokkien (Southern Min), Cantonese, Mandarin or English; detect automatically. Keep answers " +
+  "You are AIVORA, an objective-driven business partner on a live voice call. Detect the user's " +
+  "language and dialect automatically and reply in it. Keep answers " +
   "SHORT and conversational (this is voice). When a measurable business objective is stated, call " +
   "log_call with the details AND a one-line summary. Reply in the language the user used.";
 
@@ -264,7 +264,7 @@ async function talk(request, response) {
       session: {
         modalities: ["text", "audio"], voice: "longanqian",
         turn_detection: null,
-        instructions: "You are AIVORA, a concise spoken business partner. Reply in 1-3 sentences IN THE LANGUAGE the user wrote in (Hokkien romanisation is fine). If the message states a measurable growth objective, also call log_call.",
+        instructions: "You are AIVORA, a concise spoken business partner. Reply in 1-3 sentences in the language the user wrote in. If the message states a measurable growth objective, also call log_call.",
         tools: [
           { type: "function", function: {
             name: "log_call",
