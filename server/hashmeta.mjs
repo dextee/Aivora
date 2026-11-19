@@ -141,8 +141,14 @@ async function localGenerate(spec, env) {
     }
   }
   } finally { clearTimeout(kill); }
-  const html = acc.match(/```(?:html)?\s*([\s\S]*?)```/i)?.[1] || (/<!doctype|<html/i.test(acc) ? acc : null);
-  return html ? { tool: "aivora-local", result: html } : null;
+  let html = acc.match(/```(?:html)?\s*([\s\S]*?)```/i)?.[1];
+  if (!html) {
+    // truncated stream: the closing fence never arrived — salvage the document
+    html = acc.replace(/^\s*```(?:html)?\s*/i, "").replace(/\s*```\s*$/i, "");
+    if (!/<html|<!doctype/i.test(html)) return null;
+    if (!/<\/html>/i.test(html)) html += "\n</body>\n</html>";
+  }
+  return { tool: "aivora-local", result: html };
 }
 
 const J = (v) => ({ status: 200, type: "application/json; charset=utf-8", body: JSON.stringify(v) });
