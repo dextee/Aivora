@@ -93,6 +93,7 @@ test("build emits a standalone dynamic QW Page and serves healthy root", async (
     "dist",
     "package-lock.json",
     "package.json",
+    "server",
     "server.mjs",
   ]);
 
