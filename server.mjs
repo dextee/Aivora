@@ -97,7 +97,10 @@ const server = createServer(async (request, response) => {
     const url = new URL(request.url ?? "/", "http://qwenwork.local");
 
     if (url.pathname === "/api/health")
-      return send(response, 200, JSON.stringify({ status: "ok", build: BUILD }), "application/json; charset=utf-8");
+      return send(response, 200, JSON.stringify({ status: "ok" }), "application/json; charset=utf-8");
+
+    if (url.pathname === "/api/build")
+      return send(response, 200, JSON.stringify({ build: BUILD }), "application/json; charset=utf-8");
 
     if (url.pathname === "/api/keyinfo" && request.method === "GET")
       return send(response, 200, JSON.stringify({ source: KEY() ? "env" : "none" }), "application/json; charset=utf-8");

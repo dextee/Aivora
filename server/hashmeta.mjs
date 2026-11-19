@@ -64,10 +64,12 @@ async function listTools(env, force) {
 
 function buildStorePrompt(spec) {
   const items = Array.isArray(spec.products) ? spec.products.join("\n") : String(spec.products || "");
+  const n = items.split("\n").map((x) => x.trim()).filter(Boolean).length;
   return `Generate an ecommerce product catalog page for the online store "${spec.storeName || "My Store"}". ` +
     `Products:\n${items.trim()}\nTarget market: ${spec.market || "Singapore"}. Page language: ${spec.language || "English"}. ` +
-    `Requirements: single responsive mobile-first HTML page, hero with store name, a product grid card ` +
-    `for EVERY listed product showing its EXACT name and price, WhatsApp enquiry buttons, trust badges, footer.`;
+    `Requirements: single responsive mobile-first HTML page, hero with store name, EXACTLY ${n} product ` +
+    `grid cards - one per product line above with its EXACT name and price, a WhatsApp enquiry button on ` +
+    `every card, trust badges, footer. Do not skip or merge any product.`;
 }
 
 /* Map our generic spec onto whatever schema the discovered tool declares. */
