@@ -201,12 +201,17 @@ test("WO-10R still rejects unmeasurable statements (restore parsing ≠ relax ga
   assert.match(String(body.error), /not measurable/);
 });
 
-/* ============ UI-01 — voice-first USER view: chip expansion + objective plan card ============
- * jsdom-level proof: transpile src/IntentChips.tsx and render it with react-dom/server,
- * feeding a MOCKED GET /api/odai/intents response (the engine registry shape). Assert the
- * exactly-10 chips render (label + utterance each) and the plan card renders criterion +
- * 11-task plan + awaiting-owner gates from a mocked objective view. Also assert ZERO pre-
- * WO-10 wall prose is hardcoded in the client (labels/utterances flow from the engine only). */
+/* ============ UI-01 — voice-first USER view: objective plan card ============
+ * ============ UI-01B — owner P3 amendment (2026-11-21): the chip EXPANSION is
+ * GONE from the default render; chips + registry prose render ONLY behind the
+ * client-side demo role gate (src/RoleGate.tsx) on the ADMIN surface.
+ * jsdom-level proof: transpile src modules, render the role-gated AdminPanel
+ * with react-dom/server under both roles and feed MOCKED engine payloads
+ * (the registry shapes). Assert (a) the default USER tree carries ZERO chip
+ * labels/utterances and zero registry prose, (b) the ADMIN tree carries
+ * exactly the ten chips + the registry summary, (c) classifyRole fails closed
+ * to USER. Plan-card and hint tests below stay exactly as shipped (the plan
+ * card is now reachable purely via the typed/spoken path). */
 const req = createRequire(import.meta.url);
 const ts = req("typescript");
 const React = req("react");
@@ -223,25 +228,118 @@ async function loadIntentChips() {
 }
 const pathJoinUrl = (p) => new URL("file://" + p).href;
 
+/* transpile RoleGate.tsx + its only internal import (./IntentChips) into a
+ * paired temp module so the role surface can be rendered standalone. */
+async function loadRoleGate() {
+  const opts = { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } };
+  const chipsOut = ts.transpileModule(readFileSync(new URL("../src/IntentChips.tsx", import.meta.url), "utf8"), opts).outputText;
+  const rgOut = ts.transpileModule(readFileSync(new URL("../src/RoleGate.tsx", import.meta.url), "utf8"), opts).outputText
+    .replace(/from ['"]\.\/IntentChips['"]/g, 'from "./.ui01b-chips.generated.mjs"');
+  const chipsTmp = fileURLToPath(new URL("../tests/.ui01b-chips.generated.mjs", import.meta.url));
+  const rgTmp = fileURLToPath(new URL("../tests/.ui01b-rolagate.generated.mjs", import.meta.url));
+  writeFileSync(chipsTmp, chipsOut);
+  writeFileSync(rgTmp, rgOut);
+  try { return await import(pathJoinUrl(rgTmp)); } finally { try { unlinkSync(rgTmp); unlinkSync(chipsTmp); } catch { /* temp */ } }
+}
+
 function mockedIntentsResponse() {
   const reg = JSON.parse(readFileSync(new URL("../odai/config/intents_registry.json", import.meta.url), "utf8"));
   // mimic the server: strip keywords, serve public fields for all ten intents
   return { tenant_id: "t-ui01", intents: reg.intents.map(({ keywords, ...p }) => p) };
 }
+function mockedRegistrySummary() {
+  // shape mirrors WO-A1 GET /api/odai/registry (counts + version + non-rendered extras)
+  return {
+    tenant_id: "t-ui01b", registry_version: "1.0.0",
+    intake_sha256: "73e172ce", connector_classification_totals: { MOCK: 2, PROVIDER_SANDBOX: 18, BLOCKED: 8 },
+    counts: { agents: 22, specialists: 54, skills: 59, objectives: 100, tasks: 224, task_edges: 124, connectors: 28, policies: 16 },
+  };
+}
 
-test("UI-01: exactly 10 intent chips render from a mocked /intents response (label + utterance each)", async () => {
-  const mod = await loadIntentChips();
-  const items = mod.parseIntentsResponse(mockedIntentsResponse());
-  assert.equal(items.length, 10, "registry must expose exactly ten intents to the client");
-  assert.equal("keywords" in items[0], false, "internal fields stripped before render");
-  const html = renderToStaticMarkup(React.createElement(mod.IntentChips, { items, onPick: () => {} }));
-  const chipCount = (html.match(/class="intent-chip"/g) || []).length;
-  assert.equal(chipCount, 10, `expected 10 chips, rendered ${chipCount}`);
+test("UI-01B: classifyRole fails closed to USER; ?role=admin or persisted ADMIN ⇒ ADMIN", async () => {
+  const mod = await loadRoleGate();
+  assert.equal(mod.classifyRole("", null), "USER", "default role is USER");
+  assert.equal(mod.classifyRole("?role=user", null), "USER");
+  assert.equal(mod.classifyRole("?role=administrator", null), "USER", "only the exact admin flag escalates the surface");
+  assert.equal(mod.classifyRole("", "bogus"), "USER");
+  assert.equal(mod.classifyRole("", "admin"), "USER", "stored value must be the canonical ADMIN marker");
+  assert.equal(mod.classifyRole("?role=admin", null), "ADMIN");
+  assert.equal(mod.classifyRole("?role=ADMIN", null), "ADMIN", "flag value is case-insensitive");
+  assert.equal(mod.classifyRole("?x=1&role=admin&y=2", null), "ADMIN", "flag works among other params");
+  assert.equal(mod.classifyRole("", "ADMIN"), "ADMIN", "localStorage persists ADMIN for the demo");
+  assert.equal(mod.classifyRole("?role=nonsense", "ADMIN"), "ADMIN", "junk query never downgrades a persisted ADMIN");
+  assert.equal(mod.ADMIN_ROLE_KEY, "aivora_demo_role");
+});
+
+test("UI-01B: the DEFAULT USER tree renders ZERO chip labels — the expansion is gone (exactly 10 chips only under ADMIN)", async () => {
+  const rg = await loadRoleGate();
+  const parser = (await loadIntentChips()).parseIntentsResponse; // the parse contract stays in IntentChips.tsx (UI-01 shipped module)
+  const chipItems = parser(mockedIntentsResponse());
+  assert.equal(chipItems.length, 10, "registry must expose exactly ten intents to the client");
+  assert.equal("keywords" in chipItems[0], false, "internal fields stripped before render");
   const reg = JSON.parse(readFileSync(new URL("../odai/config/intents_registry.json", import.meta.url), "utf8"));
+  // USER: the role-gated surface provably renders NOTHING — no chips, no prose, no registry
+  const userHtml = renderToStaticMarkup(React.createElement(rg.AdminPanel, { role: "USER", intents: chipItems, registry: rg.parseRegistrySummary(mockedRegistrySummary()), onPick: () => {} }));
+  assert.equal(userHtml, "", "default USER surface must render nothing at all");
   for (const it of reg.intents) {
-    assert.ok(html.includes(it.label), `chip label missing: ${it.label}`);
-    assert.ok(html.includes(`<span>${it.utterance}</span>`), `chip utterance missing: ${it.utterance}`);
+    assert.equal(userHtml.includes(it.label), false, `chip label leaked into USER tree: ${it.label}`);
+    assert.equal(userHtml.includes(it.utterance), false, `chip utterance leaked into USER tree: ${it.utterance}`);
   }
+  assert.equal(userHtml.includes("intent-chip"), false);
+  assert.equal(userHtml.includes("AIVORA · Admin"), false);
+  // ADMIN: exactly ten chips (label + utterance each) + registry summary prose
+  const adminHtml = renderToStaticMarkup(React.createElement(rg.AdminPanel, { role: "ADMIN", intents: chipItems, registry: rg.parseRegistrySummary(mockedRegistrySummary()), onPick: () => {} }));
+  const chipCount = (adminHtml.match(/class="intent-chip"/g) || []).length;
+  assert.equal(chipCount, 10, `expected 10 chips under ADMIN, rendered ${chipCount}`);
+  for (const it of reg.intents) {
+    assert.ok(adminHtml.includes(it.label), `chip label missing under ADMIN: ${it.label}`);
+    assert.ok(adminHtml.includes(`<span>${it.utterance}</span>`), `chip utterance missing under ADMIN: ${it.utterance}`);
+  }
+  assert.equal(OWNER_LABELS.length, 10); // the registry the ADMIN panel mirrors is the same ten
+});
+
+test("UI-01B: registry summary parse fails closed; ADMIN panel shows counts, USER tree never does", async () => {
+  const rg = await loadRoleGate();
+  assert.equal(rg.parseRegistrySummary(null), null);
+  assert.equal(rg.parseRegistrySummary({}), null, "no counts ⇒ nothing renders");
+  assert.equal(rg.parseRegistrySummary({ counts: { agents: "22" } }), null, "non-numeric values never render");
+  const good = rg.parseRegistrySummary(mockedRegistrySummary());
+  assert.ok(good && good.counts.length === 8 && good.version === "1.0.0");
+  const items = (await loadIntentChips()).parseIntentsResponse(mockedIntentsResponse());
+  const userHtml = renderToStaticMarkup(React.createElement(rg.AdminPanel, { role: "USER", intents: items, registry: good, onPick: () => {} }));
+  for (const needle of ["agents", "objectives", "task edges", "Registry summary", "registry v1.0.0"]) {
+    assert.equal(userHtml.includes(needle), false, `registry prose leaked into USER tree: ${needle}`);
+  }
+  const adminHtml = renderToStaticMarkup(React.createElement(rg.AdminPanel, { role: "ADMIN", intents: items, registry: good, onPick: () => {} }));
+  for (const needle of ["Registry summary", "registry v1.0.0", "<b>100</b>", "<b>22</b>"]) {
+    assert.ok(adminHtml.includes(needle), `registry summary missing under ADMIN: ${needle}`);
+  }
+});
+
+test("UI-01B: the REAL GET /api/odai/registry response parses through the shipped client parser", async () => {
+  const rg = await loadRoleGate();
+  const body = await getj("/api/odai/registry");
+  const view = rg.parseRegistrySummary(body);
+  assert.ok(view, "live registry response must parse (counts object of numbers)");
+  assert.ok(view.counts.length >= 8, "WO-A1 registry serves at least the 8 documented counts");
+  assert.equal(typeof view.version, "string");
+});
+
+test("UI-01B: src audit — the expansion affordance is GONE from the default render and the chip bubble is role-gated", () => {
+  const tv = readFileSync(new URL("../src/TalkView.tsx", import.meta.url), "utf8");
+  assert.equal(tv.includes("intentask"), false, "chip-expansion affordance still referenced in TalkView");
+  assert.equal(tv.includes("askzone"), false, "chip-expansion askzone still referenced in TalkView");
+  assert.equal(tv.includes("chipsOpen"), false, "UI-01 expand-state residue still lives in TalkView");
+  // the only call site of the chip bubble must sit behind the ADMIN role test
+  assert.equal((tv.match(/void askIntentsList\(\);/g) || []).length, 1, "exactly one chip-bubble call site");
+  assert.ok(tv.includes('if (role === "ADMIN" && /what can you run'), "the intent-question intercept must be ADMIN-gated");
+  assert.ok(tv.includes("<AdminPanel "), "TalkView composes the role-gated AdminPanel");
+  assert.equal((tv.match(/<AdminPanel /g) || []).length, 1, "the idle tree composes AdminPanel exactly once (rows carry chat bubbles only for ADMIN)");
+  assert.equal(tv.includes("<IntentChips items={intents}"), false, "the idle tree must not wire chips outside AdminPanel");
+  const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  assert.equal(css.includes(".intentask"), false, "dead affordance CSS still shipped");
+  assert.equal(css.includes(".askzone"), false, "dead askzone CSS still shipped");
+  assert.ok(css.includes(".admin-panel"), "admin surface styles ship");
 });
 
 test("UI-01: plan card renders criterion + full 11-task plan + awaiting-owner gates", async () => {

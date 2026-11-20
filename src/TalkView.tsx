@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { openRealtimeRtc, type RtcHandle } from "./rtc";
 import { loadConfig, type LiveEvent } from "./lib";
 import { IntentChips, ObjectivePlanCard, objectiveCreateOutcome, parseIntentsResponse, type IntentItem, type ObjView } from "./IntentChips";
+import { AdminPanel, parseRegistrySummary, sessionRole, type RegistrySummaryView, type Role } from "./RoleGate";
 
 /* Talk to AIVORA — one big green button, continuous WebRTC session.
  * The partner engine IS qwen-audio-3.1-realtime-flash (rtc.ts PARTNER_MODEL):
@@ -23,16 +24,18 @@ type Row =
 
 /* WO-10 — the ten business intents live in the ENGINE (odai/config/intents_registry.json),
  * served by GET /api/odai/intents and scored by POST /api/odai/intents/match.
- * UI-01 (owner-approved tranche) — "What can you run for me?" now EXPANDS into
- * exactly ten intent chips fetched from /intents at runtime (presentational
- * module: src/IntentChips.tsx; zero intent prose in the client). A chip click
- * types its utterance into the composer and submits it. A matched objective
- * intent is created on the typed path via POST /api/odai/objectives with a
- * fresh ?_t nonce (the api() helper stamps it): the engine's criterion, task
- * plan and gates render as a card, frozen in its awaiting-owner state until
- * the owner approves in MGMT; an unmeasurable statement surfaces the engine's
- * own restate hint VERBATIM. dashboard/shield engines and the on-demand
- * Today's Business row work exactly as before. */
+ * UI-01 (2026-11-20) shipped a chip EXPANSION on the USER idle screen; the
+ * UI-01B amendment (owner directive P3, 2026-11-21) REMOVED that expansion from
+ * the default render: the voice-first big mic is the sole primary action, the
+ * typing composer is retained (optional, understated), and NO intent chip or
+ * registry prose renders for the default USER role. Chips + the GET
+ * /api/odai/registry summary render ONLY inside AdminPanel (src/RoleGate.tsx)
+ * when the client-side demo role is ADMIN (?role=admin, persisted). A matched
+ * objective intent on the typed/heard path still renders the awaiting-owner
+ * plan card (that flow is unchanged — the plan card is now reachable purely
+ * via typed/spoken utterances, never via a chip wall); an unmeasurable
+ * statement still surfaces the engine's own restate hint VERBATIM. dashboard/
+ * shield engines and the on-demand Today's Business row work exactly as before. */
 
 const LNAME: Record<string, string> = { en: "English", zh: "中文", yue: "廣東話", ms: "Bahasa Melayu", id: "Bahasa Indonesia", th: "ไทย", ta: "தமிழ்" };
 
@@ -57,11 +60,15 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
   const q4busy = useRef(false);
   const q4hist = useRef<{ role: string; content: string }[]>([]); // rolling context, last 12 exchanges
 
-  /* UI-01 — "What can you run for me?" expands into the engine's intent chips
-   * (fetched once at runtime from GET /intents; zero client-side prose). */
+  /* UI-01B — the client-side demo role decides which surfaces exist at all.
+   * Intent chips + the registry summary are fetched ONLY when role is ADMIN
+   * and rendered ONLY inside AdminPanel (src/RoleGate.tsx); the default USER
+   * tree never renders or fetches them (zero intent prose client-side stays
+   * true — the data still comes from the engine at runtime). */
+  const [role] = useState<Role>(() => sessionRole());
   const [intents, setIntents] = useState<IntentItem[] | null>(null);
-  const [chipsOpen, setChipsOpen] = useState(false);
   const [chipsErr, setChipsErr] = useState<string | null>(null);
+  const [registry, setRegistry] = useState<RegistrySummaryView | null>(null);
 
   useEffect(() => { feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight }); }, [rows, state]);
   useEffect(() => {
@@ -94,8 +101,9 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     });
   }
 
-  /* UI-01 — one runtime fetch (cached in state): GET /intents returns the
-   * engine's current intent list; the client renders it, never rewrites it. */
+  /* UI-01B — one runtime fetch (cached in state), used ONLY by the Admin role
+   * surface: GET /intents returns the engine's current intent list; the client
+   * renders it, never rewrites it. */
   async function ensureIntents(): Promise<IntentItem[] | null> {
     if (intents) return intents;
     try {
@@ -111,14 +119,26 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     }
   }
 
-  /* idle affordance: the question expands in place into the ten chips */
-  function toggleChips() {
-    if (!chipsOpen) void ensureIntents();
-    setChipsOpen((o) => !o);
+  /* AdminPanel's registry summary data: GET /api/odai/registry (counts +
+   * version, defensive parse). The USER role never calls this route. */
+  async function ensureRegistry(): Promise<void> {
+    try {
+      const res = await api("/api/odai/registry");
+      if (!res.ok) return;
+      const parsed = parseRegistrySummary(await res.json());
+      if (parsed) setRegistry(parsed);
+    } catch { /* admin demo surface — stays honest by absence */ }
   }
 
-  /* asked mid-conversation (typed or heard): the answer bubble carries the
-   * same clickable chips */
+  /* ADMIN only: prefetch both data surfaces the panel renders. */
+  useEffect(() => {
+    if (role !== "ADMIN") return;
+    void ensureIntents();
+    void ensureRegistry();
+  }, [role]);
+
+  /* asked mid-conversation while ADMIN: the answer bubble carries the same
+   * clickable chips (USER never has this intercept — see askQ4) */
   async function askIntentsList() {
     const items = await ensureIntents();
     setRows((r) => [...r, items
@@ -126,7 +146,8 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
       : { who: "err", text: "Intent list unavailable — the engine did not answer" }]);
   }
 
-  /* chip click = type the utterance into the composer and submit it */
+  /* chip click (reachable only in the ADMIN surface) = type the utterance
+   * into the composer and submit it — same submit routine as everything else */
   function chipPick(it: IntentItem) {
     setQ4text(it.utterance);
     void askQ4(it.utterance);
@@ -285,11 +306,15 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     const text = String(forced ?? q4text).trim();
     if (!text || q4busy.current) return;
     setQ4text("");
-    /* the intent question, typed: answer with the chip bubble (UI-01). Any
-     * other business intent is scored by the engine below — objective intents
-     * render the awaiting-owner plan card (UI-01); nothing is ever approved
-     * client-side (WO-09 owner gate). */
-    if (/what can you run|what can.{0,12}for me/i.test(text)) {
+    /* UI-01B: the chip bubble is the ADMIN role surface's answer only. For
+     * the default USER role the same question falls through to the engine
+     * match below (registry scoring — e.g. "what can you run for me" scores
+     * under MIN_SCORE and is no match) and is answered by Qwen4-Max in prose,
+     * never as chips. Objective/dashboard/shield intents matched from typed or
+     * heard utterances still take their engine path: the awaiting-owner plan
+     * card is now reachable purely via the typed/spoken path; nothing is ever
+     * approved client-side (WO-09 owner gate). */
+    if (role === "ADMIN" && /what can you run|what can.{0,12}for me/i.test(text)) {
       setRows((r) => [...r, { who: "me", text }]);
       void askIntentsList();
       return;
@@ -359,16 +384,10 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
             <div className="hello"><h2>Hello, Boss! 👋</h2>
                 <p>Just tell me what you want done — say it out loud, in any language.
                   {odaiU?.company ? <span className="brandchip">{odaiU.company.name}{odaiU.company.synthetic ? " · demo brand" : ""}</span> : null}</p></div>
-            <div className="askzone">
-              <button className="intentask" onClick={toggleChips} aria-expanded={chipsOpen}>
-                What can you run for me? <i>{chipsOpen ? "▴" : "▾"}</i>
-              </button>
-              {chipsOpen && (intents
-                ? <IntentChips items={intents} onPick={chipPick} />
-                : chipsErr
-                  ? <p className="chips-note">Intent list unavailable — {chipsErr} · press the question again to retry</p>
-                  : <p className="chips-note">Asking the engine…</p>)}
-            </div>
+            {/* UI-01B: no chip expansion in the default render. AdminPanel
+                returns null for the USER role — chips + registry summary
+                exist ONLY on the ADMIN role surface (src/RoleGate.tsx). */}
+            <AdminPanel role={role} intents={intents} registry={registry} err={chipsErr} onPick={chipPick} />
           </>
         )}
         {rows.map((r, i) => (
