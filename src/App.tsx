@@ -4,6 +4,8 @@ import { SettingsSheet } from "./SettingsSheet";
 import { TalkView } from "./TalkView";
 import { DocsView } from "./DocsView";
 import { StoreView } from "./StoreView";
+import { ManagementView } from "./ManagementView";
+import { SecurityView } from "./SecurityView";
 import type { StoreSpec } from "./lib";
 import { probeKey, type ConnSource } from "./lib";
 
@@ -15,6 +17,8 @@ const TITLES: Record<View, { t: string; s: string }> = {
 
 export function App() {
   const [view, setView] = useState<View>("talk");
+  const [mode, setMode] = useState<"user" | "management" | "security">("user");
+  const [modeErr, setModeErr] = useState<string | null>(null);
   const [storeSeed, setStoreSeed] = useState<Partial<StoreSpec> | null>(null);
   const [menu, setMenu] = useState(false);
   const [settings, setSettings] = useState(false);
@@ -22,6 +26,15 @@ export function App() {
   const [conn, setConn] = useState<ConnSource>("checking");
 
   const refreshConn = () => { void probeKey().then(setConn); };
+  async function switchMode(m: "user" | "management" | "security") {
+    if (m === mode) { setView("talk"); return; }
+    try {
+      const r = await fetch(`/api/odai/view?mode=${m}&_t=${Date.now()}`);
+      if (!r.ok) { const j = await r.json().catch(() => ({})); setModeErr(j.error || "mode denied by server"); return; }
+      setModeErr(null); setMode(m); if (m === "user") setView("talk");
+    } catch { setModeErr("cannot reach authorization endpoint"); }
+  }
+  const goFeature = (v: View) => { setMode("user"); setView(v); };
   useEffect(() => { void probeKey().then(setConn); }, []);
   useEffect(() => { setMenu(false); }, [view]);
 
@@ -30,7 +43,7 @@ export function App() {
     : conn === "none" ? "add a key to go live" : "connecting…";
 
   return (
-    <div className="app">
+    <div className={`app${mode === "user" && view === "talk" ? " usermode" : ""}${mode === "management" ? " darkchrome" : ""}${mode === "security" ? " darkchrome-s" : ""}`}>
       <header className="topbar">
         <button className="tb-btn burger" onClick={() => setMenu((m) => !m)} aria-label="Menu">
           <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" /></svg>
@@ -40,21 +53,27 @@ export function App() {
           ? <img className="logo" src="/logo.png" alt="AIVORA" />
           : <button className="tb-btn" onClick={() => setView("talk")} aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>}
         <span className="who">
-          <b>{TITLES[view].t}</b>
-          <small><span className={`st-dot ${conn === "env" || conn === "browser" ? "ok" : conn === "checking" ? "warn" : "off"}`} />{TITLES[view].s} · {connLine}</small>
+          <b>{mode === "user" ? TITLES[view].t : mode === "management" ? "AI Brain · Orchestration" : "AIVORA SHIELD"}</b>
+          <small><span className={`st-dot ${conn === "env" || conn === "browser" ? "ok" : conn === "checking" ? "warn" : "off"}`} />{mode === "user" ? `${TITLES[view].s} · ${connLine}` : modeErr ? modeErr : `${mode} mode · server-authorized`}</small>
         </span>
-        <button className="tb-btn" onClick={() => setSettings(true)} aria-label="API connection" title="API connection">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="12" r="4" stroke="currentColor" strokeWidth="1.9" /><path d="M11.5 12H21M17 12v3.5M20 12v2.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" /></svg>
-        </button>
+        <nav className="modeseg" aria-label="Mode">
+          <button className={mode === "user" ? "on" : ""} onClick={() => switchMode("user")}>USER</button>
+          <button className={mode === "management" ? "on p" : ""} onClick={() => switchMode("management")}>MGMT</button>
+          <button className={mode === "security" ? "on s" : ""} onClick={() => switchMode("security")}>SHIELD</button>
+        </nav>
       </header>
 
+      {mode === "user" && <>
       {view === "talk" && <TalkView onOpenDocs={() => setView("docs")} onOpenStore={(sd) => { setStoreSeed(sd); setView("store"); }} />}
       {view === "docs" && <DocsView />}
       {view === "store" && <StoreView seed={storeSeed} onBack={() => setView("talk")} />}
+      </>}
+      {mode === "management" && <ManagementView />}
+      {mode === "security" && <SecurityView />}
 
       <Menu open={menu} view={view} conn={conn}
         onClose={() => setMenu(false)}
-        onGo={setView}
+        onGo={goFeature}
         onSettings={() => { setMenu(false); setSettings(true); }}
         onAbout={() => { setMenu(false); setAbout(true); }} />
 

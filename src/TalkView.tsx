@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { openRealtimeRtc, type RtcHandle } from "./rtc";
-import type { LiveEvent } from "./lib";
+import { loadConfig, type LiveEvent } from "./lib";
 
 /* Talk to AIVORA — one big green button, continuous WebRTC session.
  * The partner engine IS qwen-audio-3.1-realtime-flash (rtc.ts PARTNER_MODEL):
@@ -19,6 +19,8 @@ type Row =
 
 const LNAME: Record<string, string> = { en: "English", zh: "中文", yue: "廣東話", ms: "Bahasa Melayu", id: "Bahasa Indonesia", th: "ไทย", ta: "தமிழ்" };
 
+const EXAMPLES = ["Find new customers", "Increase sales", "Prepare a report", "Follow up customers", "Create product materials", "Check today's results"];
+
 export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOpenStore(seed: { storeName?: string; products?: string; market?: string; language?: string }): void }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"idle" | "connecting" | "partner" | "interpreter">("idle");
@@ -27,10 +29,34 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
   const engRef = useRef<RtcHandle | null>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const outBuf = useRef("");
+  const pendingUtterance = useRef<string | null>(null);
+  const [odaiU, setOdaiU] = useState<{ objective: string | null; tasks_done?: string; whats_done: string[]; awaiting: string | null } | null>(null);
   const pairOpen = useRef(false);
   const toollessRef = useRef(false);
 
   useEffect(() => { feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight }); }, [rows, state]);
+  useEffect(() => {
+    let dead = false;
+    const pull = async () => {
+      try {
+        const c = loadConfig();
+        const r = await fetch(`/api/odai/view?mode=user&_t=${Date.now()}`, { headers: c?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {} });
+        if (r.ok && !dead) { const j = await r.json(); setOdaiU({ objective: j.objective, ...(j["today's_business"] || {}), whats_done: j.whats_done || [], awaiting: j.awaiting }); }
+      } catch { /* offline demo */ }
+    };
+    void pull();
+    const id = setInterval(pull, 6000);
+    return () => { dead = true; clearInterval(id); };
+  }, []);
+
+  function sayExample(text: string) {
+    if (state === "connecting" || state === "interpreter") return;
+    setRows((r) => [...r, { who: "me", text }]);
+    const eng = engRef.current;
+    if (eng?.sendTextTurn?.(text)) return;
+    pendingUtterance.current = text;
+    void connect("omni");
+  }
   useEffect(() => () => { try { engRef.current?.stop(); } catch { /* unmount */ } }, []);
   useEffect(() => {
     if (state !== "partner" && state !== "interpreter") return;
@@ -75,7 +101,16 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     setState("connecting"); setSecs(0);
     const eng = openRealtimeRtc(mode, target, (e: LiveEvent) => {
       switch (e.kind) {
-        case "ready": setState(mode === "translate" ? "interpreter" : "partner"); break;
+        case "ready": {
+          setState(mode === "translate" ? "interpreter" : "partner");
+          const p = pendingUtterance.current;
+          if (p && mode !== "translate") {
+            pendingUtterance.current = null;
+            if (!engRef.current?.sendTextTurn?.(p))
+              setRows((r) => [...r, { who: "err", text: "session opened but the example could not be delivered — try the mic" }]);
+          }
+          break;
+        }
         case "user":
           if (mode === "translate") { outBuf.current = ""; pairOpen.current = true; setRows((r) => [...r, { who: "pair", src: e.text, out: "" }]); }
           else { setRows((r) => [...r, { who: "me", text: e.text }]); void keywordRoute(e.text); }
