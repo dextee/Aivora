@@ -109,6 +109,21 @@ Pack extracted (work/pack9); contracts/config/FNY catalog vendored into repo `od
   repaired (indent-space mangling, one route-segment destructuring fix, quantity regex widened so
   "100 Good Doctor wellness products" parses — verified by the shipped suite).
 
+## V33 — objectives route wire-up verified (2026-11-20)
+
+- Wiring is LIVE in `server.mjs`: the objectives import (line 21) plus the four routes (create / approve /
+  resume / report + GET resume) are present and idempotent — `patchV33.py` reported `IMPORT PRESENT`,
+  `ROUTES PRESENT`; `package.json` `test` script already runs `tests/objectives.test.mjs`. No anchor drift.
+- `server/odai/objectives.mjs` re-supplied from the V33 package, then the same packaging damage was repaired
+  (4 lines only, behaviour identical to the proven V32 module): `view` re-exported (server imports it),
+  `classify()` maps `x.id` (tasks have no `task_id`), quantity regex widened again, and beat-receipt decision
+  defaulted `(r.decision || "ALLOW")` because `workflow.receipt()` stores the default only on DB rows.
+  Still a projection-driven scheduler over `workflow.mjs` — no second engine, no gate bypass.
+- DB: migration 002 re-posted to the control API `database/migrate` (idempotent, `code: ok`); schema readback
+  `code: ok`); schema readback confirms `odai_objective` + `odai_gate_decision` columns/PKs match the DDL.
+  App still mirrors objective rows only best-effort — row writes remain the documented open slot.
+- Verified: `npm test` 22/22 green (runtime + odai + q4 + objectives). Demo: `docs/objective-engine-demo-v33.txt`.
+
 ## V34 — USER-mode business-intent chips (2026-11-20)
 - TalkView idle hero: EXAMPLES replaced by `BIZ_INTENTS` — ten [label, utterance] pairs (Start My Business → Protect My Business); tap sends the UTTERANCE via sayExample. Rendered as a compact 2-column grid, bold label + em dash + phrase (V34 block appended to `src/styles.css`, usermode + plain fallbacks).
 - sayExample intercepts: dashboard test extended with track|spending|profit (Manage My Money → Today's Business bubble); new pre-check `protect.*(safe)|keep my (money|business).*safe` → SHIELD sys row (widened `.*` so the chip phrase "keep my money and business safe" actually triggers).
