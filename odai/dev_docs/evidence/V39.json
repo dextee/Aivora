@@ -1,0 +1,37 @@
+{
+  "at": "2026-11-20T10:05:24.764Z",
+  "commit_oid_head": "060d225bd6bb8963d93247ce66a98006db4005de",
+  "dist": [
+    {
+      "name": "dist/assets/index-Bspt2kgG.css",
+      "sha256": "d97c8911e5bf5f68928968933c76ba5083040fa8dea52e783b661fea918ddd70"
+    },
+    {
+      "name": "dist/assets/index-DOLMeFjt.js",
+      "sha256": "50a16b5acd6c0ba13771341ff4078a16f6a596b7fdb6feb076088b31940278e9"
+    },
+    {
+      "name": "dist/favicon.png",
+      "sha256": "ec0b3947ebe29ec16c92fab406d9881afc668b9090f6fcb84c6925d2d631db3b"
+    },
+    {
+      "name": "dist/index.html",
+      "sha256": "181b9407d63c6baa9ea6371cd8e0707683dd45455f4a28d62b4a6220279bf044"
+    },
+    {
+      "name": "dist/logo.png",
+      "sha256": "975bfbe539a2c455ca1ed2a1b8bcad111b59ce566f8b323c87505244b85ed3ec"
+    }
+  ],
+  "npm_test": {
+    "exit": 0,
+    "tests": 24,
+    "pass": 24,
+    "fail": 0,
+    "skipped": 0,
+    "duration_ms": 16496.867922,
+    "tap_tail": "# Subtest: parseDelta returns empty string for malformed or non-native input\n# Subtest: POST /api/q4/chat with no key available → 503 JSON error mentioning the key\n# Subtest: GET /api/health stays credential-free 200 ok\n# Subtest: build emits a standalone dynamic QW Page and serves healthy root\n# tests 24\n# suites 3\n# pass 24\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 16496.867922"
+  },
+  "page_version": "V39",
+  "notes": "WO-02 technical preflight on dispatch; staged deployment 305e4d13-e5a2-491c-a9df-0cc491e22b7b; /api/health and /api/odai/modes verified 200 post-deploy"
+}
