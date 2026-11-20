@@ -15,3 +15,6 @@
 2026-11-20T14:35:37Z|REVOKE|WO-UI01|reason=ops misissue: initial issue omitted --ops commit; watchdog DENY committed as designed (fail-closed observed); reissuing correctly for remaining protected actions
 2026-11-20T14:35:38Z|ISSUE|WO-UI01|ops=check,commit|paths=src,tests|minutes=60|budget=12|single_use=0|expires_at=2026-11-20T15:35:38Z
 2026-11-20T14:35:58Z|REVOKE|WO-UI01|reason=UI-01 SHIPPED (staged, NO publish; files: src/TalkView.tsx expandable chips + typed-objective path, src/IntentChips.tsx NEW chip/plan-card module, src/styles.css UI-01 light block + intentlist removed
+2026-11-20T14:37:22Z|ISSUE|WO-A1|ops=check,commit|paths=server,odai/config,tests,tools|minutes=120|budget=24|single_use=0|expires_at=2026-11-20T16:37:22Z
+2026-11-20T15:13:27Z|ISSUE|WO-A2|ops=check,commit|paths=tests|minutes=60|budget=12|single_use=0|expires_at=2026-11-20T16:13:27Z
+2026-11-20T15:14:11Z|REVOKE|WO-A1|reason=WO-A1 SHIPPED (staged, NO publish; files: tools/build_registry.py, odai/config 7 registry files, server/odai/{registry,skills,ledger}.mjs, objectives.mjs router+states, server.mjs GET /api/odai/regist
