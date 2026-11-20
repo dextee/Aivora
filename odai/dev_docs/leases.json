@@ -20,6 +20,8 @@
       "check": 1,
       "commit": 1
     },
-    "revoked": false
+    "revoked": true,
+    "revoked_reason": "WO-09A SHIPPED (staged, no publish)",
+    "revoked_at": "2026-11-20T12:26:36Z"
   }
 }
