@@ -126,4 +126,57 @@ Scope: NO PUBLISH, no production touch. Single evidence file appended (this bloc
   Zero button wall: USER idle shows exactly one subtle text affordance; intent list arrives from the engine at ask-time, never bundled. No objective created or executed autonomously: client never sends autocreate; server-side autocreate still stops at the owner spend gate and the 9.0 connector NEVER (external writes remain disabled).
   Secrets: none read, printed, committed, or bundled by this run. No scheduled task or automation was created, updated, or triggered. NO PUBLISH invoked; online version stays V39.
   Commit: 'WO-10: intents to engine, minimal USER' (oid = this change set's commit on main; reproducible via git log --grep).
-================================================================
+ ================================================================
+ ================================================================
+ 2026-11-20T11:57Z — WO-10 RE-VERIFICATION (IDEMPOTENT RE-RUN OF THE SAME EXECUTION)
+ ================================================================
+ Work order: WO-10 (second triggering of the same scheduled execution — no new scope, no new feature)
+ Page: app-1fe44043-4ed153f9 (aivora-odai-realtime, dynamic, clupxd6g.qwenwork.page, online V39)
+ Repo: /mnt/pages/page-repo-1255a831-bc45-4ee3-a572-8ff3e587ad2a
+ Access: page_repo resolve(managed/update) -> prepare -> open — succeeded first attempt, no retry.
+ Entry HEAD: 1a8637c6b79ddaef31416d5b9aa3a281a8125209 = 'WO-10: intents to engine, minimal USER' (clean worktree)
+ Verdict: WO-10 WAS ALREADY COMPLETE AT ENTRY. Zero runtime/source files were re-edited; the change set below
+ was verified in place, not recreated. Scope stayed NO PUBLISH.
+
+ [1] REQUIREMENT-BY-REQUIREMENT CONFIRMATION (all read/observed at this HEAD)
+   1) odai/config/intents_registry.json — valid JSON, exactly ten owner-approved intents (Start My Business,
+      Find Products, Set Up My Online Shop, Make Advertisements, Find Customers, Talk to Customers,
+      Deliver My Products, Manage My Money, Run My Business Automatically, Protect My Business), each
+      {id,label,utterance,engine,objective_template|null}. Engines: manage-my-money=dashboard,
+      protect-my-business=shield-note (both objective_template null), remaining eight=objective.
+   2) server.mjs (odai router): GET /api/odai/intents -> {tenant_id,intents} from publicIntents() (internal
+      `keywords` stripped); POST /api/odai/intents/match {utterance} -> {launch:"match-only",intent,score}
+      with zero side effects. createObjective auto-launch fires ONLY on ?autocreate=true AND engine=objective
+      AND a non-null template. server/odai/intents.mjs holds scoring structure only — no intent prose in code.
+      Direct module proof at this HEAD: 8/8 objective templates return measurable=true from interpret()
+      (units_sold 30/50/40/60/25/80 over FNYGlobal + growth 30%/45d and 30%/60d); probes
+      'Bring me buyers'->find-customers(100), 'What can I sell?'->find-products(100),
+      'I want to run ads for my products'->make-advertisements(2), 'hello'->unmatched(0).
+   3) src/TalkView.tsx — no BIZ_INTENTS array and no ten-chip grid in USER idle; hero + composer + big mic
+      retained; single subtle text affordance 'What can you run for me?' -> GET /intents rendered as a plain
+      assistant bubble (text <ul>, zero buttons). Typed and heard utterances probe /intents/match BEFORE Q4;
+      objective match prints 'Ready to run: <label> — say the word in MGMT' (no autonomous launch — WO-09
+      owner gate stays closed; client never sends autocreate).
+   4) src/styles.css — zero .exrow/.exchip rules remain; replaced by .intentask/.intentlist (styles.css:377-382).
+      V30 LIGHT THEME, BLACK TEXT marker untouched.
+   5) tests/objectives.test.mjs — WO-10 groups present and green (TAP ok 17–22): registry ten + engine
+      contract; interpret() on every template; GET strips internal fields; 3 probe utterances match-only;
+      autocreate gating; USER bundle audit (built JS must exclude 'Run My Business Automatically', must
+      include 'What can you run for me') + zero exrow/exchip references.
+
+ [2] GATES (DEV-12 preflight before checkpoint; DEV-11 suite verdict)
+   node tools/guardrails_preflight.mjs -> exit 0: preflight clear: single-server ✓ provenance-inert ✓
+     lockfile ✓ single-policy ✓ editable-src ✓ test-gate ✓ single-dispatcher ✓
+   npm run typecheck -> exit 0 (tsc strict clean)
+   npm run build -> exit 0 (dist/assets/index-BHRX1g2z.js 196.00 kB)
+   npm test -> exit 0.  TAP tail: 1..35 / # tests 43 / # suites 3 / # pass 43 / # fail 0 / # cancelled 0 / # skipped 0
+   Independent bundle audit on the fresh build: 'Run My Business Automatically' 0 hits in dist JS;
+     'What can you run for me' 1 hit; 'exchip'/'exrow' 0 hits in both dist CSS and dist JS.
+
+ [3] STEERAGE / HONESTY
+   Only this evidence log changed in this run (append-only block); no runtime file was modified, so the
+   WO-10 commit remains the single canonical commit for the work order. Zero button wall confirmed.
+   No objective was created or executed autonomously; 9.0 external-write NEVER unchanged.
+   Secrets: none read, printed, committed, or bundled. No scheduled task or automation was created,
+   updated, triggered, paused, or deleted. NO PUBLISH invoked — online version stays V39.
+ ================================================================
