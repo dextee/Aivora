@@ -254,7 +254,7 @@ test("inertness + scope: WO-09A tools import only node builtins; no runtime file
       assert.match(m[1], /^node:/, f + " must only import node builtins, found " + m[1]);
   }
   for (const f of [AUTHZ_REL, WATCHDOG_REL]) assert.ok(PROTECTED_FILES.includes(f), f + " must be inside the seal");
-  assert.equal(PROTECTED_FILES.length, 5, "seal covers 5 executable security files; tools/SECURITY-FILES.sha256 itself is the 6th guarded artefact");
+  assert.equal(PROTECTED_FILES.length, 6, "WO-111D owner-seal flow: 5 executable security files + .githooks/pre-commit preventive boundary (manifest itself the 7th guarded artefact)");
   const files = [];
   const walk = (d) => { for (const e of readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else files.push(p); } };
   walk(path.join(repoRoot, "server"));

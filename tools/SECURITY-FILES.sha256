@@ -1,6 +1,7 @@
 # WO-09A security-file seal — never edit these files without an owner token (tools/watchd.mjs audits this list)
-745f207f6a62e9dc93fcda231989433d692f0e0e659fced3713d3520e325cda9  tests/authz.test.mjs
+8321d4a7356fb5de4f1cd34752f0744355fdb2e8ce4c5c94f85fae68cd9f8ee2  .githooks/pre-commit
+2d5460372c6ff7f312625bdc1f4c8d7d6c42ae9e10a0d9e4acebaccd9dfbc4c3  tests/authz.test.mjs
 d0881dfa3a12a91c89a9f566a873c548274625c74fe634302fec5817b507c503  tools/authz.mjs
 714ebca14bff62aea70ddf1a04f2e62f9e14af4c319741de124f0c91448d2326  tools/guardrail_harness.mjs
 4ce553ea476d6a7d748de2efaff92cb8f7e5125a6cf0f2c47f148e6d854f6fc3  tools/guardrails_preflight.mjs
-09866b610b5e29006556fac55c19b739465832322d6c78b11f134523a4751e66  tools/verify_integrity.mjs
+b8f5c10a9a659e1e2591cbf5ba01e627cf21856a85c230ed54d083b6e0ece698  tools/verify_integrity.mjs

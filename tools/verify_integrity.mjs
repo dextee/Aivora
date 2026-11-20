@@ -22,6 +22,7 @@ import { fileURLToPath } from "node:url";
 
 export const MANIFEST_PATH = "tools/SECURITY-FILES.sha256";
 export const PROTECTED_FILES = [
+  ".githooks/pre-commit",
   "tools/authz.mjs",
   "tools/verify_integrity.mjs",
   "tools/guardrails_preflight.mjs",
