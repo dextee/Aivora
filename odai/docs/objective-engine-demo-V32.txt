@@ -1,0 +1,80 @@
+OBJECTIVE OBJ-mwokbhwi
+--- pre-gate tasks ---
+state: AWAITING_SPEND_APPROVAL | 5/11 tasks · gates approve_spend:awaiting_owner, approve_publish:awaiting_owner, approve_customer_comms:awaiting_owner
+  intake → done
+  plan → done
+  research_demand → done
+  catalog_prepare → done
+  storefront_draft → done
+  marketing_plan → pending
+  schedule → pending
+  watch_verify → pending
+  channel_package → pending
+  fulfillment_sim → pending
+  final_report → pending
+  gate approve_spend → awaiting_owner
+  gate approve_publish → awaiting_owner
+  gate approve_customer_comms → awaiting_owner
+--- owner releases spend ---
+now: 11/11 tasks · gates approve_spend:released_executed, approve_publish:awaiting_owner, approve_customer_comms:awaiting_owner | REPORTED
+--- publish gate release (recorded; external stays held) ---
+--- FINAL CLASSIFIED REPORT ---
+{
+    "objective_id": "OBJ-mwokbhwi",
+    "tenant_id": "demo-uncle-coffee-wellness",
+    "statement": "Help me sell 100 Good Doctor wellness products using FNYGlobal's catalog.",
+    "success_criterion": {
+        "kind": "units_sold",
+        "target_units": 100,
+        "via_catalog": "FNYGlobal",
+        "brand": "The Good Doctor Organization",
+        "measurable": true
+    },
+    "state": "REPORTED",
+    "progress": "11/11 tasks \u00b7 gates approve_spend:released_executed, approve_publish:approved_held_EXTERNAL_NEVER, approve_customer_comms:awaiting_owner",
+    "completed": [
+        "intake",
+        "plan",
+        "research_demand",
+        "catalog_prepare",
+        "storefront_draft",
+        "marketing_plan",
+        "schedule",
+        "watch_verify",
+        "channel_package",
+        "final_report"
+    ],
+    "simulated": [
+        "fulfillment_sim"
+    ],
+    "awaiting_owner_decision": [],
+    "failed": [],
+    "not_reached": [],
+    "approval_gates": [
+        {
+            "gate": "approve_spend",
+            "scope": "advertising spend",
+            "state": "released_executed"
+        },
+        {
+            "gate": "approve_publish",
+            "scope": "external publishing (Shopee/Facebook)",
+            "state": "approved_held_EXTERNAL_NEVER",
+            "note": "release recorded for owner scope, but 9.0 connector_readiness keeps external writes DISABLED \u2014 engine will NEVER publish/spend/send on its own"
+        },
+        {
+            "gate": "approve_customer_comms",
+            "scope": "customer messages (WhatsApp/email)",
+            "state": "awaiting_owner"
+        }
+    ],
+    "evidence_sources": {
+        "manifest": "D03 tasks (fixed graph)",
+        "receipts": "D04 beats 1\u201310 (workflow.mjs)",
+        "policy": "D08 R01\u2013R19 + connector gate",
+        "storage": "D10 odai_* tables (trace/receipt/run/approval)",
+        "simulated_boundary": "beat-9 order TEST_SIMULATED; supplier handoff PREPARED_NOT_SENT"
+    },
+    "durable_note": "task states project durably from beat receipts (odai_receipt/odai_trace); objective-row mirroring to odai_objective is the V33 slot \u2014 in-memory graph is authoritative per instance",
+    "generated_at": "2026-11-20T05:52:42.686Z"
+}
