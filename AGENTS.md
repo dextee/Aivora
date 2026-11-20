@@ -128,3 +128,5 @@ Pack extracted (work/pack9); contracts/config/FNY catalog vendored into repo `od
 - TalkView idle hero: EXAMPLES replaced by `BIZ_INTENTS` — ten [label, utterance] pairs (Start My Business → Protect My Business); tap sends the UTTERANCE via sayExample. Rendered as a compact 2-column grid, bold label + em dash + phrase (V34 block appended to `src/styles.css`, usermode + plain fallbacks).
 - sayExample intercepts: dashboard test extended with track|spending|profit (Manage My Money → Today's Business bubble); new pre-check `protect.*(safe)|keep my (money|business).*safe` → SHIELD sys row (widened `.*` so the chip phrase "keep my money and business safe" actually triggers).
 - No tryline element existed in the hero (CSS-only leftovers); no other behaviour touched.
+
+- V34 note: ten business-intent chips shipped + verified live on clupxd6g.qwenwork.page (V36 deploy; bundle contains "Run My Business Automatically", "Find new customers" gone).
