@@ -1,0 +1,99 @@
+AIVORA ODAI — recovery verification evidence log (single rolling log; append one block per WO)
+
+================================================================
+2026-11-20T11:27Z — WO-08 RECOVERY VERIFICATION — VERIFIED
+================================================================
+Work order: WO-08 recovery verification execution (DEV-10 primary, DEV-11 verdict)
+Page: app-1fe44043-4ed153f9 (aivora-odai-realtime, dynamic, clupxd6g.qwenwork.page)
+Repo: /mnt/pages/page-repo-1255a831-bc45-4ee3-a572-8ff3e587ad2a
+Entry HEAD: bead5b6ced8764e68f1614c769026949dc506794 (clean worktree)
+Access: page_repo resolve(managed/update) -> prepare -> open — succeeded on first attempt, no retry.
+Scope: NO PUBLISH, NO production touch. Only this evidence log + AGENTS.md line changed in repo.
+
+[1] WO-07 OUTPUT CONFIRMATION (in-repo records)
+  odai/dev_docs/wo07-backup-report.md — present:
+    - aivora-source-complete.tar.gz 426,298 B / 55 files (repo minus node_modules, dist, .qw-pages, .git)
+    - aivora-git-history.bundle 505,967 B — "The bundle records a complete history", refs main+HEAD at 9538a972…
+    - manifest.sha256 — tar bb1ce4981cc72f0a…8bfa9c · bundle e59079a57120d8b9…a15004
+    - secret audit: "Result: zero secret-bearing files in either artifact."
+    - delivery: NOT blocked — 3 active Drive share links under /backups/tranche-B/ (tar, bundle, manifest)
+  odai/dev_docs/tranche-report.md — STEP-0 prerequisite gate recorded as PASS, four gate lines quoted:
+    a | F-1 verdict in `f1-provenance-report.md` | **RUNTIME-CLEAN** (WO-01 audit; V37/V38 zero runtime delta; no unexplained src/ diffs)
+    b | Evidence JSON for latest version | `odai/dev_docs/evidence/V39.json` present; V39 = last published version (deployment 305e4d13); records certifying commit `060d225b…`
+    c | `node tools/guardrails_preflight.mjs` | exit **0** (all seven gates ✓)
+    d | `npm run build && npm test` | exit **0** — TAP 24 tests / 24 pass / 0 fail (pre-tranche baseline)
+  corroboration in this sandbox: odai/dev_docs/f1-provenance-report.md and odai/dev_docs/evidence/V39.json both tracked.
+
+[2] AUTHORITATIVE RECOVERY MATERIAL REGENERATED (this sandbox, entry HEAD)
+  git bundle create /tmp/v08.bundle --all -> 524,078 B; `git bundle verify` okay; refs main+HEAD = bead5b6c…; complete history.
+  tar czf /tmp/v08.tar.gz (repo minus node_modules, dist, .qw-pages, .git) -> 443,420 B; 62 regular members.
+  Parity: tar member list == `git ls-files` (62 == 62) -> TAR_EQUALS_TRACKED.
+  Name scan for .env|key|secret|sk-|bearer|token|credential|pem inside archive listing -> 0 hits.
+  sha256 manifest (/tmp/v08-manifest.sha256):
+    feb03704b8228e7931ec0b1e4d8c8e3c0047a14689f12747bfad74a2c957fa2f  v08.tar.gz
+    1510fc8de6939939988b48924d8e272475509aaaf092ecf413061963be509b56  v08.bundle
+  Note: these are the WO-08 refreshed artifacts for HEAD bead5b6c (WO-07's snapshot was taken at 9538a972
+  and is superseded for this HEAD; WO-07 Drive copies remain the owner's persistent copies of that snapshot).
+
+[3] ISOLATED RESTORATION DRILL (out of live repo — /tmp/v08r; live repo untouched, worktree clean after)
+  command                                          | result
+  rm -rf /tmp/v08r; mkdir /tmp/v08r                | SETUP_OK
+  git clone /tmp/v08.bundle /tmp/v08r/clone        | CLONE_OK
+  git -C /tmp/v08r/clone rev-parse HEAD            | bead5b6ced8764e68f1614c769026949dc506794 == repo HEAD -> HEAD_MATCH_OK
+  git fsck --connectivity-only --no-dangling       | no errors -> GIT_OBJECTS_OK
+  tar xzf /tmp/v08.tar.gz -C /tmp/v08r/tree        | EXTRACT_OK (62 files)
+  sha256sum -c /tmp/v08-manifest.sha256            | v08.tar.gz OK · v08.bundle OK -> MANIFEST_OK
+  diff -rq tree/server.mjs      vs repo            | IDENTICAL -> KEYFILE_IDENTICAL
+  diff -rq tree/package.json   vs repo             | IDENTICAL -> KEYFILE_IDENTICAL
+  diff -rq tree/src/TalkView.tsx vs repo           | IDENTICAL -> KEYFILE_IDENTICAL
+  diff -rq tree/odai/migrations vs repo            | IDENTICAL (001_init.sql) -> KEYFILE_IDENTICAL
+  diff -rq whole restored tree vs repo (excl node_modules/dist/.qw-pages/.git) | no differences -> FULLTREE_IDENTICAL
+  node --check server.mjs (restored tree)          | exit 0 -> NODE_CHECK_OK
+  node tools/guardrails_preflight.mjs (restored)   | exit 0 — "preflight clear: single-server ✓ provenance-inert ✓ lockfile ✓ single-policy ✓ editable-src ✓ test-gate ✓ single-dispatcher ✓"
+  npm ci --silent (restored tree)                  | exit 0 -> NPM_CI_OK
+  npm run build (restored tree)                    | exit 0 — vite: "✓ 36 modules transformed", "✓ built in 790ms"
+                                                    dist/index.html 1.17 kB · dist/assets/index-Bspt2kgG.css 28.57 kB · dist/assets/index-DOLMeFjt.js 195.37 kB
+                                                    prepare-publish: standalone dynamic bundle staged under .qw-pages/publish
+  npm test (restored tree)                         | exit 0 — TAP tail:
+                                                    # tests 37
+                                                    # suites 3
+                                                    # pass 37
+                                                    # fail 0
+                                                    # cancelled 0
+                                                    # skipped 0
+                                                    # todo 0
+                                                    # duration_ms 16191.816842
+  DRILL VERDICT: PASS — bundle replays identical HEAD; tar reproduces a byte-identical tracked tree;
+  the restored tree alone boots, passes preflight and the full 37-test suite OFF the live repository.
+
+[4] ROLLBACK AVAILABILITY ASSERTION (read-only; NO action taken)
+  Mechanism: every QW Pages publish seals an immutable Artifact version (object key frozen by Seal,
+  "The same Artifact object cannot be overwritten after Seal"), and the online route is selected by a
+  single Publish call `POST /api/page/clupxd6g.qwenwork.page/publish {"version":"Vn"}` against an already
+  sealed older version. So a one-command republish of any sealed version restores it without rebuilding
+  source. History is append-only: `git bundle --all` + repo `main` keep every source commit reachable, and
+  source restore (`page_repo.py restore --page-id … --commit-oid … --expected-head-oid …`) is available for
+  the source side without touching the online Artifact.
+  Ledger (GET /api/page/clupxd6g.qwenwork.page/artifact): total 39 sealed versions V1..V39, current online = V39
+  (page state deployed, has_online_artifact true, runtime_contract broker). Every ledger row carries a
+  source_commit_oid; the three latest versions available to roll back to (and current) are:
+    V39 060d225bd6bb8963d93247ce66a98006db4005de  (online 2026-11-20T18:04+08:00)
+    V38 e076db65c65fee201db8baf21e4618eda04fba00  (2026-11-20T14:07+08:00)
+    V37 c777a2b81c45eb41b77abcd75c74e5e53455a48b  (2026-11-20T14:06+08:00)
+    V36 9b828eae9a5c48a4fb73706ecf1f0ffd8ddbd024  (2026-11-20T14:05+08:00)
+  Cross-check: all four OIDs resolve in the live repo, are commit objects, and are ancestors of HEAD.
+  Ledger max = V39, i.e. no unpublished/phantom newer version exists, so rollback targets are unambiguous.
+  ASSERTION: AVAILABLE — an older sealed version can be restored by republish that one version.
+  Per WO-08 scope no publish/rollback was invoked (NO ACTION).
+
+[5] DEV-11 VERDICT
+  WO-08 VERIFIED. WO-07 backup outputs confirmed (tar + bundle + sha256 manifest + delivered Drive links);
+  tranche STEP-0 prerequisite gate (4 checks) PASS as recorded; refreshed bundle/tar for HEAD bead5b6c
+  created and hash-manifested; isolated restore reproduced identical HEAD + identical tracked tree;
+  full preflight/build/test (37/37) green outside the live repo; rollback to a prior immutable version
+  confirmed available via sealed-Artifact republish. Zero publishes, zero production touches,
+  no scheduled task/automation mutation performed in this run.
+  Residual owner-side items: pause/close of the tranche task remains an owner UI action (execution rules
+  forbid task mutation from inside a run); WO-07's Drive copies are of HEAD 9538a972 — refresh on request.
+  Secrets: none read, printed, committed, or bundled by this run.
+================================================================
