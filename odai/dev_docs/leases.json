@@ -76,6 +76,8 @@
       "check": 3,
       "commit": 1
     },
-    "revoked": false
+    "revoked": true,
+    "revoked_reason": "HOTFIX WO-10R SHIPPED (staged, no publish; files: server.mjs odaiRoute objectives branch + import, server/odai/objectives.mjs listObjectives, tests/objectives.test.mjs +6 real-HTTP tests, AGENTS.md no",
+    "revoked_at": "2026-11-20T13:58:36Z"
   }
 }

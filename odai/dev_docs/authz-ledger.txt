@@ -9,3 +9,4 @@
 2026-11-20T13:20:31Z|DENY|AUDIT-EXP|op=check|path=-|reason=EXPIRED|detail=expires_at=2026-11-20T13:20:31Z
 2026-11-20T13:20:31Z|DENY|AUDIT-NONE|op=check|path=-|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
 2026-11-20T13:45:53Z|ISSUE|WO-10R|ops=check,commit|paths=server/odai,tests|minutes=120|budget=12|single_use=0|expires_at=2026-11-20T15:45:53Z
+2026-11-20T13:58:36Z|REVOKE|WO-10R|reason=HOTFIX WO-10R SHIPPED (staged, no publish; files: server.mjs odaiRoute objectives branch + import, server/odai/objectives.mjs listObjectives, tests/objectives.test.mjs +6 real-HTTP tests, AGENTS.md no
