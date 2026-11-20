@@ -10,8 +10,9 @@
  *                                          — enforce_allowlist semantics; changed file = one path/line;
  *                                            --simulate substitutes the list (drill-only, never commits)
  *   self-check --wo <wo.json> [--changed t] [--json]
- *                                          — refuses to operate if this harness file is itself in the
- *                                            changed set without a DEV-08-ordered-work-order scope
+ *                                          — refuses to run when a harness-owned enforcement file
+ *                                            (SELF_FILES: the harness itself, tools/watchd.mjs) is in
+ *                                            the changed set without a DEV-08-ordered-work-order scope
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -19,6 +20,8 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 export const HARNESS_PATH = "tools/guardrail_harness.mjs";
+export const WATCHD_PATH = "tools/watchd.mjs";
+export const SELF_FILES = [HARNESS_PATH, WATCHD_PATH];
 export const PREFLIGHT_PATH = "tools/guardrails_preflight.mjs";
 export const EXIT = { OK: 0, PREFLIGHT_FAILED: 1, FAIL_CLOSED: 2, UNAUTHORIZED_PATH: 3, SELF_MODIFICATION: 4, USAGE: 5 };
 /* Runtime surfaces frozen for security-class WOs (WO-05/06/07). The src/ prefix covers nested dirs too. */
@@ -52,20 +55,22 @@ export function enforce_allowlist(changedFiles, woScope, classOverride) {
   const allowed = (woScope?.paths || []).map(normalize);
   for (const f of changed) {
     if (violations.some((v) => v.file === f)) continue;
-    if (f === HARNESS_PATH) continue; // self-file handled exclusively by selfCheck()
+    if (SELF_FILES.includes(f)) continue; // self-files handled exclusively by selfCheck()
     if (!allowed.some((a) => a === f || (a.endsWith("/") && f.startsWith(a))))
       violations.push({ file: f, rule: "outside WO scope" });
   }
   return { ok: violations.length === 0, level: violations.length ? "UNAUTHORIZED_PATH" : "OK", violations };
 }
 
-/** Refuse to run when the harness's own file is in the changed set without proper ordering. */
+/** Refuse to run when a harness-owned enforcement file is in the changed set without proper ordering. */
 export function selfCheck(changedFiles, wo) {
   const changed = (changedFiles || []).map(normalize);
-  if (!changed.includes(HARNESS_PATH)) return { ok: true, level: "OK", violations: [] };
-  const sanctioned = wo?.role === "DEV-08-ordered-work-order" && Array.isArray(wo?.targets) && wo.targets.map(normalize).includes(HARNESS_PATH);
-  if (sanctioned) return { ok: true, level: "OK", violations: [{ file: HARNESS_PATH, rule: "SELF-MOD SANCTIONED by DEV-08 ordered work order — proceed with eyes open" }], sanctioned_self_mod: true };
-  return { ok: false, level: "SELF_MODIFICATION", violations: [{ file: HARNESS_PATH, rule: "harness refuses to run: its own file is in the changed set and role != DEV-08-ordered-work-order" }] };
+  const selfHits = changed.filter((f) => SELF_FILES.includes(f));
+  if (selfHits.length === 0) return { ok: true, level: "OK", violations: [] };
+  const targets = (wo?.targets || []).map(normalize);
+  const sanctioned = wo?.role === "DEV-08-ordered-work-order" && selfHits.every((f) => targets.includes(f));
+  if (sanctioned) return { ok: true, level: "OK", violations: selfHits.map((f) => ({ file: f, rule: "SELF-MOD SANCTIONED by DEV-08 ordered work order — proceed with eyes open" })), sanctioned_self_mod: true };
+  return { ok: false, level: "SELF_MODIFICATION", violations: selfHits.map((f) => ({ file: f, rule: "harness refuses to run: enforcement file in changed set and role != DEV-08-ordered-work-order (or not every self-file is an explicit target)" })) };
 }
 
 function loadJson(p) { return JSON.parse(readFileSync(p, "utf8")); }

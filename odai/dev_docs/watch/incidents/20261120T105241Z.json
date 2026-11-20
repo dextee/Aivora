@@ -1,0 +1,149 @@
+{
+  "id": "20261120T105241Z",
+  "schema": "containment-request/v1",
+  "actor": "DEV-13",
+  "generated_at": "2026-11-20T10:52:41.550Z",
+  "hard_rule": "request-only: watcher never mutates state, never approves, never writes outside incident dir; DB access is SELECT-only",
+  "requested_action": "owner_review_and_freeze_dispatch",
+  "action_ceiling": "request — owner decision required before ANY state change",
+  "signals": [
+    {
+      "type": "DISPATCH_NON_ALLOW",
+      "run_id": "run-mwokbhwi",
+      "at": {
+        "kind": "trace",
+        "seq": 75
+      },
+      "view": {
+        "kind": "BEAT_DONE",
+        "beat": 7,
+        "actor": "watch",
+        "decision": "NEVER",
+        "rule": "connector:qwenwork",
+        "note": "external_writes_enabled=false (9.0 readiness contract) + approval_required"
+      },
+      "detail": "kind=BEAT_DONE decision=NEVER"
+    },
+    {
+      "type": "DISPATCH_NON_ALLOW",
+      "run_id": "run-mwokd053",
+      "at": {
+        "kind": "trace",
+        "seq": 84
+      },
+      "view": {
+        "kind": "BEAT_DONE",
+        "beat": 5,
+        "actor": "human-gate",
+        "decision": "APPROVE",
+        "rule": null,
+        "note": "spend cap offered S$200; policy R12: new spend needs written owner confirmation"
+      },
+      "detail": "kind=BEAT_DONE decision=APPROVE"
+    },
+    {
+      "type": "DISPATCH_NON_ALLOW",
+      "run_id": "run-mwokth53",
+      "at": {
+        "kind": "trace",
+        "seq": 90
+      },
+      "view": {
+        "kind": "BEAT_DONE",
+        "beat": 5,
+        "actor": "human-gate",
+        "decision": "APPROVE",
+        "rule": null,
+        "note": "spend cap offered S$200; policy R12: new spend needs written owner confirmation"
+      },
+      "detail": "kind=BEAT_DONE decision=APPROVE"
+    },
+    {
+      "type": "DISPATCH_NON_ALLOW",
+      "run_id": "run-mwokth53",
+      "at": {
+        "kind": "trace",
+        "seq": 93
+      },
+      "view": {
+        "kind": "BEAT_DONE",
+        "beat": 7,
+        "actor": "watch",
+        "decision": "NEVER",
+        "rule": "connector:qwenwork",
+        "note": "external_writes_enabled=false (9.0 readiness contract) + approval_required"
+      },
+      "detail": "kind=BEAT_DONE decision=NEVER"
+    },
+    {
+      "type": "DISPATCH_NON_ALLOW",
+      "run_id": "run-mwos36v8",
+      "at": {
+        "kind": "trace",
+        "seq": 102
+      },
+      "view": {
+        "kind": "BEAT_DONE",
+        "beat": 5,
+        "actor": "human-gate",
+        "decision": "APPROVE",
+        "rule": null,
+        "note": "spend cap offered S$200; policy R12: new spend needs written owner confirmation"
+      },
+      "detail": "kind=BEAT_DONE decision=APPROVE"
+    },
+    {
+      "type": "DISPATCH_NON_ALLOW",
+      "run_id": "run-mwot7nsg",
+      "at": {
+        "kind": "trace",
+        "seq": 108
+      },
+      "view": {
+        "kind": "BEAT_DONE",
+        "beat": 5,
+        "actor": "human-gate",
+        "decision": "APPROVE",
+        "rule": null,
+        "note": "spend cap offered S$200; policy R12: new spend needs written owner confirmation"
+      },
+      "detail": "kind=BEAT_DONE decision=APPROVE"
+    },
+    {
+      "type": "DISPATCH_NON_ALLOW",
+      "run_id": "run-mwot7nsg",
+      "at": {
+        "kind": "trace",
+        "seq": 111
+      },
+      "view": {
+        "kind": "BEAT_DONE",
+        "beat": 7,
+        "actor": "watch",
+        "decision": "NEVER",
+        "rule": "connector:qwenwork",
+        "note": "external_writes_enabled=false (9.0 readiness contract) + approval_required"
+      },
+      "detail": "kind=BEAT_DONE decision=NEVER"
+    }
+  ],
+  "evidence_refs": {
+    "read_views": {
+      "trace": {
+        "requested": 40,
+        "ok": true,
+        "code": null,
+        "rows": 40
+      },
+      "receipts": {
+        "requested": 40,
+        "ok": true,
+        "code": null,
+        "rows": 40
+      }
+    },
+    "sql": "SELECT tenant_id,run_id,seq,kind,beat,actor,decision,rule,note FROM odai_trace|odai_receipt ORDER BY seq DESC LIMIT n"
+  },
+  "state_written_by_this_module": "none — request only",
+  "terminal": true
+}
