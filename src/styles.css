@@ -373,10 +373,45 @@ button { font-family: inherit; }
 .usermode .q4bar { background: #f6faf6; border-top-color: #d8e6db; }
 .usermode .q4bar input { background: #fff; border-color: #cfded3; color: #000; }
 
-/* ============ WO-10 — minimal USER: ONE subtle intent affordance (chip wall removed) ============ */
+/* ============ WO-10 — minimal USER: ONE subtle intent affordance (chip wall removed) ============
+   UI-01 (2026-11-20): the affordance now EXPANDS into ten engine-fetched chips (see UI-01 block below). */
 .intentask { margin: 4px 18px 0; padding: 4px 0; align-self: flex-start; background: none; border: 0;
   color: #0b2e1a; font: 700 12.5px var(--font); letter-spacing: .01em; text-decoration: underline;
   text-underline-offset: 3px; text-decoration-thickness: 1px; cursor: pointer; opacity: .82; }
 .intentask:active { opacity: .55; }
-.intentlist { margin: 4px 0 0; padding-left: 18px; }
-.intentlist li { margin: 1px 0; font-size: 12px; line-height: 1.35; }
+.intentask i { font-style: normal; text-decoration: none; display: inline-block; opacity: .7; }
+.askzone { display: flex; flex-direction: column; }
+
+/* ============ UI-01 — expandable intent chips + objective plan card (voice-first USER, light theme) ============ */
+/* One green accent on white/near-white, black text; no gradients, no dark blocks. */
+.askzone { margin: 4px 18px 0; }
+.askzone .intentask { margin: 0; }
+.intent-chips { display: flex; flex-wrap: wrap; gap: 8px 7px; margin: 8px 0 2px; }
+.intent-chip { flex: 1 1 auto; min-width: 0; max-width: 100%; text-align: left; background: #fff; color: #000;
+  border: 1.5px solid #d7e3da; border-radius: 16px; padding: 9px 12px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 2px; font: 700 13px var(--font); line-height: 1.2;
+  -webkit-tap-highlight-color: transparent; }
+.intent-chip:hover { border-color: var(--wa-green); }
+.intent-chip:active { border-color: var(--wa-green); background: #eefaf1; }
+.intent-chip strong { color: #000; font-weight: 800; letter-spacing: .01em; }
+.intent-chip span { color: #33513f; font-weight: 600; font-size: 12px; overflow-wrap: anywhere; }
+.chips-note { margin: 8px 0 2px; font: 600 11.5px var(--font); color: #3c4f43; }
+/* bubble that carries the chips should use the full width on mobile */
+.bubrow.wide .bub { max-width: 100%; }
+/* plan card */
+.objcard { width: 100%; background: #fff; border: 1.5px solid #cfe4d5; border-radius: 14px; padding: 12px 13px;
+  box-shadow: 0 1px 3px rgba(12,60,30,.08); }
+.objcard h5 { margin: 0 0 6px; font: 800 13px var(--font); color: #000; letter-spacing: .01em; }
+.objcrit { font: 700 13.5px var(--font); color: #0b6b46; margin: 0 0 8px; }
+.objstate { background: #fff6e0; border: 1px solid #f0d497; color: #7a4a00; font: 800 12px var(--font);
+  border-radius: 8px; padding: 7px 10px; margin: 0 0 10px; }
+.objtasks { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.objtasks li { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font: 600 12.5px var(--font); color: #000; }
+.objtasks li span { overflow-wrap: anywhere; }
+.objtasks li em { font-style: normal; font-weight: 800; font-size: 11px; color: #5c7a67; flex: 0 0 auto; }
+.objtasks li.done em { color: #0b9e4f; }
+.objgates { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.objgate { font: 700 11px var(--font); border-radius: 999px; padding: 5px 9px; border: 1px solid #dbe8dd; background: #f1f7f2; color: #374151; }
+.objgate.awaiting_owner { background: #fff6e0; border-color: #f0d497; color: #7a4a00; font-weight: 800; }
+.objgate.ok { background: #eefaf1; border-color: #6dbd8a; color: #0b6b46; }
+.objfine { font: 600 10.5px var(--font); color: #3c4f43; margin: 0; }

@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
 import { spawn, spawnSync } from "node:child_process";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import { interpret } from "../server/odai/objectives.mjs";
 const root = new URL("../", import.meta.url);
 let child; const B = "http://127.0.0.1:8309";
@@ -198,4 +199,113 @@ test("WO-10R still rejects unmeasurable statements (restore parsing ≠ relax ga
   const { status, body } = await post("/api/odai/objectives", { text: "make me rich eventually" });
   assert.equal(status, 200);
   assert.match(String(body.error), /not measurable/);
+});
+
+/* ============ UI-01 — voice-first USER view: chip expansion + objective plan card ============
+ * jsdom-level proof: transpile src/IntentChips.tsx and render it with react-dom/server,
+ * feeding a MOCKED GET /api/odai/intents response (the engine registry shape). Assert the
+ * exactly-10 chips render (label + utterance each) and the plan card renders criterion +
+ * 11-task plan + awaiting-owner gates from a mocked objective view. Also assert ZERO pre-
+ * WO-10 wall prose is hardcoded in the client (labels/utterances flow from the engine only). */
+const req = createRequire(import.meta.url);
+const ts = req("typescript");
+const React = req("react");
+const { renderToStaticMarkup } = req("react-dom/server");
+
+async function loadIntentChips() {
+  const source = readFileSync(new URL("../src/IntentChips.tsx", import.meta.url), "utf8");
+  const out = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
+  }).outputText;
+  const tmp = fileURLToPath(new URL("../tests/.ui01-chips.generated.mjs", import.meta.url));
+  writeFileSync(tmp, out);
+  try { return await import(pathJoinUrl(tmp)); } finally { unlinkSync(tmp); }
+}
+const pathJoinUrl = (p) => new URL("file://" + p).href;
+
+function mockedIntentsResponse() {
+  const reg = JSON.parse(readFileSync(new URL("../odai/config/intents_registry.json", import.meta.url), "utf8"));
+  // mimic the server: strip keywords, serve public fields for all ten intents
+  return { tenant_id: "t-ui01", intents: reg.intents.map(({ keywords, ...p }) => p) };
+}
+
+test("UI-01: exactly 10 intent chips render from a mocked /intents response (label + utterance each)", async () => {
+  const mod = await loadIntentChips();
+  const items = mod.parseIntentsResponse(mockedIntentsResponse());
+  assert.equal(items.length, 10, "registry must expose exactly ten intents to the client");
+  assert.equal("keywords" in items[0], false, "internal fields stripped before render");
+  const html = renderToStaticMarkup(React.createElement(mod.IntentChips, { items, onPick: () => {} }));
+  const chipCount = (html.match(/class="intent-chip"/g) || []).length;
+  assert.equal(chipCount, 10, `expected 10 chips, rendered ${chipCount}`);
+  const reg = JSON.parse(readFileSync(new URL("../odai/config/intents_registry.json", import.meta.url), "utf8"));
+  for (const it of reg.intents) {
+    assert.ok(html.includes(it.label), `chip label missing: ${it.label}`);
+    assert.ok(html.includes(`<span>${it.utterance}</span>`), `chip utterance missing: ${it.utterance}`);
+  }
+});
+
+test("UI-01: plan card renders criterion + full 11-task plan + awaiting-owner gates", async () => {
+  const mod = await loadIntentChips();
+  // build a realistic awaiting-owner view through the REAL engine (interpret → criterion)
+  const p = interpret("Sell 40 Lumen Wellness products from the FNYGlobal catalog through my online shop in 60 days");
+  assert.equal(p.valid, true, "template must be measurable");
+  const obj = {
+    objective_id: "OBJ-ui01", state: "AWAITING_SPEND_APPROVAL", criterion: p.criterion,
+    tasks: [
+      { id: "intake", state: "done" }, { id: "plan", state: "done" }, { id: "research_demand", state: "done" },
+      { id: "catalog_prepare", state: "pending" }, { id: "storefront_draft", state: "pending" }, { id: "marketing_plan", state: "pending" },
+      { id: "schedule", state: "pending" }, { id: "watch_verify", state: "pending" }, { id: "channel_package", state: "pending" },
+      { id: "fulfillment_sim", state: "pending" }, { id: "final_report", state: "pending" },
+    ],
+    gates: [
+      { id: "approve_spend", scope: "advertising spend", state: "awaiting_owner" },
+      { id: "approve_publish", scope: "external publishing (Shopee/Facebook)", state: "not_reached" },
+      { id: "approve_customer_comms", scope: "customer messages (WhatsApp/email)", state: "not_reached" },
+    ],
+  };
+  const html = renderToStaticMarkup(React.createElement(mod.ObjectivePlanCard, { label: "Set Up My Online Shop", o: obj }));
+  assert.ok(html.includes("objcard"), "plan card root missing");
+  assert.ok(html.includes("Sell 40"), "criterion line not rendered: " + mod.criterionLine(p.criterion));
+  assert.ok(/awaiting the gates|Awaiting owner approval|awaiting/i.test(html), "awaiting-owner state not surfaced");
+  const taskRows = (html.match(/<li/g) || []).length;
+  assert.equal(taskRows, 11, `expected 11 task rows, got ${taskRows}`);
+  assert.ok(html.includes("advertising spend"), "spend gate scope not shown");
+  assert.ok(html.includes("awaiting your approval"), "awaiting-owner gate label not shown");
+  assert.ok(html.includes("queued"), "not-reached gates shown as queued");
+});
+
+test("UI-01: the 'not measurable' engine error surfaces its restate hint VERBATIM", async () => {
+  const mod = await loadIntentChips();
+  const HINT = "not measurable — restate with a number (units / % over days)";
+  const out1 = mod.objectiveCreateOutcome({ error: HINT });
+  assert.equal(out1.ok, false);
+  assert.equal(out1.hint, HINT, "hint must be shown character-for-character as the server wrote it");
+  // empty / unparseable body → not ok, and never a crash
+  assert.equal(mod.objectiveCreateOutcome(null).ok, false);
+  assert.equal(mod.objectiveCreateOutcome({}).ok, false, "empty body never crashes the outcome parser");
+});
+
+test("UI-01: zero intent prose hardcoded in the client — no pre-WO-10 wall labels anywhere in src/ or USER bundle", () => {
+  const reg = JSON.parse(readFileSync(new URL("../odai/config/intents_registry.json", import.meta.url), "utf8"));
+  const srcDir = new URL("../src/", import.meta.url);
+  const srcAll = readdirSync(fileURLToPath(srcDir)).filter((f) => /\.(tsx?|ts|css)$/.test(f))
+    .map((f) => readFileSync(new URL(f, srcDir), "utf8")).join("\n");
+  // every registry label/utterance must be absent from the shipped client source
+  const offenders = [];
+  for (const it of reg.intents) {
+    for (const s of [it.label, it.utterance]) {
+      // the ONLY permissible occurrence is a comment referencing the chip flow, never a rendered string literal
+      if (new RegExp(`["\`']\\s*${s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(srcAll)) offenders.push(s);
+    }
+  }
+  assert.deepEqual(offenders, [], `client renders intent prose: ${offenders.join(", ")}`);
+  // and it never reaches the USER bundle (labels/utterances only ever arrive via fetch)
+  const assets = new URL("../dist/assets/", import.meta.url);
+  const js = readdirSync(fileURLToPath(assets)).filter((f) => f.endsWith(".js"));
+  const bundle = js.map((f) => readFileSync(new URL(f, assets), "utf8")).join("");
+  for (const it of reg.intents) {
+    assert.equal(bundle.includes(it.utterance), false, `utterance leaked into bundle: ${it.utterance}`);
+  }
+  // affordance + plan hook strings DO ship
+  assert.equal(bundle.includes("What can you run for me"), true);
 });

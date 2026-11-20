@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { openRealtimeRtc, type RtcHandle } from "./rtc";
 import { loadConfig, type LiveEvent } from "./lib";
+import { IntentChips, ObjectivePlanCard, objectiveCreateOutcome, parseIntentsResponse, type IntentItem, type ObjView } from "./IntentChips";
 
 /* Talk to AIVORA — one big green button, continuous WebRTC session.
  * The partner engine IS qwen-audio-3.1-realtime-flash (rtc.ts PARTNER_MODEL):
@@ -16,17 +17,22 @@ type Row =
   | { who: "me" | "ai" | "sys" | "err"; text: string; label?: string }
   | { who: "biz" }
   | { who: "intents"; items: IntentItem[] }
+  | { who: "objective"; label: string; obj: ObjView }
   | { who: "pair"; src: string; out: string }
   | { who: "log"; log: Record<string, unknown> };
 
 /* WO-10 — the ten business intents live in the ENGINE (odai/config/intents_registry.json),
  * served by GET /api/odai/intents and scored by POST /api/odai/intents/match.
- * The client keeps zero intent prose and zero chip wall: one text affordance
- * asks the server and renders the list as a plain assistant chat bubble.
- * Objective autocreate stays OFF client-side — nothing launches without the
- * owner gate (WO-09); a matched intent only answers "Ready to run: … say the
- * word in MGMT". */
-type IntentItem = { id: string; label: string; utterance: string; engine: string; objective_template: string | null };
+ * UI-01 (owner-approved tranche) — "What can you run for me?" now EXPANDS into
+ * exactly ten intent chips fetched from /intents at runtime (presentational
+ * module: src/IntentChips.tsx; zero intent prose in the client). A chip click
+ * types its utterance into the composer and submits it. A matched objective
+ * intent is created on the typed path via POST /api/odai/objectives with a
+ * fresh ?_t nonce (the api() helper stamps it): the engine's criterion, task
+ * plan and gates render as a card, frozen in its awaiting-owner state until
+ * the owner approves in MGMT; an unmeasurable statement surfaces the engine's
+ * own restate hint VERBATIM. dashboard/shield engines and the on-demand
+ * Today's Business row work exactly as before. */
 
 const LNAME: Record<string, string> = { en: "English", zh: "中文", yue: "廣東話", ms: "Bahasa Melayu", id: "Bahasa Indonesia", th: "ไทย", ta: "தமிழ்" };
 
@@ -50,6 +56,12 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
   const [q4text, setQ4text] = useState("");
   const q4busy = useRef(false);
   const q4hist = useRef<{ role: string; content: string }[]>([]); // rolling context, last 12 exchanges
+
+  /* UI-01 — "What can you run for me?" expands into the engine's intent chips
+   * (fetched once at runtime from GET /intents; zero client-side prose). */
+  const [intents, setIntents] = useState<IntentItem[] | null>(null);
+  const [chipsOpen, setChipsOpen] = useState(false);
+  const [chipsErr, setChipsErr] = useState<string | null>(null);
 
   useEffect(() => { feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight }); }, [rows, state]);
   useEffect(() => {
@@ -82,22 +94,51 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     });
   }
 
-  /* the one affordance: ask the ENGINE for its intents — rendered as a plain
-   * assistant chat bubble (text list, zero buttons). */
-  async function askIntentsList() {
+  /* UI-01 — one runtime fetch (cached in state): GET /intents returns the
+   * engine's current intent list; the client renders it, never rewrites it. */
+  async function ensureIntents(): Promise<IntentItem[] | null> {
+    if (intents) return intents;
     try {
       const res = await api("/api/odai/intents");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const j = (await res.json()) as { intents?: IntentItem[] };
-      setRows((r) => [...r, { who: "intents", items: j.intents || [] }]);
+      const items = parseIntentsResponse(await res.json());
+      if (!items.length) throw new Error("empty registry response");
+      setIntents(items); setChipsErr(null);
+      return items;
     } catch (e) {
-      setRows((r) => [...r, { who: "err", text: `Intent list unavailable — ${e instanceof Error ? e.message : e}` }]);
+      setChipsErr(e instanceof Error ? e.message : String(e));
+      return null;
     }
   }
 
+  /* idle affordance: the question expands in place into the ten chips */
+  function toggleChips() {
+    if (!chipsOpen) void ensureIntents();
+    setChipsOpen((o) => !o);
+  }
+
+  /* asked mid-conversation (typed or heard): the answer bubble carries the
+   * same clickable chips */
+  async function askIntentsList() {
+    const items = await ensureIntents();
+    setRows((r) => [...r, items
+      ? { who: "intents", items }
+      : { who: "err", text: "Intent list unavailable — the engine did not answer" }]);
+  }
+
+  /* chip click = type the utterance into the composer and submit it */
+  function chipPick(it: IntentItem) {
+    setQ4text(it.utterance);
+    void askQ4(it.utterance);
+  }
+
   /* typed/voice utterances are scored by POST /intents/match (registry data decides
-   * the intent; no prose lives here). The client NEVER sends autocreate — no
-   * objective launches until the WO-09 owner gate fully opens. */
+   * the intent; no prose lives here). UI-01: an objective intent now takes the
+   * TYPED-OBJECTIVE path on the USER screen — POST /api/odai/objectives (api()
+   * stamps a fresh ?_t nonce). The engine's measurable template is tried when
+   * the raw utterance is not measurable; if that still fails, the server's own
+   * restate hint is shown VERBATIM. Either way the objective stops at its
+   * awaiting-owner gates — the client never approves anything (WO-09 stays). */
   async function tryIntentMatch(utterance: string): Promise<boolean> {
     try {
       const res = await api("/api/odai/intents/match", { method: "POST", body: JSON.stringify({ utterance }) });
@@ -111,7 +152,12 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
       } else if (it.engine === "shield-note") {
         setRows((r) => [...r, { who: "ai", text: `Ready to run: ${it.label} — SHIELD keeps watch over publishing, spending and data (simulated); open the SHIELD tab.` }]);
       } else {
-        setRows((r) => [...r, { who: "ai", text: `Ready to run: ${it.label} — say the word in MGMT` }]);
+        let out = objectiveCreateOutcome(await (await api("/api/odai/objectives", { method: "POST", body: JSON.stringify({ statement: utterance }) })).json().catch(() => null));
+        if (!out.ok && it.objective_template) {
+          out = objectiveCreateOutcome(await (await api("/api/odai/objectives", { method: "POST", body: JSON.stringify({ statement: it.objective_template }) })).json().catch(() => null));
+        }
+        if (out.ok) setRows((r) => [...r, { who: "objective", label: it.label, obj: out.obj }]);
+        else setRows((r) => [...r, { who: "sys", text: out.hint }]);
       }
       return true;
     } catch { return false; }
@@ -235,12 +281,14 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     connect("omni");
   }
 
-  async function askQ4() {
-    const text = q4text.trim();
+  async function askQ4(forced?: string) {
+    const text = String(forced ?? q4text).trim();
     if (!text || q4busy.current) return;
     setQ4text("");
-    /* typed intent request — the affordance phrase, or a scored business intent;
-     * neither calls Qwen4-Max, neither launches an objective (WO-09 owner gate). */
+    /* the intent question, typed: answer with the chip bubble (UI-01). Any
+     * other business intent is scored by the engine below — objective intents
+     * render the awaiting-owner plan card (UI-01); nothing is ever approved
+     * client-side (WO-09 owner gate). */
     if (/what can you run|what can.{0,12}for me/i.test(text)) {
       setRows((r) => [...r, { who: "me", text }]);
       void askIntentsList();
@@ -311,18 +359,26 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
             <div className="hello"><h2>Hello, Boss! 👋</h2>
                 <p>Just tell me what you want done — say it out loud, in any language.
                   {odaiU?.company ? <span className="brandchip">{odaiU.company.name}{odaiU.company.synthetic ? " · demo brand" : ""}</span> : null}</p></div>
-            <button className="intentask" onClick={() => { setRows((r) => [...r, { who: "me", text: "What can you run for me?" }]); void askIntentsList(); }}>
-              What can you run for me?
-            </button>
+            <div className="askzone">
+              <button className="intentask" onClick={toggleChips} aria-expanded={chipsOpen}>
+                What can you run for me? <i>{chipsOpen ? "▴" : "▾"}</i>
+              </button>
+              {chipsOpen && (intents
+                ? <IntentChips items={intents} onPick={chipPick} />
+                : chipsErr
+                  ? <p className="chips-note">Intent list unavailable — {chipsErr} · press the question again to retry</p>
+                  : <p className="chips-note">Asking the engine…</p>)}
+            </div>
           </>
         )}
         {rows.map((r, i) => (
-          <div key={i} className={`bubrow${r.who === "me" ? " me" : ""}${r.who === "biz" || r.who === "intents" ? " wide" : ""}`}>
+          <div key={i} className={`bubrow${r.who === "me" ? " me" : ""}${r.who === "biz" || r.who === "intents" || r.who === "objective" ? " wide" : ""}`}>
             {r.who === "biz" ? <BizPanel u={odaiU} />
               : r.who === "intents" ? <div className="bub"><span className="tag">AIVORA</span>
-                  <div className="btxt">Here is what I can run for you — say or type one and I will take it from there:
-                    <ul className="intentlist">{r.items.map((it) => <li key={it.id}><b>{it.label}</b> — “{it.utterance}”</li>)}</ul>
+                  <div className="btxt">Here is what I can run for you — tap one, or say it out loud:
+                    <IntentChips items={r.items} onPick={chipPick} />
                   </div></div>
+              : r.who === "objective" ? <ObjectivePlanCard label={r.label} o={r.obj} />
               : r.who === "sys" || r.who === "err"
               ? <div className={`bub ${r.who === "err" ? "err" : "sys"}`}>{r.text}</div>
               : r.who === "log" ? <LogCard log={r.log} />

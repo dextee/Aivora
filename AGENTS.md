@@ -230,3 +230,33 @@ Pack extracted (work/pack9); contracts/config/FNY catalog vendored into repo `od
   pre-fix, 20/20 post-fix in-file; full `npm test` green; lease WO-10R (paths=server/odai,tests) — the
   parse/list branches live inline in `server.mjs` odaiRoute and the AGENTS.md note is this line; disclosed
   on the SHIPPED ledger line. No security-class (sealed) files changed; no re-seal needed.
+
+## UI-01 — minimal voice-first USER view (2026-11-20, lease WO-UI01 paths=src,tests, no publish)
+- USER idle flow is now: greeting, the ONE dominant green mic button (unchanged), the question
+  "What can you run for me?" which EXPANDS IN PLACE into exactly ten intent chips fetched at
+  runtime from GET /api/odai/intents (cached client-side in one state slot; click = the chip's
+  utterance is typed into the composer and submitted through the same submit routine), the compact
+  Qwen4-Max composer, and the on-demand Today's Business row (Manage My Money chip → dashboard
+  engine, behaviour preserved). The WO-10 plain-text bubble list was replaced by the same
+  clickable chip component, so a typed/heard "what can you run for me" mid-conversation answers
+  with live chips.
+- New pure module `src/IntentChips.tsx` owns ALL chip/plan rendering: INTENT_CHIPS (label +
+  utterance buttons), ObjectivePlanCard (criterion line + 11-task plan + 3 gates with the
+  awaiting-owner banner front and center), parseIntentsResponse (defensive parse, keywords can
+  never reach the UI) and objectiveCreateOutcome (engine error strings travel VERBATIM — the
+  "not measurable — restate…" hint is shown character-for-character). Zero intent prose in the
+  client — bundle + source audits test-enforced (dist must contain none of the 10
+  labels/utterances; BIZ_INTENTS-style wall remains dead: still zero exrow/exchip).
+- Typed-objective path: a matched `objective` intent POSTs /api/odai/objectives with the raw
+  utterance; on "not measurable" it retries the intent's measurable objective_template (same
+  framing the WO-10 autocreate path used); failure of both still surfaces the engine's hint
+  verbatim as a sys bubble. Success renders the plan card frozen in AWAITING_SPEND_APPROVAL —
+  gates stay owner-held (WO-09 untouched; approve lives in MGMT). Dashboard/shield engines
+  unchanged. Light-theme discipline kept: white/near-white cards, black text, ONE green accent,
+  amber only for the pre-existing awaiting-owner vocabulary — no gradients, no dark blocks.
+- Verified at 390×844 against the real server bundle: exactly 10 chips render, chips wrap to a
+  single column, document scrollWidth 390 (no horizontal scroll), mic centre 718/844 = thumb
+  zone; chip click → "Sell 30 Lumen Wellness products via FNYGlobal" card with 11 tasks + 3
+  gates live. Suite 65/65 (was 61) — render-level proofs use react-dom/server on the transpiled
+  module (jsdom is not in the lockfile and adding deps breaks the WO lease/G4; same assertions
+  hold: markup contains 10 .intent-chip nodes from a MOCKED /intents payload).
