@@ -180,13 +180,26 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     <div className="view talkview">
       <div className="conv talkfeed" ref={feedRef}>
         {rows.length === 0 && (
-          <div className="talk-hero">
-            <img src="/logo.png" alt="AIVORA" />
-            <h2>Talk to AIVORA</h2>
-            <p>One press. Speak naturally — <b>廣東話 · 普通话 · English · Bahasa Melayu · தமிழ்</b>.<br />
-              Ask for goals, interpretation or a document — AIVORA routes itself.</p>
-            <span className="tryline">try: “我想90天内业绩增长三成” · “interpret for my supplier” · “translate this contract”</span>
-          </div>
+          <>
+            <div className="hello"><h2>Hello, Boss! 👋</h2><p>Just tell me what you want done — say it out loud, in any language.</p></div>
+            <div className="exrow" aria-label="Example requests">
+              {EXAMPLES.map((x) => <button key={x} className="exchip" onClick={() => sayExample(x)}>“{x}”</button>)}
+            </div>
+            <div className="bizcard">
+              <h4>📊 Today's Business <span className="test-badge">TEST</span></h4>
+              <div className="bizgrid">
+                <div className="biz"><label>🛒 Sales</label><b>S$12,480</b> <i>▲ +24%</i></div>
+                <div className="biz"><label>👥 Customers</label><b>86</b> <i>▲ +18%</i></div>
+                <div className="biz"><label>✅ Tasks done</label><b>{odaiU?.tasks_done ?? "0/10 beats"}</b></div>
+                <div className="biz"><label>🗂 Objective</label><b style={{ fontSize: 12, color: "#b9f5cf" }}>{odaiU?.objective ? String(odaiU.objective).slice(0, 40) : "—"}</b></div>
+              </div>
+            </div>
+            <ul className="donelist">
+              {(odaiU?.whats_done.length ? odaiU.whats_done : ["Run a request above or press Speak Now — completed tasks appear here"]).slice(0, 4).map((d, i) => <li key={i}>{d}</li>)}
+              {odaiU?.awaiting && <li style={{ color: "#fbbf24" }}>⏸ Owner approval pending — open MGMT tab to decide</li>}
+            </ul>
+            <p className="fineprint" style={{ marginTop: 8 }}>sales/customer figures are demo fixtures (TEST) until live ledger data exists</p>
+          </>
         )}
         {rows.map((r, i) => (
           <div key={i} className={`bubrow${r.who === "me" ? " me" : ""}`}>
