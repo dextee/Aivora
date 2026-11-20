@@ -236,6 +236,29 @@
     "revoked_reason": "WO-A2 SHIPPED (staged, NO publish; files: tests/policy_registry.test.mjs NEW 19 probes, tests/policy_gaps.txt NEW SEC-05 honest-red, package.json test-chain wiring; AGENTS.md not updated — outside lea",
     "revoked_at": "2026-11-20T15:42:21Z"
   },
+  "WO-SEC05": {
+    "issued_at": "2026-11-20T17:50:15Z",
+    "expires_at": "2026-11-20T19:20:15Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "check": 1,
+      "commit": 6
+    },
+    "revoked": true,
+    "revoked_reason": "WO-SEC05 SHIPPED (staged, NO publish; files: server/odai/reservations.mjs NEW, server/odai/{skills,ledger,objectives}.mjs, tests/policy_registry.test.mjs, tests/policy_gaps.txt GREEN-regenerated; AGEN",
+    "revoked_at": "2026-11-20T18:08:41Z"
+  },
   "WO-UI01": {
     "issued_at": "2026-11-20T14:35:38Z",
     "expires_at": "2026-11-20T15:35:38Z",
