@@ -337,3 +337,35 @@ button { font-family: inherit; }
 .lpill.sel, .pill.sel, .mab { font-weight: 800; }
 .mgmt .node, .mgmt .node small, .mgmt .node b { color: #000; }
 /* dark-surface text stays near-white for contrast (black on forest/navy is invisible) */
+
+/* ============ USER PAGE: LIGHT THEME, BLACK TEXT (owner directive V30 — final) ============ */
+.app.usermode { background: linear-gradient(180deg, #f0f6f1 0%, #e3efe6 100%); color: #000; }
+.usermode, .usermode .view, .usermode .conv, .usermode .talkfeed { color: #000; }
+.usermode .hello h2 { color: #000; }
+.usermode .hello p { color: #17251d; font-weight: 600; }
+.usermode .brandchip { background: #d7f0df; border-color: #6dbd8a; color: #0b2e1a; }
+.usermode .tryline { background: #fff; border: 1px solid #d4e3d8; color: #17251d; }
+.usermode .exrow .exchip { background: #ffffff; border: 1.5px solid #1fae63; color: #000; font-weight: 700; box-shadow: 0 1px 2px rgba(10,60,30,.08); }
+.usermode .exchip:active { background: #d7f0df; }
+.usermode .talk-status, .usermode .talk-status.on { color: #000; font-weight: 800; }
+.usermode .talk-ctl { background: linear-gradient(180deg, rgba(240,246,241,0), #eef4ef 30%); }
+.usermode .big-mic { box-shadow: 0 10px 24px -6px rgba(14,159,95,.5), 0 3px 10px rgba(10,50,26,.25); }
+.usermode .bizcard { background: #fff; border: 1.5px solid #cfe4d5; box-shadow: 0 1px 3px rgba(12,60,30,.08); }
+.usermode .bizcard h4 { color: #000; }
+.usermode .biz { background: #f1f7f2; }
+.usermode .biz label { color: #33513f; font-weight: 800; }
+.usermode .biz b { color: #000; }
+.usermode .biz i, .usermode .biz i.up { color: #0b7d3f; font-weight: 900; }
+.usermode .donelist li { background: #fff; color: #000; border: 1px solid #dbe8dd; font-weight: 600; }
+.usermode .donelist li::before { color: #0b9e4f; }
+.usermode .donelist li.awaiting { color: #7a4a00; background: #fff6e0; border-color: #f0d497; }
+.usermode .fineprint { color: #3c4f43; font-weight: 700; }
+.usermode .test-badge { background: #f59e0b; color: #241202; }
+.usermode .row.ai .bub, .usermode .row.ai .bub .btxt, .usermode .row.ai .bub time { color: #000; }
+.usermode .row.user .bub, .usermode .row.user .bub .btxt { color: #000; }
+.usermode .bub .tag { color: #0b6b46; }
+.usermode .compose { background: #f6faf6; border-top-color: #d8e6db; }
+.usermode .compose input { background: #fff; border-color: #cfded3; color: #000; }
+.usermode .compose input::placeholder { color: #5c7a67; }
+/* V30 deploy marker: survives CSS minification; rendered off-screen, no visual effect */
+.usermode::before { content: "LIGHT THEME, BLACK TEXT"; position: fixed; top: 0; left: 100%; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); pointer-events: none; }
