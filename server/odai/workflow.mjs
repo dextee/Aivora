@@ -156,7 +156,7 @@ export async function userView(tenantId) {
   return { objective: s?.run?.objective ?? t.trace.find((x) => x.kind === "RUN_STARTED")?.objective ?? null,
     "today's_business": { tasks_done: `${(s ? s.rec.filter((r) => r.decision !== "APPROVE" && r.decision !== "NEVER").length : receipts.filter((r) => !r.awaiting).length)}/10 beats`, data_state: "TEST · database" },
     whats_done: done.slice(-4), awaiting: awaiting ? "spending_approval" : null,
-    company: { name: COMPANY.company_name, synthetic: COMPANY.is_synthetic, slot: COMPANY.profile_slot };
+    company: { name: COMPANY.company_name, synthetic: COMPANY.is_synthetic, slot: COMPANY.profile_slot } };
 }
 export async function managementView(tenantId) {
   const t = get(tenantId);
