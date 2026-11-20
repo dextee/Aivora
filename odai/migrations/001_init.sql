@@ -1,0 +1,23 @@
+-- AIVORA ODAI 9.0 — migration 001 (idempotent; one page = one schema; tenant_id isolates demo tenants inside server code)
+CREATE TABLE IF NOT EXISTS odai_supplier (tenant_id text NOT NULL, supplier text NOT NULL, relation_state text NOT NULL DEFAULT 'UNVERIFIED_PENDING_AGREEMENT', ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, supplier));
+CREATE TABLE IF NOT EXISTS odai_product (tenant_id text NOT NULL, sku text NOT NULL, name text, category text, package text, currency text, website_price numeric, price_type text, reseller_authorized boolean, regulatory_review_status text, fulfillment_mode text, marketing_claims_approved boolean, review_state text NOT NULL DEFAULT 'QUARANTINED', provenance jsonb, created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, sku));
+CREATE TABLE IF NOT EXISTS odai_variant (tenant_id text, sku text, variant text, attrs jsonb, PRIMARY KEY (tenant_id, sku, variant));
+CREATE TABLE IF NOT EXISTS odai_price_history (tenant_id text, sku text, price numeric, currency text, captured_on date, source_url text, id bigserial PRIMARY KEY);
+CREATE TABLE IF NOT EXISTS odai_source_receipt (tenant_id text, run_id text, source text, captured date, note text, id bigserial PRIMARY KEY);
+CREATE TABLE IF NOT EXISTS odai_catalog_review (tenant_id text, sku text, reviewer text, state text, note text, ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, sku));
+CREATE TABLE IF NOT EXISTS odai_inventory_status (tenant_id text, sku text, state text, qty_source text, PRIMARY KEY (tenant_id, sku));
+CREATE TABLE IF NOT EXISTS odai_channel_listing (tenant_id text, sku text, channel text, state text NOT NULL DEFAULT 'DRAFT_ONLY', payload jsonb, updated_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, sku, channel));
+CREATE TABLE IF NOT EXISTS odai_customer_consent (tenant_id text, customer_ref text, purpose text, granted boolean, ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, customer_ref, purpose));
+CREATE TABLE IF NOT EXISTS odai_campaign (tenant_id text, run_id text, name text, cap_sgd numeric, state text, ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, run_id));
+CREATE TABLE IF NOT EXISTS odai_spend_approval (tenant_id text, run_id text, approved boolean, cap_sgd numeric, binding text, decided_by text DEFAULT 'OWNER', ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, run_id));
+CREATE TABLE IF NOT EXISTS odai_order (tenant_id text, order_id text, kind text NOT NULL, amount numeric, currency text, sku text, supplier_cost numeric, supplier_cost_verified boolean DEFAULT false, sent_to_supplier boolean DEFAULT false, ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, order_id));
+CREATE TABLE IF NOT EXISTS odai_fulfillment_handoff (tenant_id text, order_id text, state text NOT NULL DEFAULT 'PREPARED_NOT_SENT', payload jsonb, ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, order_id));
+CREATE TABLE IF NOT EXISTS odai_refund (tenant_id text, order_id text, amount numeric, reason text, ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, order_id, ts));
+CREATE TABLE IF NOT EXISTS odai_expense (tenant_id text, run_id text, category text, amount numeric, currency text, source text, ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, run_id, category, ts));
+CREATE TABLE IF NOT EXISTS odai_fx_rate (from_cur text, to_cur text, rate numeric, asof date, PRIMARY KEY (from_cur, to_cur, asof));
+CREATE TABLE IF NOT EXISTS odai_ledger_entry (tenant_id text, run_id text, account text, side text, amount numeric, currency text, basis text, ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, run_id, account, ts));
+CREATE TABLE IF NOT EXISTS odai_profit_snapshot (tenant_id text, run_id text, snapshot jsonb, ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, run_id, ts));
+CREATE TABLE IF NOT EXISTS odai_run (tenant_id text, run_id text, objective text, state text, started_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, run_id));
+CREATE TABLE IF NOT EXISTS odai_trace (tenant_id text, run_id text, seq bigserial, kind text, beat int, actor text, decision text, rule text, note text, ts timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS odai_receipt (tenant_id text, run_id text, beat int, id text, role text, summary text, decision text, rule text, evidence jsonb, demo_mode text, ts timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, run_id, beat));
+CREATE INDEX IF NOT EXISTS idx_odai_trace_tenant ON odai_trace (tenant_id, ts);

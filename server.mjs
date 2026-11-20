@@ -229,18 +229,18 @@ async function odaiRoute(url, request, response) {
       const mode = url.searchParams.get("mode");
       const authz = modeAccess(mode, { tenantId: tenant });   // staging demo session; production auth: WO-90-SEC-004
       if (!authz.ok) return json({ error: authz.reason }, 403);
-      const body = mode === "user" ? userView(tenant) : mode === "management" ? managementView(tenant) : securityView(tenant);
+      const body = mode === "user" ? await userView(tenant) : mode === "management" ? await managementView(tenant) : await securityView(tenant);
       return json({ mode, tenant_id: tenant, grants: authz.grants, data_mode: "TEST", ...body });
     }
     if (path === "/demo/start" && request.method === "POST") {
       let raw = ""; for await (const c of request) raw += c;
       const { objective } = JSON.parse(raw || "{}");
-      return json({ tenant_id: tenant, ...startRun(tenant, String(objective || "Sell FNYGlobal wellness products to 100 customers").slice(0, 300)) });
+      return json({ tenant_id: tenant, ...await startRun(tenant, String(objective || "Sell FNYGlobal wellness products to 100 customers").slice(0, 300)) });
     }
     if (path === "/demo/approve" && request.method === "POST") {
       let raw = ""; for await (const c of request) raw += c;
       const { runId, approve, cap } = JSON.parse(raw || "{}");
-      return json(decideSpend(tenant, String(runId), !!approve, Number(cap) || 200));
+      return json(await decideSpend(tenant, String(runId), !!approve, Number(cap) || 200));
     }
     if (path === "/catalog") return json({ tenant_id: tenant, review_mode: "QUARANTINE_REVIEW_REQUIRED", products: get(tenant).products.map((p) => ({ id: p.id, name: p.name, currency: p.currency, price: p.website_price, price_type: p.price_type, reseller_authorized: p.reseller_authorized, regulatory: p.regulatory_review_status, review_state: p.review_state })) });
     return json({ error: "unknown odai path" }, 404);
