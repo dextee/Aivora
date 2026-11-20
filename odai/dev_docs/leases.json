@@ -104,11 +104,12 @@
     "revoked_at": "2026-11-20T15:14:11Z"
   },
   "WO-A2": {
-    "issued_at": "2026-11-20T15:13:27Z",
-    "expires_at": "2026-11-20T16:13:27Z",
+    "issued_at": "2026-11-20T15:30:43Z",
+    "expires_at": "2026-11-20T16:30:43Z",
     "minutes": 60,
     "paths": [
-      "tests"
+      "tests",
+      "package.json"
     ],
     "ops": [
       "check",
@@ -116,8 +117,12 @@
     ],
     "budget": 12,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 3
+    },
+    "revoked": true,
+    "revoked_reason": "WO-A2 SHIPPED (staged, NO publish; files: tests/policy_registry.test.mjs NEW 19 probes, tests/policy_gaps.txt NEW SEC-05 honest-red, package.json test-chain wiring; AGENTS.md not updated — outside lea",
+    "revoked_at": "2026-11-20T15:42:21Z"
   },
   "WO-UI01": {
     "issued_at": "2026-11-20T14:35:38Z",

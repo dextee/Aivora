@@ -18,3 +18,7 @@
 2026-11-20T14:37:22Z|ISSUE|WO-A1|ops=check,commit|paths=server,odai/config,tests,tools|minutes=120|budget=24|single_use=0|expires_at=2026-11-20T16:37:22Z
 2026-11-20T15:13:27Z|ISSUE|WO-A2|ops=check,commit|paths=tests|minutes=60|budget=12|single_use=0|expires_at=2026-11-20T16:13:27Z
 2026-11-20T15:14:11Z|REVOKE|WO-A1|reason=WO-A1 SHIPPED (staged, NO publish; files: tools/build_registry.py, odai/config 7 registry files, server/odai/{registry,skills,ledger}.mjs, objectives.mjs router+states, server.mjs GET /api/odai/regist
+2026-11-20T15:30:34Z|DENY|WO-A2|op=commit|path=package.json|reason=PATH_NOT_ALLOWED|detail=path=package.json scope=tests
+2026-11-20T15:30:43Z|REVOKE|WO-A2|reason=scope misissue: owner rule 'npm test green WITH new tests' requires package.json test-chain wiring; PATH_NOT_ALLOWED DENY observed live (fail-closed as designed, UI-01 precedent); reissuing tests+pack
+2026-11-20T15:30:43Z|ISSUE|WO-A2|ops=check,commit|paths=tests,package.json|minutes=60|budget=12|single_use=0|expires_at=2026-11-20T16:30:43Z
+2026-11-20T15:42:21Z|REVOKE|WO-A2|reason=WO-A2 SHIPPED (staged, NO publish; files: tests/policy_registry.test.mjs NEW 19 probes, tests/policy_gaps.txt NEW SEC-05 honest-red, package.json test-chain wiring; AGENTS.md not updated — outside lea
