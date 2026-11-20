@@ -19,6 +19,7 @@ import { startRun, decideSpend, userView, managementView, securityView } from ".
 import { modeAccess, POLICY_VERSION, UNAVAILABLE_RULE_SETS } from "./server/odai/policy.mjs";
 import { get, DEMO_TENANT } from "./server/odai/store.mjs";
 import { createObjective, approve, resume, finalReport, project, view as objView } from "./server/odai/objectives.mjs";
+import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
 
 const host = process.env.HOST;
 const port = Number(process.env.PORT);
@@ -297,6 +298,22 @@ async function odaiRoute(url, request, response) {
     if (request.method === "GET" && !action) return json(await resume(tenant, oid));
   }
   if (path === "/modes") return json({ contract: "ui_modes_9_0", policy_version: POLICY_VERSION, unavailable_rule_sets: UNAVAILABLE_RULE_SETS, modes: ["user", "management", "security"], mode_change_grants_permission: false });
+    if (path === "/intents" && request.method === "GET") {
+      // registry minus internal fields (keywords stripped server-side). Data-driven; no prose in code.
+      return json({ tenant_id: tenant, intents: publicIntents() });
+    }
+    if (path === "/intents/match" && request.method === "POST") {
+      let raw = ""; for await (const c of request) raw += c;
+      let body; try { body = JSON.parse(raw || "{}"); } catch { return json({ error: "bad json" }, 400); }
+      const utterance = String(body.utterance || "").slice(0, 300);
+      const match = matchIntent(utterance);
+      const autocreate = url.searchParams.get("autocreate"); // owner gate WO-09: only "true" launches, else side-effect-free match
+      if (autocreate === "true" && match.intent && match.intent.engine === "objective" && match.intent.objective_template) {
+        const created = await createObjective(tenant, match.intent.objective_template);
+        return json({ tenant_id: tenant, launch: "autocreate", intent: match.intent, score: match.score, objective: created });
+      }
+      return json({ tenant_id: tenant, launch: "match-only", intent: match.intent, score: match.score });
+    }
     if (path === "/view") {
       const mode = url.searchParams.get("mode");
       const authz = modeAccess(mode, { tenantId: tenant });   // staging demo session; production auth: WO-90-SEC-004

@@ -97,3 +97,33 @@ Scope: NO PUBLISH, NO production touch. Only this evidence log + AGENTS.md line 
   forbid task mutation from inside a run); WO-07's Drive copies are of HEAD 9538a972 — refresh on request.
   Secrets: none read, printed, committed, or bundled by this run.
 ================================================================
+================================================================
+2026-11-20T11:45Z — WO-10 SUPERVISED IMPLEMENTATION — INTENTS TO ENGINE, MINIMAL USER
+================================================================
+Work order: WO-10 (DEV-02 architect role; DEV-12 preflight gate; DEV-11 test gate)
+Page: app-1fe44043-4ed153f9 (aivora-odai-realtime, dynamic, clupxd6g.qwenwork.page)
+Repo: /mnt/pages/page-repo-1255a831-bc45-4ee3-a572-8ff3e587ad2a
+Entry HEAD: bead5b6ced8764e68f1614c769026949dc506794 (clean worktree)
+Access: page_repo resolve(managed/update) -> prepare -> open — succeeded on first attempt, no retry.
+Scope: NO PUBLISH, no production touch. Single evidence file appended (this block); AGENTS.md updated.
+
+[1] FILES TOUCHED
+  new   odai/config/intents_registry.json      — ten owner-approved intents {id,label,utterance,engine,objective_template|null} + internal keywords engine; 8 objective, 1 dashboard (Manage My Money), 1 shield-note (Protect My Business).
+  new   server/odai/intents.mjs                — registry loader, publicView (keywords stripped), structural token scorer; zero intent prose in code; MIN_SCORE 2; exact-utterance=100.
+  mod   server.mjs                             — GET /api/odai/intents (registry minus internal fields); POST /api/odai/intents/match {utterance} -> match-only (no side effects) by default; createObjective auto-launch ONLY with ?autocreate=true AND engine=objective (WO-09 owner gate; client never passes it).
+  mod   src/TalkView.tsx                       — BIZ_INTENTS grid + sayExample regex intercepts REMOVED. Idle = hero + composer + big mic + one text affordance 'What can you run for me?' -> GET /intents rendered as plain assistant chat bubble (text list, no buttons). Typed (askQ4, pre-Q4) and voice (turn) utterances -> POST /intents/match; objective match answers 'Ready to run: <label> — say the word in MGMT' (NO autonomous launch); dashboard match also opens Today's Business card; shield-note match prints the SHIELD note.
+  mod   src/styles.css                         — every .exrow/.exchip rule deleted (V34 grid block replaced by .intentask/.intentlist); zero references left in src/ (grep-verified in this run and by the shipped test). V30 LIGHT THEME, BLACK TEXT marker intact (src/styles.css:336 + .usermode::before hook).
+  mod   tests/objectives.test.mjs              — +6 test groups (9–14): registry exactly-ten + engine contract; every objective_template passes D03 interpret() via direct module import; GET strips internal keywords; 3 probe utterances expected (Bring me buyers->find-customers, What can I sell?->find-products, fuzzy ads probe->make-advertisements) with launch=match-only + no objective; autocreate gating (dashboard never spawns; objective spawn => criterion target_units=50, state AWAITING_SPEND_APPROVAL); USER-bundle audit (no 'Run My Business Automatically'/'Help me start earning' in built JS, 'What can you run for me' present) + zero exrow/exchip src references.
+  mod   AGENTS.md                              — V34 marked SUPERSEDED by WO-10; WO-10 section describes final product state.
+
+[2] GATES (DEV-12 preflight first, DEV-11 suite verdict — run against the FINAL file set)
+  node tools/guardrails_preflight.mjs -> exit 0: preflight clear: single-server ✓ provenance-inert ✓ lockfile ✓ single-policy ✓ editable-src ✓ test-gate ✓ single-dispatcher ✓
+  npm run typecheck -> clean;  npm run build && npm test -> exit 0
+  TAP tail: 1..35 / # tests 43 / # suites 3 / # pass 43 / # fail 0 / # cancelled 0 / # skipped 0 (baseline 37; +6 WO-10)
+  interpret() pass on all 8 objective templates (units+FNYGlobal x6, growth-% x2) — machine-checked in test 10.
+
+[3] STEERAGE / HONESTY
+  Zero button wall: USER idle shows exactly one subtle text affordance; intent list arrives from the engine at ask-time, never bundled. No objective created or executed autonomously: client never sends autocreate; server-side autocreate still stops at the owner spend gate and the 9.0 connector NEVER (external writes remain disabled).
+  Secrets: none read, printed, committed, or bundled by this run. No scheduled task or automation was created, updated, or triggered. NO PUBLISH invoked; online version stays V39.
+  Commit: 'WO-10: intents to engine, minimal USER' (oid = this change set's commit on main; reproducible via git log --grep).
+================================================================

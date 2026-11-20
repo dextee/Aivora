@@ -1,0 +1,88 @@
+{
+  "schema_version": "10.0.0",
+  "provenance": "WO-10 (2026-11-20): the ten owner-approved business intents move from the V34 USER chip grid into the engine. This file is the single source of truth; server matching scores against it — no intent prose lives in code.",
+  "validation_note": "Every engine=objective objective_template MUST pass D03 interpret() (server/odai/objectives.mjs): measurable framing only — units+catalog/brand or % over days. tests/objectives.test.mjs enforces this on every run.",
+  "launch_policy": "Autocreate is OFF by default; the client never launches an objective on its own. Auto-spawn happens only if the caller passes ?autocreate=true (owner gate WO-09). Matched intents render a single chat line: 'Ready to run: <label> — say the word in MGMT'.",
+  "intents": [
+    {
+      "id": "start-my-business",
+      "label": "Start My Business",
+      "utterance": "Help me start earning",
+      "engine": "objective",
+      "objective_template": "Sell 30 Lumen Wellness products from the FNYGlobal catalog in 90 days",
+      "keywords": ["start", "business", "earning", "earn", "begin", "launch", "first sale", "help me start", "new venture"]
+    },
+    {
+      "id": "find-products",
+      "label": "Find Products",
+      "utterance": "What can I sell?",
+      "engine": "objective",
+      "objective_template": "Sell 50 wellness products from the FNYGlobal catalog this quarter",
+      "keywords": ["find", "products", "sell", "catalog", "source", "supply", "stock", "what can i sell", "winning products"]
+    },
+    {
+      "id": "set-up-my-online-shop",
+      "label": "Set Up My Online Shop",
+      "utterance": "Help me sell online",
+      "engine": "objective",
+      "objective_template": "Sell 40 Lumen Wellness products from the FNYGlobal catalog through my new online shop",
+      "keywords": ["set", "online", "shop", "store", "website", "webstore", "storefront", "shopee", "sell online", "e-commerce"]
+    },
+    {
+      "id": "make-advertisements",
+      "label": "Make Advertisements",
+      "utterance": "Promote my products",
+      "engine": "objective",
+      "objective_template": "Grow wellness sales 30% in 45 days with targeted advertisements",
+      "keywords": ["make", "advertisements", "advertisement", "advertise", "ads", "promote", "promotion", "marketing", "campaign"]
+    },
+    {
+      "id": "find-customers",
+      "label": "Find Customers",
+      "utterance": "Bring me buyers",
+      "engine": "objective",
+      "objective_template": "Sell 60 wellness products from the FNYGlobal catalog to newly found buyers",
+      "keywords": ["find", "customers", "buyers", "bring", "leads", "audience", "reach", "new customers"]
+    },
+    {
+      "id": "talk-to-customers",
+      "label": "Talk to Customers",
+      "utterance": "Answer questions and help me sell",
+      "engine": "objective",
+      "objective_template": "Sell 25 wellness products from the FNYGlobal catalog by answering customer questions",
+      "keywords": ["talk", "customers", "answer", "questions", "reply", "support", "chat", "enquiries", "help me sell"]
+    },
+    {
+      "id": "deliver-my-products",
+      "label": "Deliver My Products",
+      "utterance": "Handle orders and deliveries",
+      "engine": "objective",
+      "objective_template": "Deliver all 80 units sold from the FNYGlobal catalog within 14 days",
+      "keywords": ["deliver", "delivery", "orders", "shipping", "fulfil", "fulfill", "logistics", "courier", "parcel", "handle orders"]
+    },
+    {
+      "id": "manage-my-money",
+      "label": "Manage My Money",
+      "utterance": "Track spending, sales and profits",
+      "engine": "dashboard",
+      "objective_template": null,
+      "keywords": ["manage", "money", "track", "spending", "sales", "profits", "profit", "revenue", "cashflow", "finance", "dashboard", "report", "results", "today", "progress"]
+    },
+    {
+      "id": "run-my-business-automatically",
+      "label": "Run My Business Automatically",
+      "utterance": "Make money while I sleep",
+      "engine": "objective",
+      "objective_template": "Grow automated sales 30% over 60 days running end to end",
+      "keywords": ["run", "automatically", "automatic", "automation", "autopilot", "sleep", "passive", "hands off", "while i sleep", "make money while"]
+    },
+    {
+      "id": "protect-my-business",
+      "label": "Protect My Business",
+      "utterance": "Keep my money and business safe",
+      "engine": "shield-note",
+      "objective_template": null,
+      "keywords": ["protect", "safe", "safety", "security", "shield", "guard", "risk", "fraud", "privacy", "keep my business safe", "keep my money safe"]
+    }
+  ]
+}

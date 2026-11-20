@@ -15,25 +15,20 @@ import { loadConfig, type LiveEvent } from "./lib";
 type Row =
   | { who: "me" | "ai" | "sys" | "err"; text: string; label?: string }
   | { who: "biz" }
+  | { who: "intents"; items: IntentItem[] }
   | { who: "pair"; src: string; out: string }
   | { who: "log"; log: Record<string, unknown> };
 
-const LNAME: Record<string, string> = { en: "English", zh: "中文", yue: "廣東話", ms: "Bahasa Melayu", id: "Bahasa Indonesia", th: "ไทย", ta: "தமிழ்" };
+/* WO-10 — the ten business intents live in the ENGINE (odai/config/intents_registry.json),
+ * served by GET /api/odai/intents and scored by POST /api/odai/intents/match.
+ * The client keeps zero intent prose and zero chip wall: one text affordance
+ * asks the server and renders the list as a plain assistant chat bubble.
+ * Objective autocreate stays OFF client-side — nothing launches without the
+ * owner gate (WO-09); a matched intent only answers "Ready to run: … say the
+ * word in MGMT". */
+type IntentItem = { id: string; label: string; utterance: string; engine: string; objective_template: string | null };
 
-/* V34 — ten business intents (label, utterance sent on tap). Owner directive
- * 2026-11-20: replace the old example chips; same slot, same chip style. */
-const BIZ_INTENTS: readonly (readonly [string, string])[] = [
-  ["Start My Business", "Help me start earning"],
-  ["Find Products", "What can I sell?"],
-  ["Set Up My Online Shop", "Help me sell online"],
-  ["Make Advertisements", "Promote my products"],
-  ["Find Customers", "Bring me buyers"],
-  ["Talk to Customers", "Answer questions and help me sell"],
-  ["Deliver My Products", "Handle orders and deliveries"],
-  ["Manage My Money", "Track spending, sales and profits"],
-  ["Run My Business Automatically", "Make money while I sleep"],
-  ["Protect My Business", "Keep my money and business safe"],
-];
+const LNAME: Record<string, string> = { en: "English", zh: "中文", yue: "廣東話", ms: "Bahasa Melayu", id: "Bahasa Indonesia", th: "ไทย", ta: "தமிழ்" };
 
 type UState = { objective: string | null; tasks_done?: string; whats_done: string[]; awaiting: string | null; company?: { name: string; synthetic?: boolean } };
 
@@ -79,18 +74,47 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     if (state === "idle") setRows((r) => [...r, { who: "biz" }]);
   }
 
-  function sayExample(text: string) {
-    if (state === "connecting" || state === "interpreter") return;
-    if (/protect.*(safe)|keep my (money|business).*safe/i.test(text)) {
-      setRows((r) => [...r, { who: "sys", text: "SHIELD keeps watch over publishing, spending and data — see the SHIELD tab (simulated)." }]);
-      return;
+  async function api(path: string, init?: RequestInit) {
+    const c = loadConfig();
+    return fetch(`${path}${path.includes("?") ? "&" : "?"}_t=${Date.now()}`, {
+      ...init,
+      headers: { "content-type": "application/json", ...(c?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}), ...(init?.headers || {}) },
+    });
+  }
+
+  /* the one affordance: ask the ENGINE for its intents — rendered as a plain
+   * assistant chat bubble (text list, zero buttons). */
+  async function askIntentsList() {
+    try {
+      const res = await api("/api/odai/intents");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const j = (await res.json()) as { intents?: IntentItem[] };
+      setRows((r) => [...r, { who: "intents", items: j.intents || [] }]);
+    } catch (e) {
+      setRows((r) => [...r, { who: "err", text: `Intent list unavailable — ${e instanceof Error ? e.message : e}` }]);
     }
-    if (/result|today|report|progress|track|spending|profit|状态/i.test(text)) { void showDashboard(); return; }
-    setRows((r) => [...r, { who: "me", text }]);
-    const eng = engRef.current;
-    if (eng?.sendTextTurn?.(text)) return;
-    pendingUtterance.current = text;
-    void connect("omni");
+  }
+
+  /* typed/voice utterances are scored by POST /intents/match (registry data decides
+   * the intent; no prose lives here). The client NEVER sends autocreate — no
+   * objective launches until the WO-09 owner gate fully opens. */
+  async function tryIntentMatch(utterance: string): Promise<boolean> {
+    try {
+      const res = await api("/api/odai/intents/match", { method: "POST", body: JSON.stringify({ utterance }) });
+      if (!res.ok) return false;
+      const j = (await res.json()) as { intent?: IntentItem | null };
+      const it = j?.intent;
+      if (!it) return false;
+      if (it.engine === "dashboard") {
+        setRows((r) => [...r, { who: "ai", text: `Ready to run: ${it.label} — here is Today's Business.` }]);
+        void showDashboard();
+      } else if (it.engine === "shield-note") {
+        setRows((r) => [...r, { who: "ai", text: `Ready to run: ${it.label} — SHIELD keeps watch over publishing, spending and data (simulated); open the SHIELD tab.` }]);
+      } else {
+        setRows((r) => [...r, { who: "ai", text: `Ready to run: ${it.label} — say the word in MGMT` }]);
+      }
+      return true;
+    } catch { return false; }
   }
   useEffect(() => () => { try { engRef.current?.stop(); } catch { /* unmount */ } }, []);
   useEffect(() => {
@@ -148,7 +172,7 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
         }
         case "user":
           if (mode === "translate") { outBuf.current = ""; pairOpen.current = true; setRows((r) => [...r, { who: "pair", src: e.text, out: "" }]); }
-          else { setRows((r) => [...r, { who: "me", text: e.text }]); void keywordRoute(e.text); }
+          else { setRows((r) => [...r, { who: "me", text: e.text }]); void keywordRoute(e.text); void tryIntentMatch(e.text); }
           break;
         case "reply": setRows((r) => [...r, { who: "ai", text: e.text }]); break;
         case "translated": {
@@ -214,10 +238,19 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
   async function askQ4() {
     const text = q4text.trim();
     if (!text || q4busy.current) return;
-    q4busy.current = true;
     setQ4text("");
+    /* typed intent request — the affordance phrase, or a scored business intent;
+     * neither calls Qwen4-Max, neither launches an objective (WO-09 owner gate). */
+    if (/what can you run|what can.{0,12}for me/i.test(text)) {
+      setRows((r) => [...r, { who: "me", text }]);
+      void askIntentsList();
+      return;
+    }
+    setRows((r) => [...r, { who: "me", text }]);
+    if (await tryIntentMatch(text)) return;
+    q4busy.current = true;
     q4hist.current = [...q4hist.current, { role: "user", content: text }].slice(-24);
-    setRows((r) => [...r, { who: "me", text }, { who: "ai", text: "", label: "Qwen4-Max" }]);
+    setRows((r) => [...r, { who: "ai", text: "", label: "Qwen4-Max" }]);
     let acc = "";
     const patch = (t: string) => setRows((r) => {
       const c = [...r]; const last = c[c.length - 1];
@@ -278,18 +311,18 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
             <div className="hello"><h2>Hello, Boss! 👋</h2>
                 <p>Just tell me what you want done — say it out loud, in any language.
                   {odaiU?.company ? <span className="brandchip">{odaiU.company.name}{odaiU.company.synthetic ? " · demo brand" : ""}</span> : null}</p></div>
-            <div className="exrow" aria-label="Business requests">
-              {BIZ_INTENTS.map(([label, phrase]) => (
-                <button key={label} className="exchip" onClick={() => sayExample(phrase)}>
-                  <b>{label}</b>— {phrase}
-                </button>
-              ))}
-            </div>
+            <button className="intentask" onClick={() => { setRows((r) => [...r, { who: "me", text: "What can you run for me?" }]); void askIntentsList(); }}>
+              What can you run for me?
+            </button>
           </>
         )}
         {rows.map((r, i) => (
-          <div key={i} className={`bubrow${r.who === "me" ? " me" : ""}${r.who === "biz" ? " wide" : ""}`}>
+          <div key={i} className={`bubrow${r.who === "me" ? " me" : ""}${r.who === "biz" || r.who === "intents" ? " wide" : ""}`}>
             {r.who === "biz" ? <BizPanel u={odaiU} />
+              : r.who === "intents" ? <div className="bub"><span className="tag">AIVORA</span>
+                  <div className="btxt">Here is what I can run for you — say or type one and I will take it from there:
+                    <ul className="intentlist">{r.items.map((it) => <li key={it.id}><b>{it.label}</b> — “{it.utterance}”</li>)}</ul>
+                  </div></div>
               : r.who === "sys" || r.who === "err"
               ? <div className={`bub ${r.who === "err" ? "err" : "sys"}`}>{r.text}</div>
               : r.who === "log" ? <LogCard log={r.log} />

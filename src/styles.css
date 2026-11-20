@@ -202,9 +202,6 @@ button { font-family: inherit; }
 .hello { padding: 14px 18px 2px; }
 .hello h2 { font: 800 22px var(--display); color: #fff; }
 .hello p { font-size: 12.5px; color: #9fd8b4; margin-top: 3px; }
-.exrow { display: flex; gap: 7px; flex-wrap: wrap; padding: 10px 16px 2px; }
-.exchip { border: 1px solid rgba(46,230,107,.45); background: rgba(46,230,107,.08); color: #b9f5cf; font: 600 11.5px var(--font); padding: 8px 12px; border-radius: 999px; cursor: pointer; }
-.exchip:active { background: rgba(46,230,107,.25); }
 .bizcard { margin: 12px 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(46,230,107,.35); border-radius: 16px; padding: 12px 14px; box-shadow: 0 0 18px rgba(46,230,107,.12) inset; }
 .bizcard h4 { font: 800 12px var(--display); letter-spacing: .08em; color: #2ee66b; display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
 .bizgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -305,8 +302,6 @@ button { font-family: inherit; }
 .usermode .hello h2 { color: #ffffff; }
 .usermode .hello p { color: #e3efe6; }
 .usermode .brandchip { color: #fff; background: rgba(46,230,107,.22); border-color: rgba(46,230,107,.6); }
-.usermode .exchip { color: #fff; background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.34); font-weight: 700; }
-.usermode .exchip:active { background: rgba(46,230,107,.32); }
 .usermode .talk-status { color: #eff7f1; font-weight: 700; }
 .usermode .talk-status.on { color: #fff; }
 .usermode .bizcard { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.26); }
@@ -329,7 +324,7 @@ button { font-family: inherit; }
 .bub, .card, .modal, .optcard, .transout, .docspad input, .docspad textarea, .darea,
 .chatrow .mid, .seclabel, .pillbar, .lpill, .tryline, .sticker, .mstat { color: #000; }
 .bub .btxt, .bub time, .bubble, .card h4, .optcard h4, .fld > span, .gate p,
-.donelist li, .exchip, .talk-hero h2, .talk-hero p, .tryline, .mab, .gobtn, .btn { color: #000; }
+.donelist li, .talk-hero h2, .talk-hero p, .tryline, .mab, .gobtn, .btn { color: #000; }
 .bub time { color: #333; }
 .usermode .row.user .bub, .usermode .row.user .bub .btxt, .usermode .row.user .bub time { color: #000; }
 .usermode .bub, .usermode .bub .btxt { color: #000; }
@@ -345,8 +340,6 @@ button { font-family: inherit; }
 .usermode .hello p { color: #17251d; font-weight: 600; }
 .usermode .brandchip { background: #d7f0df; border-color: #6dbd8a; color: #0b2e1a; }
 .usermode .tryline { background: #fff; border: 1px solid #d4e3d8; color: #17251d; }
-.usermode .exrow .exchip { background: #ffffff; border: 1.5px solid #1fae63; color: #000; font-weight: 700; box-shadow: 0 1px 2px rgba(10,60,30,.08); }
-.usermode .exchip:active { background: #d7f0df; }
 .usermode .talk-status, .usermode .talk-status.on { color: #000; font-weight: 800; }
 .usermode .talk-ctl { background: linear-gradient(180deg, rgba(240,246,241,0), #eef4ef 30%); }
 .usermode .big-mic { box-shadow: 0 10px 24px -6px rgba(14,159,95,.5), 0 3px 10px rgba(10,50,26,.25); }
@@ -380,10 +373,10 @@ button { font-family: inherit; }
 .usermode .q4bar { background: #f6faf6; border-top-color: #d8e6db; }
 .usermode .q4bar input { background: #fff; border-color: #cfded3; color: #000; }
 
-/* ============ V34 — ten business-intent chips: compact 2-column grid ============ */
-.exrow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.exchip { text-align: left; font-size: 11.5px; padding: 10px 12px; line-height: 1.35; white-space: normal; }
-.exchip b { display: block; font-size: 12px; color: #000; }
-.usermode .exrow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.usermode .exchip { text-align: left; font-size: 11.5px; padding: 10px 12px; line-height: 1.35; white-space: normal; }
-.usermode .exchip b { display: block; font-size: 12px; color: #000; }
+/* ============ WO-10 — minimal USER: ONE subtle intent affordance (chip wall removed) ============ */
+.intentask { margin: 4px 18px 0; padding: 4px 0; align-self: flex-start; background: none; border: 0;
+  color: #0b2e1a; font: 700 12.5px var(--font); letter-spacing: .01em; text-decoration: underline;
+  text-underline-offset: 3px; text-decoration-thickness: 1px; cursor: pointer; opacity: .82; }
+.intentask:active { opacity: .55; }
+.intentlist { margin: 4px 0 0; padding-left: 18px; }
+.intentlist li { margin: 1px 0; font-size: 12px; line-height: 1.35; }

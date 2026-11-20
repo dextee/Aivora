@@ -124,12 +124,50 @@ Pack extracted (work/pack9); contracts/config/FNY catalog vendored into repo `od
   App still mirrors objective rows only best-effort — row writes remain the documented open slot.
 - Verified: `npm test` 22/22 green (runtime + odai + q4 + objectives). Demo: `docs/objective-engine-demo-v33.txt`.
 
-## V34 — USER-mode business-intent chips (2026-11-20)
+## V34 — USER-mode business-intent chips (2026-11-20) — SUPERSEDED by WO-10
+> **WO-10 (2026-11-20) supersedes the entire V34 chip wall.** The ten intents no longer live as
+> client prose (`BIZ_INTENTS`) or a `.exrow/.exchip` grid. They moved into the engine
+> (`odai/config/intents_registry.json`, served by `GET /api/odai/intents` + scored by
+> `POST /api/odai/intents/match`). USER idle keeps only hero + composer + big mic plus ONE subtle
+> text affordance "What can you run for me?". The descriptions below are retained for history only.
 - TalkView idle hero: EXAMPLES replaced by `BIZ_INTENTS` — ten [label, utterance] pairs (Start My Business → Protect My Business); tap sends the UTTERANCE via sayExample. Rendered as a compact 2-column grid, bold label + em dash + phrase (V34 block appended to `src/styles.css`, usermode + plain fallbacks).
 - sayExample intercepts: dashboard test extended with track|spending|profit (Manage My Money → Today's Business bubble); new pre-check `protect.*(safe)|keep my (money|business).*safe` → SHIELD sys row (widened `.*` so the chip phrase "keep my money and business safe" actually triggers).
 - No tryline element existed in the hero (CSS-only leftovers); no other behaviour touched.
 
 - V34 note: ten business-intent chips shipped + verified live on clupxd6g.qwenwork.page (V36 deploy; bundle contains "Run My Business Automatically", "Find new customers" gone).
+
+## WO-10 — intents to engine, minimal USER (2026-11-20, no publish)
+- **`odai/config/intents_registry.json`** is the single source of truth for the ten owner-approved
+  intents (Start My Business … Protect My Business): `{id,label,utterance,engine,objective_template|null}`
+  plus INTERNAL `keywords` (scoring only; stripped from every server response). Engines: Manage My
+  Money → `dashboard`, Protect My Business → `shield-note`, the other eight → `objective`. Every
+  objective_template is a measurable framing and MUST pass D03 `interpret()` — enforced by
+  `npm test` on every run (the shipped eight all pass; two growth-% templates, six units+FNYGlobal).
+- **`server/odai/intents.mjs`** — structural token scoring only, zero intent prose in code:
+  exact-utterance match scores 100; otherwise overlap of content-word tokens against the entry's
+  label/utterance/keywords vocabulary (+2 per multi-word phrase hit); MIN_SCORE 2, so "hello" or
+  "weather today" fall through unmatched. Read fresh from the registry file per call.
+- **Routes** (`odaiRoute`): `GET /api/odai/intents` → `{tenant_id,intents}` (public fields only);
+  `POST /api/odai/intents/match {utterance}` → `{launch:"match-only",intent,score}` with NO side
+  effects; ONLY `?autocreate=true` AND engine `objective` calls `createObjective(template)` →
+  `{launch:"autocreate",objective}`. The client never passes autocreate (WO-09 owner gate stays
+  closed); even autocreated objectives halt at AWAITING_SPEND_APPROVAL like every other path.
+- **src/TalkView.tsx** — `BIZ_INTENTS`, the ten-button grid and `sayExample` (regex intercepts)
+  are GONE (zero `.exrow/.exchip` references remain in src, test-enforced; the CSS rules were
+  deleted with the V30 `LIGHT THEME, BLACK TEXT` marker untouched). Idle = hero + ONE underlined
+  text affordance "What can you run for me?" → asks the engine and renders the intents as a plain
+  assistant chat bubble (text `<ul>`, no buttons). Typed (composer `askQ4`) and heard (voice
+  "user" turns) utterances probe `/intents/match` first: `objective` → chat line "Ready to run:
+  <label> — say the word in MGMT" and the Q4 call is skipped; `dashboard` → ready line + Today's
+  Business card; `shield-note` → ready line + SHIELD note. Unmatched text streams from Qwen4-Max
+  as before. V34's regex intercepts were replaced by this registry-driven flow.
+- **Tests** (`tests/objectives.test.mjs`, 6 new — suite 37→43, all green): registry JSON validity +
+  exact ten labels + engine/template rules; template pass via direct `interpret()` import; GET
+  strips internal fields; 3 probe utterances expect find-customers/find-products/make-advertisements
+  without side effects; autocreate gating (dashboard never spawns; objective spawn keeps gates
+  closed); USER-bundle audit — built JS must NOT contain "Run My Business Automatically"/"Help me
+  start earning", MUST contain "What can you run for me"; src grep zero exrow/exchip.
+- Evidence (append-only blocks): `odai/dev_docs/recovery-verification.txt`.
 
 ## Standing Guardrails (DEV-12) — enforced by tools/guardrails_preflight.mjs
 - G1 single-server/single-policy/single-dispatcher

@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
 import { spawn, spawnSync } from "node:child_process";
+import { readFileSync, readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { interpret } from "../server/odai/objectives.mjs";
 const root = new URL("../", import.meta.url);
 let child; const B = "http://127.0.0.1:8309";
 const post = async (u, b) => jsonOf(await fetch(B + u, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) }));
@@ -73,4 +76,85 @@ test("approve still behaves normally when preflight passes (no bypass, no breaka
   assert.equal(st.watch_verify, "done"); assert.equal(st.fulfillment_sim, "simulated");
   const pub = a.gates.find((g) => g.id === "approve_publish");
   assert.equal(pub.state, "approved_held_EXTERNAL_NEVER"); // 9.0 rules bind regardless of preflight pass
+});
+
+/* ================= WO-10 — intents move from UI into the engine ================= */
+const REG = JSON.parse(readFileSync(new URL("../odai/config/intents_registry.json", import.meta.url), "utf8"));
+const OWNER_LABELS = ["Start My Business", "Find Products", "Set Up My Online Shop", "Make Advertisements",
+  "Find Customers", "Talk to Customers", "Deliver My Products", "Manage My Money",
+  "Run My Business Automatically", "Protect My Business"];
+
+test("WO-10 registry: valid JSON, ten owner-approved intents exactly, engine contract", () => {
+  assert.equal(REG.intents.length, 10);
+  assert.deepEqual(REG.intents.map((i) => i.label), OWNER_LABELS); // exact set AND order per directive
+  assert.equal(new Set(REG.intents.map((i) => i.id)).size, 10);
+  for (const i of REG.intents) {
+    for (const f of ["id", "label", "utterance", "engine", "objective_template"]) assert.ok(f in i, `${i.id} missing ${f}`);
+    assert.ok(["objective", "dashboard", "shield-note"].includes(i.engine), `${i.id} engine ${i.engine}`);
+    if (i.engine === "objective") assert.ok(typeof i.objective_template === "string" && i.objective_template.length > 0);
+    else assert.equal(i.objective_template, null, `${i.id} non-objective engine must carry null template`);
+  }
+  const byLabel = Object.fromEntries(REG.intents.map((i) => [i.label, i.engine]));
+  assert.equal(byLabel["Manage My Money"], "dashboard");
+  assert.equal(byLabel["Protect My Business"], "shield-note");
+  assert.equal(REG.intents.filter((i) => i.engine === "objective").length, 8);
+});
+test("WO-10 registry: every objective_template is a measurable framing passing D03 interpret()", () => {
+  for (const i of REG.intents.filter((x) => x.engine === "objective")) {
+    const p = interpret(i.objective_template);
+    assert.equal(p.valid, true, `${i.id}: ${p.reason}`);
+    assert.equal(p.criterion.measurable, true, i.id);
+  }
+});
+test("WO-10 GET /api/odai/intents serves the registry minus internal fields", async () => {
+  const r = await getj("/api/odai/intents");
+  assert.equal(r.intents.length, 10);
+  for (const i of r.intents) {
+    assert.equal("keywords" in i, false, `${i.id}: internal scoring field leaked`);
+    assert.equal("id" in i && "label" in i && "utterance" in i && "engine" in i && "objective_template" in i, true, i.id);
+  }
+});
+test("WO-10 POST /intents/match: 3 probes expect the right intents, default path side-effect-free", async () => {
+  for (const [utterance, expected] of [
+    ["Bring me buyers", "find-customers"],
+    ["What can I sell?", "find-products"],
+    ["please promote my products and run ads", "make-advertisements"],
+  ]) {
+    const { status, body } = await post("/api/odai/intents/match", { utterance });
+    assert.equal(status, 200, utterance);
+    assert.equal(body.launch, "match-only", utterance);
+    assert.ok(body.intent, "no match for " + utterance);
+    assert.equal(body.intent.id, expected, utterance + " -> " + body.intent.id);
+    assert.ok(body.score >= 2, utterance);
+    assert.equal("objective" in body, false, "default match must not create anything");
+    assert.equal("keywords" in body.intent, false, "internal fields stay server-side");
+  }
+});
+test("WO-10 autocreate=true is the ONLY launch path, and only for objective engines (WO-09 owner gate stays closed by default)", async () => {
+  const dash = await post("/api/odai/intents/match?autocreate=true", { utterance: "Track spending, sales and profits" });
+  assert.equal(dash.body.intent.id, "manage-my-money");
+  assert.equal(dash.body.launch, "match-only", "dashboard engine must never spawn an objective");
+  assert.equal("objective" in dash.body, false);
+  const launch = await post("/api/odai/intents/match?autocreate=true", { utterance: "What can I sell?" });
+  assert.equal(launch.body.launch, "autocreate");
+  const o = launch.body.objective;
+  assert.ok(o && o.objective_id, JSON.stringify(o));
+  assert.equal(o.criterion.kind, "units_sold");
+  assert.equal(o.criterion.target_units, 50, "spawned from the registry template, not the raw utterance");
+  assert.equal(o.state, "AWAITING_SPEND_APPROVAL", "objective engine still stops at owner gates — no autonomous launch");
+});
+test("WO-10 USER bundle audit: chip wall gone, text affordance shipped, zero exrow/exchip references", () => {
+  const assets = new URL("../dist/assets/", import.meta.url);
+  const js = readdirSync(fileURLToPath(assets)).filter((f) => f.endsWith(".js"));
+  assert.ok(js.length >= 1, "no built JS assets");
+  const bundle = js.map((f) => readFileSync(new URL(f, assets), "utf8")).join("");
+  assert.equal(bundle.includes("Run My Business Automatically"), false, "old chip label still in USER bundle");
+  assert.equal(bundle.includes("Help me start earning"), false, "old chip utterance still in USER bundle");
+  assert.equal(bundle.includes("What can you run for me"), true, "text affordance missing from USER bundle");
+  const srcDir = new URL("../src/", import.meta.url);
+  const allSrc = readdirSync(fileURLToPath(srcDir)).filter((f) => /\.(tsx?|ts|css)$/.test(f))
+    .map((f) => readFileSync(new URL(f, srcDir), "utf8")).join("\n");
+  assert.equal(allSrc.includes("exrow"), false, "dead exrow reference remains");
+  assert.equal(allSrc.includes("exchip"), false, "dead exchip reference remains");
+  assert.equal(readFileSync(new URL("../src/styles.css", import.meta.url), "utf8").includes(".exchip"), false, "exchip CSS rule remains");
 });
