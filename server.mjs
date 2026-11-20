@@ -18,6 +18,7 @@ import { chatQ4 } from "./server/qwen4.mjs";
 import { startRun, decideSpend, userView, managementView, securityView } from "./server/odai/workflow.mjs";
 import { modeAccess, POLICY_VERSION, UNAVAILABLE_RULE_SETS } from "./server/odai/policy.mjs";
 import { get, DEMO_TENANT } from "./server/odai/store.mjs";
+import { createObjective, approve, resume, finalReport, project, view as objView } from "./server/odai/objectives.mjs";
 
 const host = process.env.HOST;
 const port = Number(process.env.PORT);
@@ -279,7 +280,23 @@ async function odaiRoute(url, request, response) {
   const path = url.pathname.replace("/api/odai", "");
   try {
     if (path === "/company") { const { COMPANY } = await import("./server/odai/store.mjs"); return json({ tenant_id: tenant, company: COMPANY, note: "synthetic demo brand standing in for TGDO per owner instruction; swap odai/config/company_profile.json when real data arrives" }); }
-    if (path === "/modes") return json({ contract: "ui_modes_9_0", policy_version: POLICY_VERSION, unavailable_rule_sets: UNAVAILABLE_RULE_SETS, modes: ["user", "management", "security"], mode_change_grants_permission: false });
+    if (path === "/objectives" && request.method === "POST") {
+    let raw = ""; for await (const c of request) raw += c;
+    const { statement } = JSON.parse(raw || "{}");
+    return json(await createObjective(tenant, String(statement || "").slice(0, 300)));
+  }
+  if (path.startsWith("/objectives/")) {
+    const seg = path.split("/"); const oid = seg[2], action = seg[3];
+    if (request.method === "POST" && action === "approve") {
+      let raw = ""; for await (const c of request) raw += c;
+      const { scope, cap } = JSON.parse(raw || "{}");
+      return json(await approve(tenant, oid, String(scope), Number(cap) || 150));
+    }
+    if (request.method === "POST" && action === "resume") return json(await resume(tenant, oid));
+    if (request.method === "POST" && action === "report") return json(finalReport(tenant, oid));
+    if (request.method === "GET" && !action) return json(await resume(tenant, oid));
+  }
+  if (path === "/modes") return json({ contract: "ui_modes_9_0", policy_version: POLICY_VERSION, unavailable_rule_sets: UNAVAILABLE_RULE_SETS, modes: ["user", "management", "security"], mode_change_grants_permission: false });
     if (path === "/view") {
       const mode = url.searchParams.get("mode");
       const authz = modeAccess(mode, { tenantId: tenant });   // staging demo session; production auth: WO-90-SEC-004
