@@ -1,0 +1,1075 @@
+{
+  "dedup_ledger": {
+    "absent_owner_skill_references": [
+      "business-development",
+      "content-creator-pro",
+      "content-strategy",
+      "copywriting",
+      "data-research",
+      "deep-research",
+      "domain-name-brainstormer",
+      "market-research-reports"
+    ],
+    "final_totals": {
+      "MERGE": 10,
+      "MERGED-INTO-CTRL": 8,
+      "REGISTER-NEW": 33,
+      "REUSE-AS-IS": 3
+    },
+    "populations_are_three_disjoint": {
+      "installed_active_skills": 8,
+      "note": "dev01 \u00a72 \u2014 neither superset nor subset; dev-plane agent-conductor/woocommerce-code-review correctly excluded from business reuse.",
+      "registry_specialists": 54,
+      "rev21_dev_specialists": 32
+    },
+    "wo107_control_merges": {
+      "Evidence Verifier": "CTRL-08",
+      "Identity Agent": "CTRL-11",
+      "Policy Decision Agent": "CTRL-06",
+      "Recovery & Audit Agent": "CTRL-12",
+      "Spend Controller": "CTRL-06",
+      "Threat Monitor": "CTRL-10"
+    },
+    "wo107_misclassification_fixes": {
+      "Report Narrator": {
+        "corrected_type": "Control",
+        "merged_into": "CTRL-09"
+      },
+      "Specialist Router": {
+        "corrected_type": "Control",
+        "merged_into": "CTRL-05"
+      }
+    }
+  },
+  "generated_from": "odai/dev_docs/registry_intake.json",
+  "intake_sha256": "73e172ce58b5aa775132aa20ff06bd3a454782c90ae9aaf5105b5c6f5c35d509",
+  "registry_version": "business-plane-v2.1-a1",
+  "row_count": 54,
+  "rows": [
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Media rights",
+        "asset provenance",
+        "optimization"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Asset Manager",
+      "type_final": "Business",
+      "use_case_references_count": 1
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "none (owner data-research not in active-skills)",
+      "required_skills": [
+        "Segmentation",
+        "lawful targeting",
+        "market research"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Audience Researcher",
+      "type_final": "Business",
+      "use_case_references_count": 5
+    },
+    {
+      "active_skill_match": "theme-factory",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "fuzzy (visual identity only; naming/trademark uncovered)",
+      "required_skills": [
+        "Brand positioning",
+        "naming",
+        "trademark screening"
+      ],
+      "reuse_verdict_final": "MERGE",
+      "reuse_verdict_tableB": "MERGE",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Brand Setup Specialist",
+      "type_final": "Business",
+      "use_case_references_count": 2
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Budget allocation",
+        "scenario analysis",
+        "cost ceilings"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Budget Planner",
+      "type_final": "Business",
+      "use_case_references_count": 3
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Business-model comparison",
+        "unit economics",
+        "suitability scoring"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Business Model Analyst",
+      "type_final": "Business",
+      "use_case_references_count": 5
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "CRM automation",
+        "consented outreach",
+        "sequences"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "CRM Follow-up Specialist",
+      "type_final": "Business",
+      "use_case_references_count": 3
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Audience strategy",
+        "channel planning",
+        "measurement"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Campaign Strategist",
+      "type_final": "Business",
+      "use_case_references_count": 5
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Liquidity scenarios",
+        "reserves",
+        "forecasting"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Cashflow Forecaster",
+      "type_final": "Business",
+      "use_case_references_count": 3
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Product normalization",
+        "taxonomy",
+        "source URLs",
+        "SKU matching"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Catalog Curator",
+      "type_final": "Business",
+      "use_case_references_count": 12
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Platform APIs",
+        "publishing states",
+        "permission checks"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Channel Publisher",
+      "type_final": "Business",
+      "use_case_references_count": 1
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "woocommerce-code-review is dev-plane code review, not business checkout integration \u2014 plane boundary honored",
+      "required_skills": [
+        "Checkout flow",
+        "payment sandbox",
+        "idempotency"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Checkout Integrator",
+      "type_final": "Business",
+      "use_case_references_count": 5
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Wellness claims review",
+        "source validation",
+        "escalation"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Claims Reviewer",
+      "type_final": "Business",
+      "use_case_references_count": 5
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "owner deep-research not in active-skills",
+      "required_skills": [
+        "Regulatory research",
+        "market eligibility",
+        "labeling"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Compliance Researcher",
+      "type_final": "Business",
+      "use_case_references_count": 6
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Consent",
+        "unsubscribe",
+        "retention",
+        "channel policy"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Consent Checker",
+      "type_final": "Business",
+      "use_case_references_count": 3
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Editorial calendar",
+        "organic distribution"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Content Planner",
+      "type_final": "Business",
+      "use_case_references_count": 1
+    },
+    {
+      "active_skill_match": "ux-designer",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "fuzzy (UX copy/flows overlap; objection-handling+SLA uncovered)",
+      "required_skills": [
+        "Conversation flows",
+        "objection handling",
+        "handoff"
+      ],
+      "reuse_verdict_final": "MERGE",
+      "reuse_verdict_tableB": "MERGE",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Conversation Designer",
+      "type_final": "Business",
+      "use_case_references_count": 5
+    },
+    {
+      "active_skill_match": "landing-page-optimizer",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "fuzzy (CRO/experiment plan covered; funnel analytics/GA feed uncovered)",
+      "required_skills": [
+        "Funnel metrics",
+        "segmentation",
+        "CRO"
+      ],
+      "reuse_verdict_final": "MERGE",
+      "reuse_verdict_tableB": "MERGE",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Conversion Analyst",
+      "type_final": "Business",
+      "use_case_references_count": 4
+    },
+    {
+      "active_skill_match": "theme-factory",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "fuzzy (styling/artifact theming only; image/video gen is connector-bound)",
+      "required_skills": [
+        "Image/video generation",
+        "hooks",
+        "copy",
+        "QC"
+      ],
+      "reuse_verdict_final": "MERGE",
+      "reuse_verdict_tableB": "MERGE",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Creative Generator",
+      "type_final": "Business",
+      "use_case_references_count": 7
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "owner market-research-reports not in active-skills",
+      "required_skills": [
+        "Demand signals",
+        "competitor research",
+        "evidence quality"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Demand Researcher",
+      "type_final": "Business",
+      "use_case_references_count": 5
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Complaint triage",
+        "human handoff",
+        "SLA"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Escalation Agent",
+      "type_final": "Business",
+      "use_case_references_count": 4
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": "CTRL-08",
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "control duty \u2014 superseded by CTRL-08 merge ledger (WO-107)",
+      "required_skills": [
+        "Source provenance",
+        "cross-checks",
+        "validation"
+      ],
+      "reuse_verdict_final": "MERGED-INTO-CTRL",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": false,
+      "sheet_type_source": "Control specialist",
+      "specialist": "Evidence Verifier",
+      "type_final": "Control",
+      "use_case_references_count": 1
+    },
+    {
+      "active_skill_match": "landing-page-optimizer",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "fuzzy (A/B plan guidance only; attribution engine uncovered)",
+      "required_skills": [
+        "A/B testing",
+        "attribution",
+        "performance thresholds"
+      ],
+      "reuse_verdict_final": "MERGE",
+      "reuse_verdict_tableB": "MERGE",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Experiment Analyst",
+      "type_final": "Business",
+      "use_case_references_count": 4
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "RAG",
+        "citation retrieval",
+        "answer grounding"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "FAQ Retrieval Agent",
+      "type_final": "Business",
+      "use_case_references_count": 4
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Revenue/expense ledger",
+        "reporting",
+        "provenance"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Finance Ledger Agent",
+      "type_final": "Business",
+      "use_case_references_count": 9
+    },
+    {
+      "active_skill_match": "network-optimization-modeler",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "exact-intent (distribution network, facility/inventory positioning)",
+      "required_skills": [
+        "Dropshipping",
+        "fulfillment design",
+        "SLAs"
+      ],
+      "reuse_verdict_final": "REUSE-AS-IS",
+      "reuse_verdict_tableB": "REUSE-AS-IS",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Fulfillment Planner",
+      "type_final": "Business",
+      "use_case_references_count": 5
+    },
+    {
+      "active_skill_match": "landing-page-optimizer",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "fuzzy (hero/CTA/forms covered; lead-form CRM wiring uncovered)",
+      "required_skills": [
+        "Landing pages",
+        "lead forms",
+        "appointment funnels"
+      ],
+      "reuse_verdict_final": "MERGE",
+      "reuse_verdict_tableB": "MERGE",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Funnel Builder",
+      "type_final": "Business",
+      "use_case_references_count": 6
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": "CTRL-11",
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "control duty \u2014 superseded by CTRL-11 merge ledger (WO-107)",
+      "required_skills": [
+        "RBAC",
+        "session verification",
+        "step-up authentication"
+      ],
+      "reuse_verdict_final": "MERGED-INTO-CTRL",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": false,
+      "sheet_type_source": "Control specialist",
+      "specialist": "Identity Agent",
+      "type_final": "Control",
+      "use_case_references_count": 2
+    },
+    {
+      "active_skill_match": "network-optimization-modeler",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "fuzzy (inventory positioning covered; live stock/SKU checks connector-bound)",
+      "required_skills": [
+        "Stock checks",
+        "SKU availability",
+        "stale-data controls"
+      ],
+      "reuse_verdict_final": "MERGE",
+      "reuse_verdict_tableB": "MERGE",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Inventory Validator",
+      "type_final": "Business",
+      "use_case_references_count": 2
+    },
+    {
+      "active_skill_match": "translation",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "exact (cultural adaptation + terminology consistency in skill scope)",
+      "required_skills": [
+        "Multilingual copy",
+        "cultural adaptation",
+        "translation QA"
+      ],
+      "reuse_verdict_final": "REUSE-AS-IS",
+      "reuse_verdict_tableB": "REUSE-AS-IS",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Localization Specialist",
+      "type_final": "Business",
+      "use_case_references_count": 3
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Unit economics",
+        "fees",
+        "break-even",
+        "margin analysis"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Margin Analyst",
+      "type_final": "Business",
+      "use_case_references_count": 7
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "agent-conductor is dev-plane only; planning stays engine-native (CTRL-04)",
+      "required_skills": [
+        "Goal decomposition",
+        "DAG",
+        "success criteria"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Objective Planner",
+      "type_final": "Business",
+      "use_case_references_count": 5
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "KPI analysis",
+        "constrained experiments"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Optimization Agent",
+      "type_final": "Business",
+      "use_case_references_count": 2
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Order schema",
+        "duplicate detection",
+        "idempotency"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Order Validator",
+      "type_final": "Business",
+      "use_case_references_count": 4
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Settlement reconciliation",
+        "fees",
+        "refunds"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Payment Reconciler",
+      "type_final": "Business",
+      "use_case_references_count": 3
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": "CTRL-06",
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "control duty \u2014 superseded by CTRL-06 merge ledger (WO-107)",
+      "required_skills": [
+        "Deterministic policy",
+        "authorization",
+        "fail closed"
+      ],
+      "reuse_verdict_final": "MERGED-INTO-CTRL",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": false,
+      "sheet_type_source": "Control specialist",
+      "specialist": "Policy Decision Agent",
+      "type_final": "Control",
+      "use_case_references_count": 4
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Discount mechanics",
+        "offer terms",
+        "expiry"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Promotion Planner",
+      "type_final": "Business",
+      "use_case_references_count": 1
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": "CTRL-12",
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "control duty \u2014 superseded by CTRL-12 merge ledger (WO-107)",
+      "required_skills": [
+        "Incident containment",
+        "rollback",
+        "immutable audit"
+      ],
+      "reuse_verdict_final": "MERGED-INTO-CTRL",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": false,
+      "sheet_type_source": "Control specialist",
+      "specialist": "Recovery & Audit Agent",
+      "type_final": "Control",
+      "use_case_references_count": 2
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Refund policy",
+        "dispute workflow",
+        "approvals"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Refund Case Agent",
+      "type_final": "Business",
+      "use_case_references_count": 2
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Company-registration research",
+        "jurisdictional requirements"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Registration Advisor",
+      "type_final": "Business",
+      "use_case_references_count": 2
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": "CTRL-09",
+      "classification_fix": true,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "misclassified business row \u2014 CTRL-09 duty (WO-107 fix)",
+      "required_skills": [
+        "Plain-language voice summaries",
+        "actual vs forecast"
+      ],
+      "reuse_verdict_final": "MERGED-INTO-CTRL",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": false,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Report Narrator",
+      "type_final": "Control",
+      "use_case_references_count": 3
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Recurring jobs",
+        "safe scheduling",
+        "resumability"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Scheduler Agent",
+      "type_final": "Business",
+      "use_case_references_count": 6
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Carrier quoting",
+        "rate verification",
+        "shipment status"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Shipping Rate Agent",
+      "type_final": "Business",
+      "use_case_references_count": 2
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Carrier tracking",
+        "webhook verification",
+        "exceptions"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Shipping Tracker",
+      "type_final": "Business",
+      "use_case_references_count": 1
+    },
+    {
+      "active_skill_match": "responsive-design + ux-designer",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "fuzzy (responsive/accessibility review covered; functional test runner uncovered)",
+      "required_skills": [
+        "Accessibility",
+        "functional QA",
+        "responsive testing"
+      ],
+      "reuse_verdict_final": "MERGE",
+      "reuse_verdict_tableB": "MERGE",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Site QA Tester",
+      "type_final": "Business",
+      "use_case_references_count": 3
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": "CTRL-05",
+      "classification_fix": true,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "misclassified business row \u2014 CTRL-05 duty (WO-107 fix); agent-conductor dev-plane only",
+      "required_skills": [
+        "Capability registry",
+        "tool routing",
+        "task assignment"
+      ],
+      "reuse_verdict_final": "MERGED-INTO-CTRL",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": false,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Specialist Router",
+      "type_final": "Control",
+      "use_case_references_count": 1
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": "CTRL-06",
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "control duty \u2014 superseded by CTRL-06 merge ledger (WO-107)",
+      "required_skills": [
+        "Spending limits",
+        "ledger reservations",
+        "approval enforcement"
+      ],
+      "reuse_verdict_final": "MERGED-INTO-CTRL",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": false,
+      "sheet_type_source": "Control specialist",
+      "specialist": "Spend Controller",
+      "type_final": "Control",
+      "use_case_references_count": 5
+    },
+    {
+      "active_skill_match": "responsive-design + ux-designer",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "fuzzy (layout/IA covered; commerce CMS/PDP build uncovered, needs SK-058 Hashmeta)",
+      "required_skills": [
+        "Responsive commerce pages",
+        "CMS",
+        "product detail pages"
+      ],
+      "reuse_verdict_final": "MERGE",
+      "reuse_verdict_tableB": "MERGE",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Storefront Builder",
+      "type_final": "Business",
+      "use_case_references_count": 7
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Supplier API",
+        "fulfillment request",
+        "retries/reconciliation"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Supplier Dispatcher",
+      "type_final": "Business",
+      "use_case_references_count": 5
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Supplier due diligence",
+        "authorization",
+        "provenance"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Supplier Verification Specialist",
+      "type_final": "Business",
+      "use_case_references_count": 6
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Tenant provisioning",
+        "onboarding",
+        "quotas"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Tenant Onboarding Agent",
+      "type_final": "Business",
+      "use_case_references_count": 2
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": "CTRL-10",
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "control duty \u2014 superseded by CTRL-10 merge ledger (WO-107)",
+      "required_skills": [
+        "Threat detection",
+        "anomaly analysis",
+        "prompt injection"
+      ],
+      "reuse_verdict_final": "MERGED-INTO-CTRL",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": false,
+      "sheet_type_source": "Control specialist",
+      "specialist": "Threat Monitor",
+      "type_final": "Control",
+      "use_case_references_count": 3
+    },
+    {
+      "active_skill_match": "translation",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "exact match",
+      "required_skills": [
+        "Translation",
+        "multilingual QA",
+        "context preservation"
+      ],
+      "reuse_verdict_final": "REUSE-AS-IS",
+      "reuse_verdict_tableB": "REUSE-AS-IS",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Translation Agent",
+      "type_final": "Business",
+      "use_case_references_count": 1
+    },
+    {
+      "active_skill_match": null,
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "",
+      "required_skills": [
+        "Speech interfaces",
+        "call routing",
+        "telephony API"
+      ],
+      "reuse_verdict_final": "REGISTER-NEW",
+      "reuse_verdict_tableB": "REGISTER-NEW",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Voice Telephony Agent",
+      "type_final": "Business",
+      "use_case_references_count": 1
+    },
+    {
+      "active_skill_match": "ux-designer",
+      "canonical_agent_binding": null,
+      "classification_fix": false,
+      "mandatory_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "match_quality": "fuzzy (dialogue/accessibility principles only; voice onboarding runtime uncovered)",
+      "required_skills": [
+        "Voice onboarding",
+        "accessible dialogue"
+      ],
+      "reuse_verdict_final": "MERGE",
+      "reuse_verdict_tableB": "MERGE",
+      "separate_process": true,
+      "sheet_type_source": "Business specialist",
+      "specialist": "Voice UX Guide",
+      "type_final": "Business",
+      "use_case_references_count": 1
+    }
+  ]
+}

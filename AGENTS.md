@@ -260,3 +260,47 @@ Pack extracted (work/pack9); contracts/config/FNY catalog vendored into repo `od
   gates live. Suite 65/65 (was 61) — render-level proofs use react-dom/server on the transpiled
   module (jsdom is not in the lockfile and adding deps breaks the WO lease/G4; same assertions
   hold: markup contains 10 .intent-chip nodes from a MOCKED /intents payload).
+
+## WO-A1 — business-plane registry implementation (2026-11-20, batch A1: WO-100/101/102/103/104/105/107/110; no publish)
+
+- **Intake**: owner workbook machine-extracted sheet-JSON pinned by the controller at
+  `odai/dev_docs/registry_intake.json` (sha256 73e172ce…d509, separate intake commit; sha drift → builder
+  refuses). Counts verified: 22 agents / 100 objectives / 224 tasks+deps / 59 skills / 54 specialists /
+  28 connectors / 16 policies / 10 overlays.
+- **`tools/build_registry.py`** (WO-100/105/107 builder, deterministic): emits 7 `odai/config/` files —
+  business_agents (22; dev02 Table A row-wise verdicts; WO-101 CTRL shims as module-name data bound to
+  EXISTING engine paths — no new dispatcher/policy surfaces), specialist_roles (54; WO-107 dedup ledger:
+  6 control-type + 2 fix-classified rows MERGED-INTO-CTRL with canonical bindings, reuse verdicts
+  REUSE-AS-IS 3 / MERGE 10 / REGISTER-NEW 33), skill_contracts (59; Table C coverage + dev01 buckets;
+  task_reference_count; SK-058 orphan = CONTRACT_ONLY rolled up into SK-047), objectives_registry (100;
+  statement + generalized WO-102 criterion spec + gate-string→scope mapping), task_graph (224 nodes,
+  per-objective step-contiguous topological order, 124 edges validated acyclic BEFORE writing),
+  connectors_matrix (28 classified MOCK 2 / PROVIDER_SANDBOX 18 / BLOCKED 8; TBD→BLOCKED rule), policy_index
+  (16 rows with dev01 §5 dispositions). Re-run reproduces byte-identical files (`--check` mode asserts it).
+  Governance note: dev02 prose totals (12/10 agents) conflict with its row-by-row table (9 REUSE/13 REGISTER);
+  rows are authoritative. Gate scopes: 96 distinct sheet strings (dev01 said 95) over spend/publish/comms/
+  external_write(held-NEVER)/review.
+- **Engine routing (WO-110/102, additive)**: `server/odai/registry.mjs` = CTRL-03/05 shims: deterministic
+  lexical+template `matchObjective` (exact 100; else score ≥ 7 AND lexical coverage ≥ 0.45; ties refuse; no LLM)
+  and `criterionFromText` grammar generalized to RM caps/amounts/counts/dates on top of units/%/days.
+  `createObjective` tries the registry FIRST; anything unmatched falls to the UNCHANGED generic planner
+  (V38 phrasing, intent autocreate templates and unknown statements proven non-hijacked). Registry objectives
+  carry the registry plan verbatim (task ids/steps/deps/skills == task_graph; edges re-validated pre-dispatch),
+  gates mapped to scopes, states AWAITING_SPEND_APPROVAL / AWAITING_GATE_APPROVAL / PLAN_APPROVED_HELD_CONNECTORS /
+  PLAN_VALIDATED_READY. `approve()` routes through `skill_gate_check` (spend cap ALLOW/HOLD/BLOCK, external
+  stays approved_held_EXTERNAL_NEVER — 9.0 NEVER unchanged; preflight still guards generic dispatch only,
+  registry objectives never dispatch yet). New GET `/api/odai/registry` → counts + per-file sha256 + version
+  hash. server.mjs gained exactly that one branch + one import (disclosed; lease paths were server,odai/config,tests,tools).
+- **WO-103 P0 six skill modules** in `server/odai/skills.mjs` (ledger-append SK-024, catalog-query SK-009,
+  evidence-append SK-021, gate-check SK-035, schedule-scaffold SK-041, report-compose SK-040): small
+  deterministic functions honoring sheet-04 required input/output columns with NEEDS_INPUT/REJECTED semantics;
+  wired into task types via planFor nodes (module/fn/executable). schedule-scaffold emits a PROPOSAL — it never
+  creates real scheduled tasks. **WO-104** `server/odai/ledger.mjs`: immutable append-only money events,
+  tenant-scoped, closed whitelist (no PII columns by construction), positive amounts + source_tag provenance
+  mandatory, corrections = new events referencing the replaced id; RLS sketch documented for the durable attach;
+  backs the money skills; no retraction API.
+- **Tests**: `tests/registry.test.mjs` (17: builder hash-stability, counts/pins, topo order, WO-107 ledger,
+  WO-105 matrix + SK-058, shim data-only + G1 surfaces intact, grammar parity vs python ground truth,
+  router additivity/fallback, registry route, 3 e2e routed objectives incl UC-091 RM300 cap approve→report and
+  UC-081 review-only, P0 contract audit, ledger immutability/isolation/no-PII). Suite 65 → 82 green;
+  typecheck/precheck/integrity (seal unchanged) pass. No publish.

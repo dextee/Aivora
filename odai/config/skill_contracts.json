@@ -1,0 +1,2887 @@
+{
+  "coverage_totals_dev02": {
+    "connector-bound": 28,
+    "needs-module": 16,
+    "template-covered": 15
+  },
+  "generated_from": "odai/dev_docs/registry_intake.json",
+  "intake_sha256": "73e172ce58b5aa775132aa20ff06bd3a454782c90ae9aaf5105b5c6f5c35d509",
+  "p0_modules_implemented": [
+    "SK-009",
+    "SK-021",
+    "SK-024",
+    "SK-035",
+    "SK-040",
+    "SK-041"
+  ],
+  "registry_version": "business-plane-v2.1-a1",
+  "row_count": 59,
+  "rows": [
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Asset rights and tenant metadata remain AIVORA-owned",
+      "canonical_owner": "Asset Manager",
+      "connector_candidate": "Google Drive",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Select and validate authorized product images, logos, avatars and media; record rights, ownership, source URLs, checksums and transformations.",
+      "dev01_bucket": "B3",
+      "display_name": "Asset Manager",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Media rights",
+        "asset provenance",
+        "optimization"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "asset_refs",
+        "usage_rights",
+        "target_format"
+      ],
+      "required_output_fields": [
+        "approved_assets",
+        "provenance",
+        "blocked_assets"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-001",
+      "skill_key": "asset_manager",
+      "suggested_module": "skill_asset_manager",
+      "task_reference_count": 1,
+      "use_case_count": "1",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Structured audience data only; no outbound contact",
+      "canonical_owner": "data-research",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Define audience segments using lawful, non-sensitive criteria and observed demand evidence; explain targeting assumptions and avoid scraping private personal data.",
+      "dev01_bucket": "B2",
+      "display_name": "Audience Researcher",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Segmentation",
+        "lawful targeting",
+        "market research"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "market",
+        "product",
+        "allowed_channels"
+      ],
+      "required_output_fields": [
+        "segment_profiles",
+        "evidence",
+        "exclusions"
+      ],
+      "reuse_decision_source": "REUSE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-002",
+      "skill_key": "audience_researcher",
+      "suggested_module": "skill_audience_researcher",
+      "task_reference_count": 5,
+      "use_case_count": "5",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Name ideation only; verify registration separately",
+      "canonical_owner": "domain-name-brainstormer",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Generate a pronounceable brand name shortlist, positioning statement, visual brief and simple voice-friendly explanation. Flag unverified domain or trademark availability instead of claiming ownership.",
+      "dev01_bucket": "B2",
+      "display_name": "Brand Setup Specialist",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Brand positioning",
+        "naming",
+        "trademark screening"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "products",
+        "audience",
+        "brand_preferences"
+      ],
+      "required_output_fields": [
+        "brand_options",
+        "positioning",
+        "asset_brief"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-003",
+      "skill_key": "brand_setup_specialist",
+      "suggested_module": "skill_brand_setup_specialist",
+      "task_reference_count": 2,
+      "use_case_count": "2",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Deterministic budget calculation and approval",
+      "canonical_owner": "Budget Planner",
+      "connector_candidate": "Internal ledger",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Turn the owner\u2019s available cash, spending ceiling, reserve requirement and time horizon into a line-item startup budget. Compare low/base/high sales cases, identify break-even units and never present scenarios as earned income.",
+      "dev01_bucket": "B2",
+      "display_name": "Budget Planner",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Budget allocation",
+        "scenario analysis",
+        "cost ceilings"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "budget_amount",
+        "currency",
+        "reserve_amount",
+        "time_horizon",
+        "proposed_costs"
+      ],
+      "required_output_fields": [
+        "budget_plan",
+        "cash_at_risk",
+        "scenario_table",
+        "approval_items"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-004",
+      "skill_key": "budget_planner",
+      "suggested_module": "skill_budget_planner",
+      "task_reference_count": 3,
+      "use_case_count": "3",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Business options and assumptions",
+      "canonical_owner": "business-development",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Compare business models against the elderly owner\u2019s capital, mobility, digital literacy and available hours. Rank feasible models by startup complexity, compliance burden, cash-flow exposure and required manual work.",
+      "dev01_bucket": "B2",
+      "display_name": "Business Model Analyst",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Business-model comparison",
+        "unit economics",
+        "suitability scoring"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "owner_constraints",
+        "market",
+        "available_capital"
+      ],
+      "required_output_fields": [
+        "ranked_business_models",
+        "assumptions",
+        "risk_register"
+      ],
+      "reuse_decision_source": "REUSE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-005",
+      "skill_key": "business_model_analyst",
+      "suggested_module": "skill_business_model_analyst",
+      "task_reference_count": 5,
+      "use_case_count": "5",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Select one channel per recipient; consent gate",
+      "canonical_owner": "CRM Follow-up Specialist",
+      "connector_candidate": "WhatsApp Business / Gmail",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the CRM Follow-up Specialist for an elderly solopreneur. Perform crm automation; consented outreach; sequences using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "CRM Follow-up Specialist",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "CRM automation",
+        "consented outreach",
+        "sequences"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-006",
+      "skill_key": "crm_follow_up_specialist",
+      "suggested_module": "skill_crm_follow_up_specialist",
+      "task_reference_count": 3,
+      "use_case_count": "3",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "Hashmeta Marketing Connector",
+      "boundary": "Strategy only; SK-056 creates campaign",
+      "canonical_owner": "content-strategy",
+      "connector_candidate": "Hashmeta",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Design evidence-based marketing campaigns with explicit owner budget caps, audiences, goals, channel choices and measurable KPI. Hand approved draft creation to SK-056 through the Hashmeta Marketing Connector; never activate paid campaigns without transaction-bound approval.",
+      "dev01_bucket": "B3",
+      "display_name": "Campaign Strategist",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Audience strategy",
+        "channel planning",
+        "measurement"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "REUSE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-007",
+      "skill_key": "campaign_strategist",
+      "suggested_module": "skill_campaign_strategist",
+      "task_reference_count": 5,
+      "use_case_count": "5",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Scenario calculations not guaranteed returns",
+      "canonical_owner": "Cashflow Forecaster",
+      "connector_candidate": "Internal ledger",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Cashflow Forecaster for an elderly solopreneur. Perform liquidity scenarios; reserves; forecasting using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Cashflow Forecaster",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Liquidity scenarios",
+        "reserves",
+        "forecasting"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-008",
+      "skill_key": "cashflow_forecaster",
+      "suggested_module": "skill_cashflow_forecaster",
+      "task_reference_count": 3,
+      "use_case_count": "3",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Verify source prices and inventory",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Normalize supplier product records into clean SKU, images, variants, currency, descriptions, stock status and provenance. Deduplicate entries and reject unsupported product claims.",
+      "dev01_bucket": "B3",
+      "display_name": "Catalog Curator",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "family": "catalog-query",
+        "function": "skill_catalog_query",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-103"
+      },
+      "keywords": [
+        "Product normalization",
+        "taxonomy",
+        "source URLs",
+        "SKU matching"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "required_output_fields": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-009",
+      "skill_key": "catalog_curator",
+      "suggested_module": "skill_catalog_curator",
+      "task_reference_count": 12,
+      "use_case_count": "12",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "Facebook API; YouTube API; LinkedIn API",
+      "boundary": "One provider per destination; sole publishing path",
+      "canonical_owner": "Channel Publisher",
+      "connector_candidate": "Facebook Pages / YouTube / LinkedIn / Instagram",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Publish approved social media posts to Facebook, YouTube and LinkedIn only through their authorized connected accounts. Validate account permissions, channel-specific formats, post approval, scheduling, idempotency and platform response IDs. Keep drafts when a connector is unavailable; never claim success without remote confirmation.",
+      "dev01_bucket": "B3",
+      "display_name": "Channel Publisher",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Platform APIs",
+        "publishing states",
+        "permission checks"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-010",
+      "skill_key": "channel_publisher",
+      "suggested_module": "skill_channel_publisher",
+      "task_reference_count": 1,
+      "use_case_count": "1",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "No live checkout without merchant authorization",
+      "canonical_owner": "Checkout Integrator",
+      "connector_candidate": "Payment provider TBD",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Configure a sandbox checkout using merchant-approved payment adapters, tax/shipping calculations and idempotent order creation. Do not store payment credentials in prompts.",
+      "dev01_bucket": "B3",
+      "display_name": "Checkout Integrator",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Checkout flow",
+        "payment sandbox",
+        "idempotency"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "merchant_config",
+        "order_rules",
+        "payment_adapter"
+      ],
+      "required_output_fields": [
+        "checkout_test_result",
+        "integration_status",
+        "exceptions"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-011",
+      "skill_key": "checkout_integrator",
+      "suggested_module": "skill_checkout_integrator",
+      "task_reference_count": 5,
+      "use_case_count": "5",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Reject unsupported claims",
+      "canonical_owner": "Claims Reviewer",
+      "connector_candidate": "Internal product truth",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Claims Reviewer for an elderly solopreneur. Perform wellness claims review; source validation; escalation using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Claims Reviewer",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Wellness claims review",
+        "source validation",
+        "escalation"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-012",
+      "skill_key": "claims_reviewer",
+      "suggested_module": "skill_claims_reviewer",
+      "task_reference_count": 6,
+      "use_case_count": "5",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Regulatory evidence research; no legal authorization",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Compliance Researcher for an elderly solopreneur. Perform regulatory research; market eligibility; labeling using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Compliance Researcher",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Regulatory research",
+        "market eligibility",
+        "labeling"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-013",
+      "skill_key": "compliance_researcher",
+      "suggested_module": "skill_compliance_researcher",
+      "task_reference_count": 6,
+      "use_case_count": "6",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Consent validation; no separate authority",
+      "canonical_owner": "Identity & Tenant Guard",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Consent Checker for an elderly solopreneur. Perform consent; unsubscribe; retention; channel policy using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B1",
+      "display_name": "Consent Checker",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Consent",
+        "unsubscribe",
+        "retention",
+        "channel policy"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-014",
+      "skill_key": "consent_checker",
+      "suggested_module": "skill_consent_checker",
+      "task_reference_count": 3,
+      "use_case_count": "3",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "Facebook; YouTube; LinkedIn; Wan",
+      "boundary": "Content calendar; same skill as SK-007",
+      "canonical_owner": "content-strategy",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Prepare platform-specific editorial calendars, poster briefs, short video scripts and Facebook/LinkedIn/YouTube post drafts; coordinate SK-055 for poster/social content and SK-057 for video assets. Verify product claims, media rights and call-to-action destinations.",
+      "dev01_bucket": "B2",
+      "display_name": "Content Planner",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Editorial calendar",
+        "organic distribution"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "REUSE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-015",
+      "skill_key": "content_planner",
+      "suggested_module": "skill_content_planner",
+      "task_reference_count": 2,
+      "use_case_count": "1",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Conversation scripts only; live replies through SK-023",
+      "canonical_owner": "copywriting",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Conversation Designer for an elderly solopreneur. Perform conversation flows; objection handling; handoff using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Conversation Designer",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Conversation flows",
+        "objection handling",
+        "handoff"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-016",
+      "skill_key": "conversation_designer",
+      "suggested_module": "skill_conversation_designer",
+      "task_reference_count": 5,
+      "use_case_count": "5",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Funnel metrics; no assumed causality",
+      "canonical_owner": "Conversion Analyst",
+      "connector_candidate": "Google Analytics",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Conversion Analyst for an elderly solopreneur. Perform funnel metrics; segmentation; cro using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Conversion Analyst",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Funnel metrics",
+        "segmentation",
+        "CRO"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-017",
+      "skill_key": "conversion_analyst",
+      "suggested_module": "skill_conversion_analyst",
+      "task_reference_count": 4,
+      "use_case_count": "4",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "Wan Image API; Wan Video API",
+      "boundary": "Image generation only; video uses SK-057; SK-055 coordinates",
+      "canonical_owner": "Creative Generator",
+      "connector_candidate": "Wan Image API",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Generate marketing creative by dispatching image and poster jobs to the Wan Image API and video jobs to the Wan Video API. Preserve job IDs, generation costs, rights-cleared assets, source product data, asynchronous status and QC. Route specialized poster/social creation to SK-055 and video production to SK-057.",
+      "dev01_bucket": "B3",
+      "display_name": "Creative Generator",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Image/video generation",
+        "hooks",
+        "copy",
+        "QC"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-018",
+      "skill_key": "creative_generator",
+      "suggested_module": "skill_creative_generator",
+      "task_reference_count": 7,
+      "use_case_count": "7",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Demand analysis with evidence",
+      "canonical_owner": "market-research-reports",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Investigate observable demand signals, seasonality and competitors using authorized research sources; differentiate indicators from verified transaction demand.",
+      "dev01_bucket": "B2",
+      "display_name": "Demand Researcher",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Demand signals",
+        "competitor research",
+        "evidence quality"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "product_category",
+        "geography",
+        "time_window"
+      ],
+      "required_output_fields": [
+        "demand_brief",
+        "evidence",
+        "uncertainty"
+      ],
+      "reuse_decision_source": "REUSE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-019",
+      "skill_key": "demand_researcher",
+      "suggested_module": "skill_demand_researcher",
+      "task_reference_count": 5,
+      "use_case_count": "5",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Human escalation and exception queue",
+      "canonical_owner": "Escalation Agent",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Escalation Agent for an elderly solopreneur. Perform complaint triage; human handoff; sla using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Escalation Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Complaint triage",
+        "human handoff",
+        "SLA"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-020",
+      "skill_key": "escalation_agent",
+      "suggested_module": "skill_escalation_agent",
+      "task_reference_count": 4,
+      "use_case_count": "4",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Single shared verification service",
+      "canonical_owner": "Evidence Verifier",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Evidence Verifier for an elderly solopreneur. Perform source provenance; cross-checks; validation using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B1",
+      "display_name": "Evidence Verifier",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "family": "evidence-append",
+        "function": "skill_evidence_append",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-103"
+      },
+      "keywords": [
+        "Source provenance",
+        "cross-checks",
+        "validation"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-021",
+      "skill_key": "evidence_verifier",
+      "suggested_module": "skill_evidence_verifier",
+      "task_reference_count": 1,
+      "use_case_count": "1",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Deterministic experiment metrics",
+      "canonical_owner": "Experiment Analyst",
+      "connector_candidate": "Google Analytics",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Experiment Analyst for an elderly solopreneur. Perform a/b testing; attribution; performance thresholds using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Experiment Analyst",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "A/B testing",
+        "attribution",
+        "performance thresholds"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-022",
+      "skill_key": "experiment_analyst",
+      "suggested_module": "skill_experiment_analyst",
+      "task_reference_count": 4,
+      "use_case_count": "4",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Approved knowledge only; customer replies gated",
+      "canonical_owner": "FAQ Retrieval Agent",
+      "connector_candidate": "Supabase",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the FAQ Retrieval Agent for an elderly solopreneur. Perform rag; citation retrieval; answer grounding using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "FAQ Retrieval Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "RAG",
+        "citation retrieval",
+        "answer grounding"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-023",
+      "skill_key": "faq_retrieval_agent",
+      "suggested_module": "skill_faq_retrieval_agent",
+      "task_reference_count": 4,
+      "use_case_count": "4",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Authoritative ledger; no AI-generated transactions",
+      "canonical_owner": "Finance Ledger Agent",
+      "connector_candidate": "Supabase",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Finance Ledger Agent for an elderly solopreneur. Perform revenue/expense ledger; reporting; provenance using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Finance Ledger Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "family": "ledger-append",
+        "function": "skill_ledger_append",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-103"
+      },
+      "keywords": [
+        "Revenue/expense ledger",
+        "reporting",
+        "provenance"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-024",
+      "skill_key": "finance_ledger_agent",
+      "suggested_module": "skill_finance_ledger_agent",
+      "task_reference_count": 9,
+      "use_case_count": "9",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Delivery estimates and supplier routing",
+      "canonical_owner": "Fulfillment Planner",
+      "connector_candidate": "Supplier connector TBD",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Fulfillment Planner for an elderly solopreneur. Perform dropshipping; fulfillment design; slas using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Fulfillment Planner",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Dropshipping",
+        "fulfillment design",
+        "SLAs"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-025",
+      "skill_key": "fulfillment_planner",
+      "suggested_module": "skill_fulfillment_planner",
+      "task_reference_count": 5,
+      "use_case_count": "5",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Landing and lead flow; reuse SK-058 for website writes",
+      "canonical_owner": "Funnel Builder",
+      "connector_candidate": "Hashmeta",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Funnel Builder for an elderly solopreneur. Perform landing pages; lead forms; appointment funnels using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Funnel Builder",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Landing pages",
+        "lead forms",
+        "appointment funnels"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-026",
+      "skill_key": "funnel_builder",
+      "suggested_module": "skill_funnel_builder",
+      "task_reference_count": 6,
+      "use_case_count": "6",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Single identity authority",
+      "canonical_owner": "Identity & Tenant Guard",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Identity Agent for an elderly solopreneur. Perform rbac; session verification; step-up authentication using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Identity Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "RBAC",
+        "session verification",
+        "step-up authentication"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-027",
+      "skill_key": "identity_agent",
+      "suggested_module": "skill_identity_agent",
+      "task_reference_count": 2,
+      "use_case_count": "2",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Verified inventory source",
+      "canonical_owner": "Inventory Validator",
+      "connector_candidate": "Supabase / supplier TBD",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Inventory Validator for an elderly solopreneur. Perform stock checks; sku availability; stale-data controls using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Inventory Validator",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Stock checks",
+        "SKU availability",
+        "stale-data controls"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-028",
+      "skill_key": "inventory_validator",
+      "suggested_module": "skill_inventory_validator",
+      "task_reference_count": 2,
+      "use_case_count": "2",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Text localization; not speech recognition",
+      "canonical_owner": "translation",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Translate product, checkout and support copy into requested language while preserving product names, numeric values, disclaimers and regulatory limitations; return review flags for uncertain dialects.",
+      "dev01_bucket": "B2",
+      "display_name": "Localization Specialist",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Multilingual copy",
+        "cultural adaptation",
+        "translation QA"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "source_content",
+        "locale",
+        "glossary"
+      ],
+      "required_output_fields": [
+        "localized_content",
+        "terminology_flags",
+        "QA_report"
+      ],
+      "reuse_decision_source": "REUSE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-029",
+      "skill_key": "localization_specialist",
+      "suggested_module": "skill_localization_specialist",
+      "task_reference_count": 3,
+      "use_case_count": "3",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Verified margin computation",
+      "canonical_owner": "Margin Analyst",
+      "connector_candidate": "Internal ledger",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Compute contribution margin by SKU from verified landed cost, marketplace fee, delivery, returns and selling price. Mark missing inputs UNKNOWN and exclude them from confident profitability rankings.",
+      "dev01_bucket": "B2",
+      "display_name": "Margin Analyst",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Unit economics",
+        "fees",
+        "break-even",
+        "margin analysis"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "sku_prices",
+        "verified_costs",
+        "fee_schedule"
+      ],
+      "required_output_fields": [
+        "margin_table",
+        "break_even",
+        "unknown_cost_flags"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-030",
+      "skill_key": "margin_analyst",
+      "suggested_module": "skill_margin_analyst",
+      "task_reference_count": 7,
+      "use_case_count": "7",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "One planner",
+      "canonical_owner": "Objective Planner",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Objective Planner for an elderly solopreneur. Perform goal decomposition; dag; success criteria using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B1",
+      "display_name": "Objective Planner",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Goal decomposition",
+        "DAG",
+        "success criteria"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-031",
+      "skill_key": "objective_planner",
+      "suggested_module": "skill_objective_planner",
+      "task_reference_count": 5,
+      "use_case_count": "5",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Propose improvements; no direct spend",
+      "canonical_owner": "Optimization Agent",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Optimization Agent for an elderly solopreneur. Perform kpi analysis; constrained experiments using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Optimization Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "KPI analysis",
+        "constrained experiments"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-032",
+      "skill_key": "optimization_agent",
+      "suggested_module": "skill_optimization_agent",
+      "task_reference_count": 2,
+      "use_case_count": "2",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Idempotent order checks",
+      "canonical_owner": "Order Validator",
+      "connector_candidate": "Supabase",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Order Validator for an elderly solopreneur. Perform order schema; duplicate detection; idempotency using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Order Validator",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Order schema",
+        "duplicate detection",
+        "idempotency"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-033",
+      "skill_key": "order_validator",
+      "suggested_module": "skill_order_validator",
+      "task_reference_count": 4,
+      "use_case_count": "4",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Match settlement records; no blind retries",
+      "canonical_owner": "Payment Reconciler",
+      "connector_candidate": "Payment provider TBD",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Payment Reconciler for an elderly solopreneur. Perform settlement reconciliation; fees; refunds using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Payment Reconciler",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Settlement reconciliation",
+        "fees",
+        "refunds"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-034",
+      "skill_key": "payment_reconciler",
+      "suggested_module": "skill_payment_reconciler",
+      "task_reference_count": 3,
+      "use_case_count": "3",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Single deterministic authorization authority",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Apply deterministic allow/deny/approval rules to every proposed tool action using identity, tenant, data sensitivity, budget and risk; LLM recommendations never override rules.",
+      "dev01_bucket": "B1",
+      "display_name": "Policy Decision Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "family": "gate-check",
+        "function": "skill_gate_check",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-103"
+      },
+      "keywords": [
+        "Deterministic policy",
+        "authorization",
+        "fail closed"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "actor",
+        "tenant",
+        "action",
+        "resource",
+        "risk"
+      ],
+      "required_output_fields": [
+        "policy_decision",
+        "reason_code",
+        "obligations"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-035",
+      "skill_key": "policy_decision_agent",
+      "suggested_module": "skill_policy_decision_agent",
+      "task_reference_count": 4,
+      "use_case_count": "4",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Promotional offers draft; price validation separate",
+      "canonical_owner": "copywriting",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Promotion Planner for an elderly solopreneur. Perform discount mechanics; offer terms; expiry using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Promotion Planner",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Discount mechanics",
+        "offer terms",
+        "expiry"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "REUSE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-036",
+      "skill_key": "promotion_planner",
+      "suggested_module": "skill_promotion_planner",
+      "task_reference_count": 1,
+      "use_case_count": "1",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Single durable audit/recovery authority",
+      "canonical_owner": "Audit & Recovery Controller",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Recovery & Audit Agent for an elderly solopreneur. Perform incident containment; rollback; immutable audit using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B1",
+      "display_name": "Recovery & Audit Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Incident containment",
+        "rollback",
+        "immutable audit"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-037",
+      "skill_key": "recovery_audit_agent",
+      "suggested_module": "skill_recovery_audit_agent",
+      "task_reference_count": 2,
+      "use_case_count": "2",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Approval-bound refund workflow",
+      "canonical_owner": "Refund Case Agent",
+      "connector_candidate": "Payment provider TBD",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Refund Case Agent for an elderly solopreneur. Perform refund policy; dispute workflow; approvals using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Refund Case Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Refund policy",
+        "dispute workflow",
+        "approvals"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-038",
+      "skill_key": "refund_case_agent",
+      "suggested_module": "skill_refund_case_agent",
+      "task_reference_count": 2,
+      "use_case_count": "2",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Registration research; no submission",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Identify business-registration, tax and platform onboarding steps for the selected jurisdiction. Provide official-source references, requirements and unresolved questions; do not represent advice as legal approval.",
+      "dev01_bucket": "B2",
+      "display_name": "Registration Advisor",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Company-registration research",
+        "jurisdictional requirements"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "jurisdiction",
+        "business_activity",
+        "entity_status"
+      ],
+      "required_output_fields": [
+        "registration_checklist",
+        "source_links",
+        "outstanding_items"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-039",
+      "skill_key": "registration_advisor",
+      "suggested_module": "skill_registration_advisor",
+      "task_reference_count": 2,
+      "use_case_count": "2",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Reuse daily-report-writer for prose only",
+      "canonical_owner": "Report Narrator",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Report Narrator for an elderly solopreneur. Perform plain-language voice summaries; actual vs forecast using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B1",
+      "display_name": "Report Narrator",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "family": "report-compose",
+        "function": "skill_report_compose",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-103"
+      },
+      "keywords": [
+        "Plain-language voice summaries",
+        "actual vs forecast"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-040",
+      "skill_key": "report_narrator",
+      "suggested_module": "skill_report_narrator",
+      "task_reference_count": 3,
+      "use_case_count": "3",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "One durable schedule authority; verify runtime access",
+      "canonical_owner": "Scheduler Agent",
+      "connector_candidate": "QwenWork scheduled tasks",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Scheduler Agent for an elderly solopreneur. Perform recurring jobs; safe scheduling; resumability using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B1",
+      "display_name": "Scheduler Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "family": "schedule-scaffold",
+        "function": "skill_schedule_scaffold",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-103"
+      },
+      "keywords": [
+        "Recurring jobs",
+        "safe scheduling",
+        "resumability"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-041",
+      "skill_key": "scheduler_agent",
+      "suggested_module": "skill_scheduler_agent",
+      "task_reference_count": 6,
+      "use_case_count": "6",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Current quotes only",
+      "canonical_owner": "Shipping Rate Agent",
+      "connector_candidate": "Logistics connector TBD",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Shipping Rate Agent for an elderly solopreneur. Perform carrier quoting; rate verification; shipment status using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Shipping Rate Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Carrier quoting",
+        "rate verification",
+        "shipment status"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-042",
+      "skill_key": "shipping_rate_agent",
+      "suggested_module": "skill_shipping_rate_agent",
+      "task_reference_count": 2,
+      "use_case_count": "2",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Verified tracking events",
+      "canonical_owner": "Shipping Tracker",
+      "connector_candidate": "Logistics connector TBD",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Retrieve carrier milestones and delivery exceptions from authorized tracking feeds; do not invent delivery dates.",
+      "dev01_bucket": "B3",
+      "display_name": "Shipping Tracker",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Carrier tracking",
+        "webhook verification",
+        "exceptions"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "carrier_reference",
+        "authorized_connector"
+      ],
+      "required_output_fields": [
+        "tracking_events",
+        "exception_alerts"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-043",
+      "skill_key": "shipping_tracker",
+      "suggested_module": "skill_shipping_tracker",
+      "task_reference_count": 1,
+      "use_case_count": "1",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Executable checks; UX review optional",
+      "canonical_owner": "Site QA Tester",
+      "connector_candidate": "Internal test runner",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Site QA Tester for an elderly solopreneur. Perform accessibility; functional qa; responsive testing using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Site QA Tester",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Accessibility",
+        "functional QA",
+        "responsive testing"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-044",
+      "skill_key": "site_qa_tester",
+      "suggested_module": "skill_site_qa_tester",
+      "task_reference_count": 3,
+      "use_case_count": "3",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "One registry and dispatcher mapping",
+      "canonical_owner": "Specialist Router",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Specialist Router for an elderly solopreneur. Perform capability registry; tool routing; task assignment using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B1",
+      "display_name": "Specialist Router",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Capability registry",
+        "tool routing",
+        "task assignment"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-045",
+      "skill_key": "specialist_router",
+      "suggested_module": "skill_specialist_router",
+      "task_reference_count": 1,
+      "use_case_count": "1",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Atomic cumulative budget reservation",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Spend Controller for an elderly solopreneur. Perform spending limits; ledger reservations; approval enforcement using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B1",
+      "display_name": "Spend Controller",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Spending limits",
+        "ledger reservations",
+        "approval enforcement"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-046",
+      "skill_key": "spend_controller",
+      "suggested_module": "skill_spend_controller",
+      "task_reference_count": 6,
+      "use_case_count": "5",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "Hashmeta Website Connector",
+      "boundary": "Website orchestration calls same adapter; no duplicate writes",
+      "canonical_owner": "SK-058",
+      "connector_candidate": "Hashmeta",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Build mobile-first storefronts through the Hashmeta Website Connector. Create portable site specification, validate products and checkout configuration, request staging preview, run QA, and require owner approval before live publication. Use SK-058 for the connector contract.",
+      "dev01_bucket": "B3",
+      "display_name": "Storefront Builder",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Responsive commerce pages",
+        "CMS",
+        "product detail pages"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-047",
+      "skill_key": "storefront_builder",
+      "suggested_module": "skill_storefront_builder",
+      "task_reference_count": 7,
+      "use_case_count": "7",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Approved order dispatch only",
+      "canonical_owner": "Supplier Dispatcher",
+      "connector_candidate": "Supplier connector TBD",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Supplier Dispatcher for an elderly solopreneur. Perform supplier api; fulfillment request; retries/reconciliation using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Supplier Dispatcher",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Supplier API",
+        "fulfillment request",
+        "retries/reconciliation"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "INSPECT GAP",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-048",
+      "skill_key": "supplier_dispatcher",
+      "suggested_module": "skill_supplier_dispatcher",
+      "task_reference_count": 5,
+      "use_case_count": "5",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Supplier research; verification remains independent",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Validate supplier identity, selling rights, fulfillment terms, inventory feeds and quoted costs against documented evidence; flag stale or contradictory sources.",
+      "dev01_bucket": "B2",
+      "display_name": "Supplier Verification Specialist",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Supplier due diligence",
+        "authorization",
+        "provenance"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "supplier_details",
+        "agreements",
+        "price_lists"
+      ],
+      "required_output_fields": [
+        "supplier_verification",
+        "exceptions",
+        "evidence_refs"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-049",
+      "skill_key": "supplier_verification_specialist",
+      "suggested_module": "skill_supplier_verification_specialist",
+      "task_reference_count": 6,
+      "use_case_count": "6",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Tenant onboarding and isolation",
+      "canonical_owner": "Identity & Tenant Guard",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Tenant Onboarding Agent for an elderly solopreneur. Perform tenant provisioning; onboarding; quotas using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Tenant Onboarding Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Tenant provisioning",
+        "onboarding",
+        "quotas"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-050",
+      "skill_key": "tenant_onboarding_agent",
+      "suggested_module": "skill_tenant_onboarding_agent",
+      "task_reference_count": 2,
+      "use_case_count": "2",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "One monitoring authority",
+      "canonical_owner": "AIVORA SHIELD Monitor",
+      "connector_candidate": "Internal",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Threat Monitor for an elderly solopreneur. Perform threat detection; anomaly analysis; prompt injection using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Threat Monitor",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Threat detection",
+        "anomaly analysis",
+        "prompt injection"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-051",
+      "skill_key": "threat_monitor",
+      "suggested_module": "skill_threat_monitor",
+      "task_reference_count": 3,
+      "use_case_count": "3",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Same as SK-029",
+      "canonical_owner": "translation",
+      "connector_candidate": "None",
+      "coverage_dev02": "template-covered",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Translation Agent for an elderly solopreneur. Perform translation; multilingual qa; context preservation using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B2",
+      "display_name": "Translation Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Translation",
+        "multilingual QA",
+        "context preservation"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "REUSE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-052",
+      "skill_key": "translation_agent",
+      "suggested_module": "skill_translation_agent",
+      "task_reference_count": 1,
+      "use_case_count": "1",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Not installed in screenshot; verify telephony need",
+      "canonical_owner": "Voice Telephony Agent",
+      "connector_candidate": "Dialpad optional",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Voice Telephony Agent for an elderly solopreneur. Perform speech interfaces; call routing; telephony api using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Voice Telephony Agent",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Speech interfaces",
+        "call routing",
+        "telephony API"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-053",
+      "skill_key": "voice_telephony_agent",
+      "suggested_module": "skill_voice_telephony_agent",
+      "task_reference_count": 1,
+      "use_case_count": "1",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "source citation present; artifact schema valid; financial figures traceable; no unauthorized side effects",
+      "allowed_capabilities": "tenant-scoped read; scoped adapter calls; draft generation",
+      "boundary": "Accessible voice interaction; verify dialects",
+      "canonical_owner": "Universal Voice Listener",
+      "connector_candidate": "Qwen voice runtime",
+      "coverage_dev02": "needs-module",
+      "deployment_state": "proposed_not_deployed",
+      "description": "Act as the Voice UX Guide for an elderly solopreneur. Perform voice onboarding; accessible dialogue using only tenant-authorized tools and verified records. First inspect the objective and required source data; then produce a concrete, reviewable business artifact with cited evidence, confidence and costs. Ask one plain-language question only when essential information is missing. Do not invent sales, margins, legal clearance, stock, or completed actions. Escalate spending, external publication and customer contact to the policy and approval gateway.",
+      "dev01_bucket": "B3",
+      "display_name": "Voice UX Guide",
+      "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
+      "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "Voice onboarding",
+        "accessible dialogue"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No independent spending, publishing, customer contact or cross-tenant access",
+      "required_input_fields": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "required_output_fields": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "reuse_decision_source": "MERGE",
+      "security_controls": "Tenant-aware; tool-scoped; auditable; no independent spending authority",
+      "skill_id": "SK-054",
+      "skill_key": "voice_ux_guide",
+      "suggested_module": "skill_voice_ux_guide",
+      "task_reference_count": 1,
+      "use_case_count": "1",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "Poster generated and readable; post variants meet platform limits; provenance stored",
+      "allowed_capabilities": "Wan Image API; asset library; approved product catalog",
+      "boundary": "Social drafts and poster brief; copywriting only for distinct CTA task",
+      "canonical_owner": "content-creator-pro",
+      "connector_candidate": "Wan Image API via SK-018",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "SPECIFIED / NOT IMPLEMENTED",
+      "description": "Generate branded static posters and platform-specific social media posts from a verified product or campaign objective. Ask the Catalog and Claims Reviewer for accurate product names, prices, rights-cleared images and permitted claims; draft clear headline, body copy, call-to-action, accessibility alt text and platform-specific variants for Facebook, LinkedIn and YouTube community content where supported. For poster artwork call the Wan Image API through the approved adapter, collect job ID, poll status, validate text legibility and brand consistency, and store the generated image plus prompt, source references, costs and provenance. Produce a reviewable draft; never publish automatically.",
+      "dev01_bucket": "B3",
+      "display_name": "Poster & Social Post Creator",
+      "error_and_recovery": "Wan job timeout: reconcile by job ID; missing product rights: block; platform incompatibility: create draft only",
+      "execution_steps": "validate catalog/claims -> brief -> generate copy -> Wan image -> QA -> owner preview -> approved publishing handoff",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "marketing os",
+        "social media",
+        "connectors"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No unapproved publishing, unsupported claims or spending",
+      "required_input_fields": [
+        "product_id",
+        "brand_id",
+        "platforms",
+        "language",
+        "objective",
+        "budget",
+        "tenant_id"
+      ],
+      "required_output_fields": [
+        "poster_asset_id",
+        "post_drafts",
+        "platform_variants",
+        "qa_result",
+        "cost_estimate"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "tenant-scoped; approval-gated; audited",
+      "skill_id": "SK-055",
+      "skill_key": "poster_social_creator",
+      "suggested_module": "skills/marketing/poster_social_creator.py",
+      "task_reference_count": 10,
+      "use_case_count": "0",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "Campaign plan and draft created with traceable budget and KPI; live actions blocked pending approval",
+      "allowed_capabilities": "Hashmeta Marketing Connector; catalog; policy gateway",
+      "boundary": "Campaign create/control; no duplicate social publishing",
+      "canonical_owner": "Marketing OS Campaign Builder",
+      "connector_candidate": "Hashmeta",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "SPECIFIED / NOT IMPLEMENTED",
+      "description": "Translate a nontechnical objective such as bring me buyers into a structured multi-channel marketing campaign. Collect owner maximum spend, target audience, product eligibility, location, time horizon, desired conversions and measurable KPI. Invoke Audience Researcher, Campaign Strategist, Content Planner and Claims Reviewer. Construct channel plan, creative briefs, tracking conventions, landing page destination and forecast ranges with uncertainty. Use the Hashmeta Marketing Connector to create a draft campaign only after validating its contract; require transaction-bound approval before activation or budget commitment. Persist Hashmeta campaign ID, budget cap, status and audit evidence.",
+      "dev01_bucket": "B3",
+      "display_name": "Marketing OS Campaign Builder",
+      "error_and_recovery": "Missing Hashmeta capability: mark BLOCKED and retain portable campaign specification",
+      "execution_steps": "research -> plan -> cost preview -> policy -> Hashmeta draft -> review -> approved activation",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "marketing os",
+        "social media",
+        "connectors"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No activation, ad spend, audience upload or customer contact without approval",
+      "required_input_fields": [
+        "objective_id",
+        "tenant_id",
+        "product_ids",
+        "audience",
+        "channels",
+        "budget_cap",
+        "currency",
+        "approval_policy"
+      ],
+      "required_output_fields": [
+        "campaign_plan",
+        "hashmeta_campaign_draft_id",
+        "estimated_costs",
+        "approval_request",
+        "kpis"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "tenant-scoped; approval-gated; audited",
+      "skill_id": "SK-056",
+      "skill_key": "marketing_os_campaign_builder",
+      "suggested_module": "skills/marketing/marketing_os_campaign_builder.py",
+      "task_reference_count": 5,
+      "use_case_count": "0",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "Playable video with QC evidence and correct product/claim data",
+      "allowed_capabilities": "Wan Video API; asset library; claims reviewer",
+      "boundary": "One video adapter; async job reconciliation",
+      "canonical_owner": "Wan Video Creator",
+      "connector_candidate": "Wan Video API",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "SPECIFIED / NOT IMPLEMENTED",
+      "description": "Create short-form product videos using the Wan Video API. Start from a verified product, storyboard, brand identity, permitted claims, target platform, language and requested duration. Select only model modes confirmed by the configured Wan API; generate shot plan, captions and voiceover script, obtain budget approval for generation if billable, submit asynchronous job, poll safely, verify video duration, format, visual consistency and product accuracy, and store an MP4 asset with provenance and generation cost. Produce platform-specific upload-ready metadata for Facebook and YouTube; publishing remains a separate approved action.",
+      "dev01_bucket": "B3",
+      "display_name": "Wan Video Creator",
+      "error_and_recovery": "Job timeout: reconcile not blind retry; unsupported mode: blocked with actionable reason",
+      "execution_steps": "verify inputs -> storyboard -> policy/budget -> Wan job -> poll -> QC -> library -> handoff",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "marketing os",
+        "social media",
+        "connectors"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No unapproved charge, copyrighted source misuse, or auto-publish",
+      "required_input_fields": [
+        "product_id",
+        "storyboard",
+        "brand_id",
+        "language",
+        "duration",
+        "aspect_ratio",
+        "tenant_id",
+        "budget_cap"
+      ],
+      "required_output_fields": [
+        "video_asset_id",
+        "mp4_uri",
+        "caption_files",
+        "platform_metadata",
+        "qa_result",
+        "actual_cost"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "tenant-scoped; approval-gated; audited",
+      "skill_id": "SK-057",
+      "skill_key": "wan_video_creator",
+      "suggested_module": "skills/marketing/wan_video_creator.py",
+      "task_reference_count": 4,
+      "use_case_count": "0",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "Preview site exists, data matches catalog, live publication requires approval",
+      "allowed_capabilities": "Hashmeta Website Connector; catalog; site QA",
+      "boundary": "Sole website write adapter",
+      "canonical_owner": "Hashmeta Website Creation Adapter",
+      "connector_candidate": "Hashmeta",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "SPECIFIED / NOT IMPLEMENTED",
+      "description": "Build and update the owner online storefront through the Hashmeta website connector, never by assuming a direct website-hosting API. Map tenant, brand, catalog, locale, product pricing, contact and checkout settings into a validated portable website specification. Discover the actual connector schema and permissions; generate staging preview, verify page URLs and navigation, run accessibility and product-data QA, and request approval before publishing or updating a live site. Store remote site ID and external operation reconciliation key.",
+      "dev01_bucket": "B3",
+      "display_name": "Hashmeta Website Creation Adapter",
+      "error_and_recovery": "Unknown connector result: EXTERNAL_UNKNOWN; reconcile remote site before retry",
+      "execution_steps": "validate -> connector schema -> staging build -> QA -> owner approval -> publish/verify",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "marketing os",
+        "social media",
+        "connectors"
+      ],
+      "kind": "business_specialist",
+      "orphan_disposition": {
+        "disposition": "CONTRACT_ONLY_ROLLED_UP_INTO_SK-047",
+        "finding": "referenced by 0 of 224 tasks (DEV-01 G-c orphan)",
+        "note": "Hashmeta website execution stays bound to SK-047 storefront_builder via CON-HASH-WEB (BLOCKED); SK-058 keeps its contract row for audit but must not gain task edges without a new owner work order.",
+        "skill_id": "SK-058"
+      },
+      "prohibited_actions": "No unapproved live publishing or destructive site overwrite",
+      "required_input_fields": [
+        "tenant_id",
+        "brand_id",
+        "product_catalog",
+        "locale",
+        "site_spec",
+        "approval_policy"
+      ],
+      "required_output_fields": [
+        "hashmeta_site_id",
+        "preview_url",
+        "page_manifest",
+        "qa_report",
+        "publish_status"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "tenant-scoped; approval-gated; audited",
+      "skill_id": "SK-058",
+      "skill_key": "hashmeta_website_connector_skill",
+      "suggested_module": "skills/commerce/hashmeta_website_adapter.py",
+      "task_reference_count": 0,
+      "use_case_count": "0",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    },
+    {
+      "acceptance_tests": "Report reconciles source metrics and labels unavailable measures",
+      "allowed_capabilities": "Facebook/YouTube/LinkedIn metrics APIs where permissioned",
+      "boundary": "Read metrics only; Google Analytics for web traffic",
+      "canonical_owner": "Social Media Performance Reporter",
+      "connector_candidate": "Social platform connectors",
+      "coverage_dev02": "connector-bound",
+      "deployment_state": "SPECIFIED / NOT IMPLEMENTED",
+      "description": "Retrieve permitted metrics for owner-approved Facebook, YouTube and LinkedIn posts, preserving source, measurement period, channel and metric definitions. Normalize impressions, views, clicks, leads and conversions without treating engagement as sales. Attribute orders only when reliable tracking evidence exists, calculate cost per lead and return on ad spend only with verified spend and conversion data, and produce simple money-first spoken reports with explicit gaps and caveats.",
+      "dev01_bucket": "B3",
+      "display_name": "Social Media Performance Reporter",
+      "error_and_recovery": "API unavailable or metric missing: mark unknown; never invent sales",
+      "execution_steps": "fetch authorized metrics -> normalize -> reconcile -> calculate -> narrate",
+      "implementation": {
+        "function": null,
+        "module": null,
+        "status": "NOT_IMPLEMENTED"
+      },
+      "keywords": [
+        "marketing os",
+        "social media",
+        "connectors"
+      ],
+      "kind": "business_specialist",
+      "prohibited_actions": "No private account scraping or invented attribution",
+      "required_input_fields": [
+        "tenant_id",
+        "channel_account_refs",
+        "post_ids",
+        "date_range",
+        "verified_spend",
+        "conversion_events"
+      ],
+      "required_output_fields": [
+        "channel_metrics",
+        "traffic_summary",
+        "verified_conversions",
+        "roi_if_supported",
+        "source_refs"
+      ],
+      "reuse_decision_source": "ADAPT",
+      "security_controls": "tenant-scoped; approval-gated; audited",
+      "skill_id": "SK-059",
+      "skill_key": "social_channel_analytics",
+      "suggested_module": "skills/marketing/social_analytics.py",
+      "task_reference_count": 2,
+      "use_case_count": "0",
+      "verification": "Not verified",
+      "version": "1.0.0"
+    }
+  ]
+}

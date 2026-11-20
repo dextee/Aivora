@@ -16,7 +16,7 @@
     "integrity": "node tools/verify_integrity.mjs check",
     "integrity:seal": "node tools/verify_integrity.mjs seal",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test tests/runtime.test.mjs tests/odai.test.mjs tests/q4.test.mjs tests/objectives.test.mjs tests/guardrails-harness.test.mjs tests/watchd.test.mjs tests/authz.test.mjs"
+    "test": "npm run build && node --test tests/runtime.test.mjs tests/odai.test.mjs tests/q4.test.mjs tests/objectives.test.mjs tests/guardrails-harness.test.mjs tests/watchd.test.mjs tests/authz.test.mjs tests/registry.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.2",

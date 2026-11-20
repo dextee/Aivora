@@ -20,6 +20,7 @@ import { modeAccess, POLICY_VERSION, UNAVAILABLE_RULE_SETS } from "./server/odai
 import { get, DEMO_TENANT } from "./server/odai/store.mjs";
 import { createObjective, approve, resume, finalReport, project, listObjectives, view as objView } from "./server/odai/objectives.mjs";
 import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
+import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
 
 const host = process.env.HOST;
 const port = Number(process.env.PORT);
@@ -300,6 +301,7 @@ async function odaiRoute(url, request, response) {
     if (request.method === "GET" && !action) return json(await resume(tenant, oid));
   }
   if (path === "/modes") return json({ contract: "ui_modes_9_0", policy_version: POLICY_VERSION, unavailable_rule_sets: UNAVAILABLE_RULE_SETS, modes: ["user", "management", "security"], mode_change_grants_permission: false });
+    if (path === "/registry" && request.method === "GET") return json({ tenant_id: tenant, ...registrySummary() }); // WO-A1: counts + version hash (no PII, no prose row dumps)
     if (path === "/intents" && request.method === "GET") {
       // registry minus internal fields (keywords stripped server-side). Data-driven; no prose in code.
       return json({ tenant_id: tenant, intents: publicIntents() });

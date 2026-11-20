@@ -9,6 +9,11 @@ import * as wf from "./workflow.mjs";
 import * as db from "./db.mjs";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
+/* WO-A1 (WO-110/WO-102): business-plane registry routing. ADDITIVE only — the generic
+ * planner below remains the complete fallback path; registry is DATA (odai/config).
+ * G1 posture: no second dispatcher/policy evaluator introduced. */
+import { matchObjective, planFor, criterionFromText } from "./registry.mjs";
+import { skill_gate_check, skill_report_compose } from "./skills.mjs";
 
 /* task graph: every task resolves from beat receipts (source of truth) */
 const TASKS = [
@@ -52,8 +57,88 @@ async function persist(obj) {
   try { if (await db.dbAvailable()) { const m = await import("./db.mjs"); m.upsertObjective && m.upsertObjective({ tenant_id: obj.tenant_id, objective_id: obj.objective_id, row: obj }); logEvent(get(obj.tenant_id), { runId: obj.run_id, beat: "·", actor: "orchestrator", kind: "OBJECTIVE_CHECKPOINT", decision: "ALLOW", note: obj.state }); } } catch { /* durable-best-effort: memory remains authoritative in staging */ }
 }
 
+/* WO-A1 registry objective (WO-110 routing + WO-102 generalized criterion).
+ * The registry plan IS the manifest — task ids/steps/deps/skills equal the built
+ * task_graph rows (plan == registry, proven by tests). No beats run for registry
+ * objectives: beats stay the generic planner's executor; connector-BLOCKED and
+ * NOT_IMPLEMENTED tasks are recorded honestly with blocked_reason, never faked. */
+function registryStateFor(gates, approvals) {
+  const live = gates.filter((g) => ["approve_spend", "approve_publish", "approve_customer_comms", "approve_external_action"].includes(g.id));
+  if (live.some((g) => g.id === "approve_spend" && !approvals.includes(g.id))) return "AWAITING_SPEND_APPROVAL";
+  if (live.some((g) => !approvals.includes(g.id))) return "AWAITING_GATE_APPROVAL";
+  if (live.length) return "PLAN_APPROVED_HELD_CONNECTORS";
+  return "PLAN_VALIDATED_READY"; // review-gated / no live scope — validated plan, owner advisory only
+}
+function registryProgress(obj) {
+  const ready = obj.tasks.filter((x) => x.state === "ready").length;
+  return `${obj.tasks.length - obj.tasks.filter((x) => x.state === "blocked_plan_validated").length}/${obj.tasks.length} tasks plan-validated (${ready} dispatch-ready P0 modules) · gates ${obj.gates.map((g) => g.id + ":" + g.state).join(", ") || "none"}`;
+}
+async function createRegistryObjective(tenantId, incoming, match, plan) {
+  const objective_id = "OBJ-" + Date.now().toString(36);
+  const criterion = criterionFromText(incoming) || (plan.criterion_spec && plan.criterion_spec.spec) ||
+    { kind: "owner_acceptance_artifact", artifact: plan.acceptance ? String(plan.acceptance.success_oracle || "").slice(0, 200) : null };
+  const gates = plan.gates.map((g) => ({ id: g.engine_gate_id, scope: g.scope, sheet_string: g.sheet_string, state: g.state, held_never: g.held_never_connector_readiness, release_log: null }));
+  const obj = {
+    objective_id, tenant_id: tenantId, plan_source: "registry",
+    registry_objective_id: plan.registry_objective_id, business_family: plan.business_family,
+    router_score: match.score, statement: incoming.trim().slice(0, 300), registry_statement: plan.statement,
+    criterion, run_id: null,
+    manifest: { tasks: plan.tasks.map((t) => ({ id: t.id, step: t.step })), gates: gates.map((g) => ({ id: g.id, scope: g.scope })), source: "odai/config (master registry, business-plane-v2.1-a1)" },
+    tasks: plan.tasks.map((t) => ({ id: t.id, state: t.state, specialist: t.specialist, deps: t.depends_on,
+      step: t.step, skill_id: t.skill_id, agent_id: t.agent_id,
+      evidence: { module: t.module, fn: t.fn, connector_class: t.connector_class, executable: t.executable, blocked_reason: t.blocked_reason } })),
+    gates,
+    state: registryStateFor(gates, []),
+    approvals: [], created_at: new Date().toISOString(), completed_at: null, report: null,
+    dispatch_validation: { edges_validated: true, note: "registry edges validated (DAG) before dispatch — dispatch itself stays held until skills/connectors land" },
+    acceptance: plan.acceptance, measurable_via: plan.measurable_via,
+  };
+  obj.progress = registryProgress(obj);
+  store.set(tenantId + "/" + objective_id, obj);
+  logEvent(get(tenantId), { runId: "·", beat: "·", actor: "orchestrator", kind: "OBJECTIVE_CREATED_REGISTRY", decision: "ALLOW", note: `${objective_id} -> ${obj.registry_objective_id} score=${obj.router_score} criterion=${criterion.kind || "artifact"}` });
+  await persist(obj);
+  return view(obj);
+}
+
+/* registry gate release — routes the OWNER decision through skill_gate_check (SK-035,
+ * CTRL-06 shim; the 9.0 gateway itself is untouched: external stays held-NEVER and the
+ * engine never dispatches on its own). cap binds spend approvals like decideSpend does. */
+async function registryApprove(obj, scope, cap) {
+  const g = obj.gates.find((x) => x.id === scope);
+  if (!g) return { error: "unknown gate scope for registry objective: " + String(scope) };
+  const capMyr = (obj.criterion && obj.criterion.kind === "money_cap_myr") ? obj.criterion.cap_myr : (g.scope === "spend" ? cap : 0);
+  const decision = skill_gate_check({ actor: "OWNER", tenant: obj.tenant_id, action: scope, resource: obj.objective_id, risk: "medium",
+    gate: { scope: g.scope }, owner_approved: true, amount_myr: g.scope === "spend" ? cap : 0, cap_myr: capMyr });
+  if (decision.status !== "OK") return { error: "gate-check refused: " + (decision.reason || String(decision.missing)) };
+  const d = decision.typed_artifact;
+  if (d.policy_decision === "HOLD") { const v = view(obj); v.gate_decision = d; v.note = "spend approval needs owner confirm (approve again with cap)"; return v; }
+  if (!obj.approvals.includes(scope)) obj.approvals.push(scope);
+  obj.approval_log = [...(obj.approval_log || []), { scope, at: new Date().toISOString(), actor: "OWNER", decision: d.policy_decision, reason_code: d.reason_code,
+    binding: g.scope === "spend" ? `cap RM${capMyr || cap} recorded (ledger-cumulative enforcement lands with the durable attach)` : "recorded; external write stays NEVER under 9.0 connector readiness" }];
+  g.state = d.policy_decision === "BLOCK" ? "approved_held_EXTERNAL_NEVER" : g.scope === "spend" ? "approved_cap_recorded" : g.scope === "review" ? "advisory_recorded" : "released_pending_connectors";
+  g.release_log = obj.approval_log[obj.approval_log.length - 1];
+  obj.state = registryStateFor(obj.gates, obj.approvals);
+  obj.progress = registryProgress(obj);
+  logEvent(get(obj.tenant_id), { runId: "·", beat: "·", actor: "guardrails", kind: "GATE", decision: String(d.policy_decision), note: `${obj.objective_id} ${scope} ${d.reason_code}` });
+  await persist(obj);
+  const out = view(obj);
+  out.gate_decision = d;
+  return out;
+}
+
 /* create → validate → manifest → begin first execution phase (beats 1–5 incl. spend gate) */
 export async function createObjective(tenantId, statement) {
+  /* WO-110 router: deterministic lexical+template resolution to the business-plane
+   * registry FIRST (no LLM). Unknown / below-threshold statements fall through to the
+   * existing generic planner path below — unchanged, additive. */
+  try {
+    const match = matchObjective(String(statement || ""));
+    if (match) {
+      const plan = planFor(match.objective.objective_id);
+      if (plan && plan.error) return { error: plan.error }; // fail closed before dispatch
+      if (plan) return createRegistryObjective(tenantId, String(statement), match, plan);
+    }
+  } catch (e) { return { error: "registry router failure (fail closed, nothing dispatched): " + String((e && e.message) || e) }; }
   const p = interpret(statement);
   if (!p.valid) return { error: p.reason };
   const objective_id = "OBJ-" + Date.now().toString(36);
@@ -119,6 +204,7 @@ function preflightBlock(tenantId, obj) {
 export async function approve(tenantId, objective_id, scope, cap = 150) {
   const obj = store.get(tenantId + "/" + objective_id);
   if (!obj) return { error: "objective not found (cold instance? re-create — durable replay lands in later version)" };
+  if (obj.plan_source === "registry") return registryApprove(obj, String(scope), Number(cap) || 150);
   if (!obj.approvals.includes(scope)) obj.approvals.push(scope);
   obj.approval_log = [...(obj.approval_log || []), { scope, at: new Date().toISOString(), actor: "OWNER", binding: scope === "approve_spend" ? `workflow resume cap S$${cap}` : "recorded; external write stays NEVER under 9.0 connector readiness — nothing publishes or sends " }];
   if (scope === "approve_spend" && obj.state !== "REPORTED") {
@@ -136,11 +222,30 @@ export async function resume(tenantId, objective_id) {
   let obj = store.get(tenantId + "/" + objective_id);
   if (!obj && await db.dbAvailable()) { /* durable replay hook */ return { error: "objective state was in a previous instance — DB-backed resume is the V33 slot; re-run demo for full lifecycle" }; }
   if (!obj) return { error: "not found" };
+  if (obj.plan_source === "registry") { obj.state = registryStateFor(obj.gates, obj.approvals); obj.progress = registryProgress(obj); return view(obj); }
   await project(obj);
   return view(obj);
 }
 
 export function classify(obj) {
+  if (obj.plan_source === "registry") {
+    const money = skill_report_compose({ tenant_id: obj.tenant_id, objective_id: obj.objective_id });
+    return {
+      objective_id: obj.objective_id, tenant_id: obj.tenant_id, plan_source: "registry",
+      registry_objective_id: obj.registry_objective_id, business_family: obj.business_family,
+      statement: obj.statement.slice(0, 100), success_criterion: obj.criterion, measurable_via: obj.measurable_via,
+      acceptance: obj.acceptance, state: obj.state, progress: obj.progress,
+      completed: [], simulated: [], awaiting_owner_decision: [], failed: [],
+      planned_ready: obj.tasks.filter((x) => x.state === "ready").map((x) => x.id),
+      planned: obj.tasks.filter((x) => x.state !== "ready").map((x) => x.id),
+      money_first: money.status === "OK" ? money.typed_artifact.money_first : { error: "ledger unavailable" },
+      approval_gates: obj.gates.map((x) => ({ gate: x.id, scope: x.scope, state: x.state, sheet_string: x.sheet_string,
+        note: x.state.startsWith("approved_held") ? "release recorded for owner scope, but 9.0 connector_readiness keeps external writes DISABLED — engine will NEVER publish/spend/send on its own" : undefined })),
+      evidence_sources: { plan: "odai/config task_graph (topo-validated pre-dispatch)", ledger: "server/odai/ledger.mjs (WO-104 append-only)" },
+      durable_note: "registry objectives carry plan + gate state only; execution lands per WO-110 as connectors/skills unblock",
+      generated_at: new Date().toISOString(),
+    };
+  }
   const g = (s) => obj.tasks.filter((x) => x.state === s).map((x) => x.id);
   return {
     objective_id: obj.objective_id, tenant_id: obj.tenant_id, statement: obj.statement.slice(0, 100),
@@ -154,7 +259,7 @@ export function classify(obj) {
 }
 function beat_receipts_note() { return { manifest: "D03 tasks (fixed graph)", receipts: "D04 beats 1–10 (workflow.mjs)", policy: "D08 R01–R19 + connector gate", storage: "D10 odai_* tables (trace/receipt/run/approval)", simulated_boundary: "beat-9 order TEST_SIMULATED; supplier handoff PREPARED_NOT_SENT" }; }
 
-export function view(obj) { return { objective_id: obj.objective_id, tenant_id: obj.tenant_id, criterion: obj.criterion, state: obj.state, progress: obj.progress, tasks: obj.tasks.map((x) => ({ id: x.id, state: x.state, specialist: x.specialist, deps: x.deps, evidence: x.evidence })), gates: obj.gates.map(({ id, scope, state, release_log }) => ({ id, scope, state, release_log })), report: obj.state === "REPORTED" ? classify(obj) : null }; }
+export function view(obj) { return { objective_id: obj.objective_id, tenant_id: obj.tenant_id, criterion: obj.criterion, state: obj.state, progress: obj.progress, ...(obj.plan_source ? { plan_source: obj.plan_source, registry_objective_id: obj.registry_objective_id, business_family: obj.business_family, router_score: obj.router_score, measurable_via: obj.measurable_via, registry_statement: obj.registry_statement } : {}), tasks: obj.tasks.map((x) => ({ id: x.id, state: x.state, specialist: x.specialist, deps: x.deps, step: x.step, evidence: x.evidence })), gates: obj.gates.map(({ id, scope, state, release_log }) => ({ id, scope, state, release_log })), report: obj.state === "REPORTED" ? classify(obj) : null }; }
 export function finalReport(tenantId, objective_id) { const obj = store.get(tenantId + "/" + objective_id); return obj ? classify(obj) : { error: "not found" }; }
 
 /* WO-10R: tenant-scoped objective list for GET /api/odai/objectives (summary projection;

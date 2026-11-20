@@ -1,0 +1,6132 @@
+{
+  "edges": 124,
+  "generated_from": "odai/dev_docs/registry_intake.json",
+  "intake_sha256": "73e172ce58b5aa775132aa20ff06bd3a454782c90ae9aaf5105b5c6f5c35d509",
+  "nodes": 224,
+  "ordering": "per-objective step-contiguous; global Kahn acyclic (mirrors reg_validation.json: cyclic=false)",
+  "registry_version": "business-plane-v2.1-a1",
+  "row_count": 224,
+  "rows": [
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "business-development",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "owner_constraints",
+        "market",
+        "available_capital"
+      ],
+      "objective_id": "UC-001",
+      "outputs": [
+        "ranked_business_models",
+        "assumptions",
+        "risk_register"
+      ],
+      "skill_id": "SK-005",
+      "specialist": "Business Model Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-001-T01"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "Budget Planner",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-001-T01"
+      ],
+      "inputs": [
+        "budget_amount",
+        "currency",
+        "reserve_amount",
+        "time_horizon",
+        "proposed_costs"
+      ],
+      "objective_id": "UC-001",
+      "outputs": [
+        "budget_plan",
+        "cash_at_risk",
+        "scenario_table",
+        "approval_items"
+      ],
+      "skill_id": "SK-004",
+      "specialist": "Budget Planner",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-001-T02"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "Budget Planner",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "budget_amount",
+        "currency",
+        "reserve_amount",
+        "time_horizon",
+        "proposed_costs"
+      ],
+      "objective_id": "UC-002",
+      "outputs": [
+        "budget_plan",
+        "cash_at_risk",
+        "scenario_table",
+        "approval_items"
+      ],
+      "skill_id": "SK-004",
+      "specialist": "Budget Planner",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-002-T01"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "business-development",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-002-T01"
+      ],
+      "inputs": [
+        "owner_constraints",
+        "market",
+        "available_capital"
+      ],
+      "objective_id": "UC-002",
+      "outputs": [
+        "ranked_business_models",
+        "assumptions",
+        "risk_register"
+      ],
+      "skill_id": "SK-005",
+      "specialist": "Business Model Analyst",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-002-T02"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "supplier_details",
+        "agreements",
+        "price_lists"
+      ],
+      "objective_id": "UC-003",
+      "outputs": [
+        "supplier_verification",
+        "exceptions",
+        "evidence_refs"
+      ],
+      "skill_id": "SK-049",
+      "specialist": "Supplier Verification Specialist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-003-T01"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-003-T01"
+      ],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-003",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-003-T02"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "Fulfillment Planner",
+      "connector_candidate": "Supplier connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-004",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-025",
+      "specialist": "Fulfillment Planner",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-004-T01"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-004-T01"
+      ],
+      "inputs": [
+        "supplier_details",
+        "agreements",
+        "price_lists"
+      ],
+      "objective_id": "UC-004",
+      "outputs": [
+        "supplier_verification",
+        "exceptions",
+        "evidence_refs"
+      ],
+      "skill_id": "SK-049",
+      "specialist": "Supplier Verification Specialist",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-004-T02"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "business-development",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "owner_constraints",
+        "market",
+        "available_capital"
+      ],
+      "objective_id": "UC-005",
+      "outputs": [
+        "ranked_business_models",
+        "assumptions",
+        "risk_register"
+      ],
+      "skill_id": "SK-005",
+      "specialist": "Business Model Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-005-T01"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-005-T01"
+      ],
+      "inputs": [
+        "jurisdiction",
+        "business_activity",
+        "entity_status"
+      ],
+      "objective_id": "UC-005",
+      "outputs": [
+        "registration_checklist",
+        "source_links",
+        "outstanding_items"
+      ],
+      "skill_id": "SK-039",
+      "specialist": "Registration Advisor",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-005-T02"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "business-development",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "owner_constraints",
+        "market",
+        "available_capital"
+      ],
+      "objective_id": "UC-006",
+      "outputs": [
+        "ranked_business_models",
+        "assumptions",
+        "risk_register"
+      ],
+      "skill_id": "SK-005",
+      "specialist": "Business Model Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-006-T01"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "Universal Voice Listener",
+      "connector_candidate": "Qwen voice runtime",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-006-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-006",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-054",
+      "specialist": "Voice UX Guide",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-006-T02"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "jurisdiction",
+        "business_activity",
+        "entity_status"
+      ],
+      "objective_id": "UC-007",
+      "outputs": [
+        "registration_checklist",
+        "source_links",
+        "outstanding_items"
+      ],
+      "skill_id": "SK-039",
+      "specialist": "Registration Advisor",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-007-T01"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-007-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-007",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-013",
+      "specialist": "Compliance Researcher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-007-T02"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "domain-name-brainstormer",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "products",
+        "audience",
+        "brand_preferences"
+      ],
+      "objective_id": "UC-008",
+      "outputs": [
+        "brand_options",
+        "positioning",
+        "asset_brief"
+      ],
+      "skill_id": "SK-003",
+      "specialist": "Brand Setup Specialist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-008-T01"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-008-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-008",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-013",
+      "specialist": "Compliance Researcher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-008-T02"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "domain-name-brainstormer",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "products",
+        "audience",
+        "brand_preferences"
+      ],
+      "objective_id": "UC-009",
+      "outputs": [
+        "brand_options",
+        "positioning",
+        "asset_brief"
+      ],
+      "skill_id": "SK-003",
+      "specialist": "Brand Setup Specialist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-009-T01"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "SK-058",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-009-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-009",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-047",
+      "specialist": "Storefront Builder",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-009-T02"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "business-development",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "owner_constraints",
+        "market",
+        "available_capital"
+      ],
+      "objective_id": "UC-010",
+      "outputs": [
+        "ranked_business_models",
+        "assumptions",
+        "risk_register"
+      ],
+      "skill_id": "SK-005",
+      "specialist": "Business Model Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-010-T01"
+    },
+    {
+      "agent_id": "AG-01",
+      "canonical_owner": "Objective Planner",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-010-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-010",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-031",
+      "specialist": "Objective Planner",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-010-T02"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Margin Analyst",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "sku_prices",
+        "verified_costs",
+        "fee_schedule"
+      ],
+      "objective_id": "UC-011",
+      "outputs": [
+        "margin_table",
+        "break_even",
+        "unknown_cost_flags"
+      ],
+      "skill_id": "SK-030",
+      "specialist": "Margin Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-011-T01"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-011-T01"
+      ],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-011",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-011-T02"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "market-research-reports",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "product_category",
+        "geography",
+        "time_window"
+      ],
+      "objective_id": "UC-012",
+      "outputs": [
+        "demand_brief",
+        "evidence",
+        "uncertainty"
+      ],
+      "skill_id": "SK-019",
+      "specialist": "Demand Researcher",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-012-T01"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-012-T01"
+      ],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-012",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-012-T02"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-013",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-013-T01"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-013-T01"
+      ],
+      "inputs": [
+        "supplier_details",
+        "agreements",
+        "price_lists"
+      ],
+      "objective_id": "UC-013",
+      "outputs": [
+        "supplier_verification",
+        "exceptions",
+        "evidence_refs"
+      ],
+      "skill_id": "SK-049",
+      "specialist": "Supplier Verification Specialist",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-013-T02"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "market-research-reports",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "product_category",
+        "geography",
+        "time_window"
+      ],
+      "objective_id": "UC-014",
+      "outputs": [
+        "demand_brief",
+        "evidence",
+        "uncertainty"
+      ],
+      "skill_id": "SK-019",
+      "specialist": "Demand Researcher",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-014-T01"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Fulfillment Planner",
+      "connector_candidate": "Supplier connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-014-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-014",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-025",
+      "specialist": "Fulfillment Planner",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-014-T02"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-015",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-015-T01"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Claims Reviewer",
+      "connector_candidate": "Internal product truth",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-015-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-015",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-012",
+      "specialist": "Claims Reviewer",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-015-T02"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-016",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-016-T01"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-016-T01"
+      ],
+      "inputs": [
+        "supplier_details",
+        "agreements",
+        "price_lists"
+      ],
+      "objective_id": "UC-016",
+      "outputs": [
+        "supplier_verification",
+        "exceptions",
+        "evidence_refs"
+      ],
+      "skill_id": "SK-049",
+      "specialist": "Supplier Verification Specialist",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-016-T02"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-017",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-017-T01"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Inventory Validator",
+      "connector_candidate": "Supabase / supplier TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-017-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-017",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-028",
+      "specialist": "Inventory Validator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-017-T02"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "market-research-reports",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "product_category",
+        "geography",
+        "time_window"
+      ],
+      "objective_id": "UC-018",
+      "outputs": [
+        "demand_brief",
+        "evidence",
+        "uncertainty"
+      ],
+      "skill_id": "SK-019",
+      "specialist": "Demand Researcher",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-018-T01"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Fulfillment Planner",
+      "connector_candidate": "Supplier connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-018-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-018",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-025",
+      "specialist": "Fulfillment Planner",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-018-T02"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "supplier_details",
+        "agreements",
+        "price_lists"
+      ],
+      "objective_id": "UC-019",
+      "outputs": [
+        "supplier_verification",
+        "exceptions",
+        "evidence_refs"
+      ],
+      "skill_id": "SK-049",
+      "specialist": "Supplier Verification Specialist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-019-T01"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-019-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-019",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-013",
+      "specialist": "Compliance Researcher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-019-T02"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Margin Analyst",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "sku_prices",
+        "verified_costs",
+        "fee_schedule"
+      ],
+      "objective_id": "UC-020",
+      "outputs": [
+        "margin_table",
+        "break_even",
+        "unknown_cost_flags"
+      ],
+      "skill_id": "SK-030",
+      "specialist": "Margin Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-020-T01"
+    },
+    {
+      "agent_id": "AG-02",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-020-T01"
+      ],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-020",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-020-T02"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "SK-058",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-021",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-047",
+      "specialist": "Storefront Builder",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-021-T01"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "Site QA Tester",
+      "connector_candidate": "Internal test runner",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-021-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-021",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-044",
+      "specialist": "Site QA Tester",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-021-T02"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-022",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-022-T01"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "SK-058",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-022-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-022",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-047",
+      "specialist": "Storefront Builder",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-022-T02"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "translation",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "source_content",
+        "locale",
+        "glossary"
+      ],
+      "objective_id": "UC-023",
+      "outputs": [
+        "localized_content",
+        "terminology_flags",
+        "QA_report"
+      ],
+      "skill_id": "SK-029",
+      "specialist": "Localization Specialist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-023-T01"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "SK-058",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-023-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-023",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-047",
+      "specialist": "Storefront Builder",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-023-T02"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "translation",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "source_content",
+        "locale",
+        "glossary"
+      ],
+      "objective_id": "UC-024",
+      "outputs": [
+        "localized_content",
+        "terminology_flags",
+        "QA_report"
+      ],
+      "skill_id": "SK-029",
+      "specialist": "Localization Specialist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-024-T01"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "Checkout Integrator",
+      "connector_candidate": "Payment provider TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-024-T01"
+      ],
+      "inputs": [
+        "merchant_config",
+        "order_rules",
+        "payment_adapter"
+      ],
+      "objective_id": "UC-024",
+      "outputs": [
+        "checkout_test_result",
+        "integration_status",
+        "exceptions"
+      ],
+      "skill_id": "SK-011",
+      "specialist": "Checkout Integrator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-024-T02"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "Checkout Integrator",
+      "connector_candidate": "Payment provider TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "merchant_config",
+        "order_rules",
+        "payment_adapter"
+      ],
+      "objective_id": "UC-025",
+      "outputs": [
+        "checkout_test_result",
+        "integration_status",
+        "exceptions"
+      ],
+      "skill_id": "SK-011",
+      "specialist": "Checkout Integrator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-025-T01"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "Payment Reconciler",
+      "connector_candidate": "Payment provider TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-025-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-025",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-034",
+      "specialist": "Payment Reconciler",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-025-T02"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "SK-058",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-026",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-047",
+      "specialist": "Storefront Builder",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-026-T01"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "Site QA Tester",
+      "connector_candidate": "Internal test runner",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-026-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-026",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-044",
+      "specialist": "Site QA Tester",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-026-T02"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-027",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-027-T01"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "Asset Manager",
+      "connector_candidate": "Google Drive",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-027-T01"
+      ],
+      "inputs": [
+        "asset_refs",
+        "usage_rights",
+        "target_format"
+      ],
+      "objective_id": "UC-027",
+      "outputs": [
+        "approved_assets",
+        "provenance",
+        "blocked_assets"
+      ],
+      "skill_id": "SK-001",
+      "specialist": "Asset Manager",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-027-T02"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "copywriting",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-028",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-016",
+      "specialist": "Conversation Designer",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-028-T01"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "Checkout Integrator",
+      "connector_candidate": "Payment provider TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-028-T01"
+      ],
+      "inputs": [
+        "merchant_config",
+        "order_rules",
+        "payment_adapter"
+      ],
+      "objective_id": "UC-028",
+      "outputs": [
+        "checkout_test_result",
+        "integration_status",
+        "exceptions"
+      ],
+      "skill_id": "SK-011",
+      "specialist": "Checkout Integrator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-028-T02"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "SK-058",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-029",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-047",
+      "specialist": "Storefront Builder",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-029-T01"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "copywriting",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-029-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-029",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-036",
+      "specialist": "Promotion Planner",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-029-T02"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "Site QA Tester",
+      "connector_candidate": "Internal test runner",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-030",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-044",
+      "specialist": "Site QA Tester",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-030-T01"
+    },
+    {
+      "agent_id": "AG-03",
+      "canonical_owner": "Checkout Integrator",
+      "connector_candidate": "Payment provider TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-030-T01"
+      ],
+      "inputs": [
+        "merchant_config",
+        "order_rules",
+        "payment_adapter"
+      ],
+      "objective_id": "UC-030",
+      "outputs": [
+        "checkout_test_result",
+        "integration_status",
+        "exceptions"
+      ],
+      "skill_id": "SK-011",
+      "specialist": "Checkout Integrator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-030-T02"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-strategy",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-031",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-007",
+      "specialist": "Campaign Strategist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-031-T01"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Creative Generator",
+      "connector_candidate": "Wan Image API",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-031-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-031",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-018",
+      "specialist": "Creative Generator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-031-T02"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-creator-pro",
+      "connector_candidate": "Wan Image API via SK-018",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-031-T02"
+      ],
+      "inputs": [
+        "product_id",
+        "brand_id",
+        "platforms",
+        "language",
+        "objective",
+        "budget",
+        "tenant_id"
+      ],
+      "objective_id": "UC-031",
+      "outputs": [
+        "poster_asset_id",
+        "post_drafts",
+        "platform_variants",
+        "qa_result",
+        "cost_estimate"
+      ],
+      "skill_id": "SK-055",
+      "specialist": "Poster & Social Post Creator",
+      "status": "Not run",
+      "step": 3,
+      "task_id": "UC-031-T03"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Claims Reviewer",
+      "connector_candidate": "Internal product truth",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-031-T03"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-031",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-012",
+      "specialist": "Claims Reviewer",
+      "status": "Not run",
+      "step": 4,
+      "task_id": "UC-031-T04"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Creative Generator",
+      "connector_candidate": "Wan Image API",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-032",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-018",
+      "specialist": "Creative Generator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-032-T01"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Claims Reviewer",
+      "connector_candidate": "Internal product truth",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-032-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-032",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-012",
+      "specialist": "Claims Reviewer",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-032-T02"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-creator-pro",
+      "connector_candidate": "Wan Image API via SK-018",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-032-T02"
+      ],
+      "inputs": [
+        "product_id",
+        "brand_id",
+        "platforms",
+        "language",
+        "objective",
+        "budget",
+        "tenant_id"
+      ],
+      "objective_id": "UC-032",
+      "outputs": [
+        "poster_asset_id",
+        "post_drafts",
+        "platform_variants",
+        "qa_result",
+        "cost_estimate"
+      ],
+      "skill_id": "SK-055",
+      "specialist": "Poster & Social Post Creator",
+      "status": "Not run",
+      "step": 3,
+      "task_id": "UC-032-T03"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Wan Video Creator",
+      "connector_candidate": "Wan Video API",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-032-T03"
+      ],
+      "inputs": [
+        "product_id",
+        "storyboard",
+        "brand_id",
+        "language",
+        "duration",
+        "aspect_ratio",
+        "tenant_id",
+        "budget_cap"
+      ],
+      "objective_id": "UC-032",
+      "outputs": [
+        "video_asset_id",
+        "mp4_uri",
+        "caption_files",
+        "platform_metadata",
+        "qa_result",
+        "actual_cost"
+      ],
+      "skill_id": "SK-057",
+      "specialist": "Wan Video Creator",
+      "status": "Not run",
+      "step": 4,
+      "task_id": "UC-032-T04"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-strategy",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-033",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-007",
+      "specialist": "Campaign Strategist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-033-T01"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Channel Publisher",
+      "connector_candidate": "Facebook Pages / YouTube / LinkedIn / Instagram",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-033-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-033",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-010",
+      "specialist": "Channel Publisher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-033-T02"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-creator-pro",
+      "connector_candidate": "Wan Image API via SK-018",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-033-T02"
+      ],
+      "inputs": [
+        "product_id",
+        "brand_id",
+        "platforms",
+        "language",
+        "objective",
+        "budget",
+        "tenant_id"
+      ],
+      "objective_id": "UC-033",
+      "outputs": [
+        "poster_asset_id",
+        "post_drafts",
+        "platform_variants",
+        "qa_result",
+        "cost_estimate"
+      ],
+      "skill_id": "SK-055",
+      "specialist": "Poster & Social Post Creator",
+      "status": "Not run",
+      "step": 3,
+      "task_id": "UC-033-T03"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Marketing OS Campaign Builder",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-033-T03"
+      ],
+      "inputs": [
+        "objective_id",
+        "tenant_id",
+        "product_ids",
+        "audience",
+        "channels",
+        "budget_cap",
+        "currency",
+        "approval_policy"
+      ],
+      "objective_id": "UC-033",
+      "outputs": [
+        "campaign_plan",
+        "hashmeta_campaign_draft_id",
+        "estimated_costs",
+        "approval_request",
+        "kpis"
+      ],
+      "skill_id": "SK-056",
+      "specialist": "Marketing OS Campaign Builder",
+      "status": "Not run",
+      "step": 4,
+      "task_id": "UC-033-T04"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-strategy",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-034",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-007",
+      "specialist": "Campaign Strategist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-034-T01"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Creative Generator",
+      "connector_candidate": "Wan Image API",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-034-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-034",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-018",
+      "specialist": "Creative Generator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-034-T02"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-creator-pro",
+      "connector_candidate": "Wan Image API via SK-018",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-034-T02"
+      ],
+      "inputs": [
+        "product_id",
+        "brand_id",
+        "platforms",
+        "language",
+        "objective",
+        "budget",
+        "tenant_id"
+      ],
+      "objective_id": "UC-034",
+      "outputs": [
+        "poster_asset_id",
+        "post_drafts",
+        "platform_variants",
+        "qa_result",
+        "cost_estimate"
+      ],
+      "skill_id": "SK-055",
+      "specialist": "Poster & Social Post Creator",
+      "status": "Not run",
+      "step": 3,
+      "task_id": "UC-034-T03"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Wan Video Creator",
+      "connector_candidate": "Wan Video API",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-034-T03"
+      ],
+      "inputs": [
+        "product_id",
+        "storyboard",
+        "brand_id",
+        "language",
+        "duration",
+        "aspect_ratio",
+        "tenant_id",
+        "budget_cap"
+      ],
+      "objective_id": "UC-034",
+      "outputs": [
+        "video_asset_id",
+        "mp4_uri",
+        "caption_files",
+        "platform_metadata",
+        "qa_result",
+        "actual_cost"
+      ],
+      "skill_id": "SK-057",
+      "specialist": "Wan Video Creator",
+      "status": "Not run",
+      "step": 4,
+      "task_id": "UC-034-T04"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Marketing OS Campaign Builder",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-034-T04"
+      ],
+      "inputs": [
+        "objective_id",
+        "tenant_id",
+        "product_ids",
+        "audience",
+        "channels",
+        "budget_cap",
+        "currency",
+        "approval_policy"
+      ],
+      "objective_id": "UC-034",
+      "outputs": [
+        "campaign_plan",
+        "hashmeta_campaign_draft_id",
+        "estimated_costs",
+        "approval_request",
+        "kpis"
+      ],
+      "skill_id": "SK-056",
+      "specialist": "Marketing OS Campaign Builder",
+      "status": "Not run",
+      "step": 5,
+      "task_id": "UC-034-T05"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Budget Planner",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "budget_amount",
+        "currency",
+        "reserve_amount",
+        "time_horizon",
+        "proposed_costs"
+      ],
+      "objective_id": "UC-035",
+      "outputs": [
+        "budget_plan",
+        "cash_at_risk",
+        "scenario_table",
+        "approval_items"
+      ],
+      "skill_id": "SK-004",
+      "specialist": "Budget Planner",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-035-T01"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-strategy",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-035-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-035",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-007",
+      "specialist": "Campaign Strategist",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-035-T02"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-creator-pro",
+      "connector_candidate": "Wan Image API via SK-018",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-035-T02"
+      ],
+      "inputs": [
+        "product_id",
+        "brand_id",
+        "platforms",
+        "language",
+        "objective",
+        "budget",
+        "tenant_id"
+      ],
+      "objective_id": "UC-035",
+      "outputs": [
+        "poster_asset_id",
+        "post_drafts",
+        "platform_variants",
+        "qa_result",
+        "cost_estimate"
+      ],
+      "skill_id": "SK-055",
+      "specialist": "Poster & Social Post Creator",
+      "status": "Not run",
+      "step": 3,
+      "task_id": "UC-035-T03"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Marketing OS Campaign Builder",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-035-T03"
+      ],
+      "inputs": [
+        "objective_id",
+        "tenant_id",
+        "product_ids",
+        "audience",
+        "channels",
+        "budget_cap",
+        "currency",
+        "approval_policy"
+      ],
+      "objective_id": "UC-035",
+      "outputs": [
+        "campaign_plan",
+        "hashmeta_campaign_draft_id",
+        "estimated_costs",
+        "approval_request",
+        "kpis"
+      ],
+      "skill_id": "SK-056",
+      "specialist": "Marketing OS Campaign Builder",
+      "status": "Not run",
+      "step": 4,
+      "task_id": "UC-035-T04"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-035-T04"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-035",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-046",
+      "specialist": "Spend Controller",
+      "status": "Not run",
+      "step": 5,
+      "task_id": "UC-035-T05"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Creative Generator",
+      "connector_candidate": "Wan Image API",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-036",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-018",
+      "specialist": "Creative Generator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-036-T01"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Experiment Analyst",
+      "connector_candidate": "Google Analytics",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-036-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-036",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-022",
+      "specialist": "Experiment Analyst",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-036-T02"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-creator-pro",
+      "connector_candidate": "Wan Image API via SK-018",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-036-T02"
+      ],
+      "inputs": [
+        "product_id",
+        "brand_id",
+        "platforms",
+        "language",
+        "objective",
+        "budget",
+        "tenant_id"
+      ],
+      "objective_id": "UC-036",
+      "outputs": [
+        "poster_asset_id",
+        "post_drafts",
+        "platform_variants",
+        "qa_result",
+        "cost_estimate"
+      ],
+      "skill_id": "SK-055",
+      "specialist": "Poster & Social Post Creator",
+      "status": "Not run",
+      "step": 3,
+      "task_id": "UC-036-T03"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "translation",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "source_content",
+        "locale",
+        "glossary"
+      ],
+      "objective_id": "UC-037",
+      "outputs": [
+        "localized_content",
+        "terminology_flags",
+        "QA_report"
+      ],
+      "skill_id": "SK-029",
+      "specialist": "Localization Specialist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-037-T01"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Creative Generator",
+      "connector_candidate": "Wan Image API",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-037-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-037",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-018",
+      "specialist": "Creative Generator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-037-T02"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-creator-pro",
+      "connector_candidate": "Wan Image API via SK-018",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-037-T02"
+      ],
+      "inputs": [
+        "product_id",
+        "brand_id",
+        "platforms",
+        "language",
+        "objective",
+        "budget",
+        "tenant_id"
+      ],
+      "objective_id": "UC-037",
+      "outputs": [
+        "poster_asset_id",
+        "post_drafts",
+        "platform_variants",
+        "qa_result",
+        "cost_estimate"
+      ],
+      "skill_id": "SK-055",
+      "specialist": "Poster & Social Post Creator",
+      "status": "Not run",
+      "step": 3,
+      "task_id": "UC-037-T03"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Wan Video Creator",
+      "connector_candidate": "Wan Video API",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-037-T03"
+      ],
+      "inputs": [
+        "product_id",
+        "storyboard",
+        "brand_id",
+        "language",
+        "duration",
+        "aspect_ratio",
+        "tenant_id",
+        "budget_cap"
+      ],
+      "objective_id": "UC-037",
+      "outputs": [
+        "video_asset_id",
+        "mp4_uri",
+        "caption_files",
+        "platform_metadata",
+        "qa_result",
+        "actual_cost"
+      ],
+      "skill_id": "SK-057",
+      "specialist": "Wan Video Creator",
+      "status": "Not run",
+      "step": 4,
+      "task_id": "UC-037-T04"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Creative Generator",
+      "connector_candidate": "Wan Image API",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-038",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-018",
+      "specialist": "Creative Generator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-038-T01"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Claims Reviewer",
+      "connector_candidate": "Internal product truth",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-038-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-038",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-012",
+      "specialist": "Claims Reviewer",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-038-T02"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-creator-pro",
+      "connector_candidate": "Wan Image API via SK-018",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-038-T02"
+      ],
+      "inputs": [
+        "product_id",
+        "brand_id",
+        "platforms",
+        "language",
+        "objective",
+        "budget",
+        "tenant_id"
+      ],
+      "objective_id": "UC-038",
+      "outputs": [
+        "poster_asset_id",
+        "post_drafts",
+        "platform_variants",
+        "qa_result",
+        "cost_estimate"
+      ],
+      "skill_id": "SK-055",
+      "specialist": "Poster & Social Post Creator",
+      "status": "Not run",
+      "step": 3,
+      "task_id": "UC-038-T03"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Wan Video Creator",
+      "connector_candidate": "Wan Video API",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-038-T03"
+      ],
+      "inputs": [
+        "product_id",
+        "storyboard",
+        "brand_id",
+        "language",
+        "duration",
+        "aspect_ratio",
+        "tenant_id",
+        "budget_cap"
+      ],
+      "objective_id": "UC-038",
+      "outputs": [
+        "video_asset_id",
+        "mp4_uri",
+        "caption_files",
+        "platform_metadata",
+        "qa_result",
+        "actual_cost"
+      ],
+      "skill_id": "SK-057",
+      "specialist": "Wan Video Creator",
+      "status": "Not run",
+      "step": 4,
+      "task_id": "UC-038-T04"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-strategy",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-038-T04"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-038",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-015",
+      "specialist": "Content Planner",
+      "status": "Not run",
+      "step": 5,
+      "task_id": "UC-038-T05"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Experiment Analyst",
+      "connector_candidate": "Google Analytics",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-039",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-022",
+      "specialist": "Experiment Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-039-T01"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-strategy",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-039-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-039",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-007",
+      "specialist": "Campaign Strategist",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-039-T02"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-creator-pro",
+      "connector_candidate": "Wan Image API via SK-018",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-039-T02"
+      ],
+      "inputs": [
+        "product_id",
+        "brand_id",
+        "platforms",
+        "language",
+        "objective",
+        "budget",
+        "tenant_id"
+      ],
+      "objective_id": "UC-039",
+      "outputs": [
+        "poster_asset_id",
+        "post_drafts",
+        "platform_variants",
+        "qa_result",
+        "cost_estimate"
+      ],
+      "skill_id": "SK-055",
+      "specialist": "Poster & Social Post Creator",
+      "status": "Not run",
+      "step": 3,
+      "task_id": "UC-039-T03"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Marketing OS Campaign Builder",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-039-T03"
+      ],
+      "inputs": [
+        "objective_id",
+        "tenant_id",
+        "product_ids",
+        "audience",
+        "channels",
+        "budget_cap",
+        "currency",
+        "approval_policy"
+      ],
+      "objective_id": "UC-039",
+      "outputs": [
+        "campaign_plan",
+        "hashmeta_campaign_draft_id",
+        "estimated_costs",
+        "approval_request",
+        "kpis"
+      ],
+      "skill_id": "SK-056",
+      "specialist": "Marketing OS Campaign Builder",
+      "status": "Not run",
+      "step": 4,
+      "task_id": "UC-039-T04"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Social Media Performance Reporter",
+      "connector_candidate": "Social platform connectors",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-039-T04"
+      ],
+      "inputs": [
+        "tenant_id",
+        "channel_account_refs",
+        "post_ids",
+        "date_range",
+        "verified_spend",
+        "conversion_events"
+      ],
+      "objective_id": "UC-039",
+      "outputs": [
+        "channel_metrics",
+        "traffic_summary",
+        "verified_conversions",
+        "roi_if_supported",
+        "source_refs"
+      ],
+      "skill_id": "SK-059",
+      "specialist": "Social Media Performance Reporter",
+      "status": "Not run",
+      "step": 5,
+      "task_id": "UC-039-T05"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Experiment Analyst",
+      "connector_candidate": "Google Analytics",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-040",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-022",
+      "specialist": "Experiment Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-040-T01"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-040-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-040",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-046",
+      "specialist": "Spend Controller",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-040-T02"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "content-creator-pro",
+      "connector_candidate": "Wan Image API via SK-018",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-040-T02"
+      ],
+      "inputs": [
+        "product_id",
+        "brand_id",
+        "platforms",
+        "language",
+        "objective",
+        "budget",
+        "tenant_id"
+      ],
+      "objective_id": "UC-040",
+      "outputs": [
+        "poster_asset_id",
+        "post_drafts",
+        "platform_variants",
+        "qa_result",
+        "cost_estimate"
+      ],
+      "skill_id": "SK-055",
+      "specialist": "Poster & Social Post Creator",
+      "status": "Not run",
+      "step": 3,
+      "task_id": "UC-040-T03"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Marketing OS Campaign Builder",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-040-T03"
+      ],
+      "inputs": [
+        "objective_id",
+        "tenant_id",
+        "product_ids",
+        "audience",
+        "channels",
+        "budget_cap",
+        "currency",
+        "approval_policy"
+      ],
+      "objective_id": "UC-040",
+      "outputs": [
+        "campaign_plan",
+        "hashmeta_campaign_draft_id",
+        "estimated_costs",
+        "approval_request",
+        "kpis"
+      ],
+      "skill_id": "SK-056",
+      "specialist": "Marketing OS Campaign Builder",
+      "status": "Not run",
+      "step": 4,
+      "task_id": "UC-040-T04"
+    },
+    {
+      "agent_id": "AG-04",
+      "canonical_owner": "Social Media Performance Reporter",
+      "connector_candidate": "Social platform connectors",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-040-T04"
+      ],
+      "inputs": [
+        "tenant_id",
+        "channel_account_refs",
+        "post_ids",
+        "date_range",
+        "verified_spend",
+        "conversion_events"
+      ],
+      "objective_id": "UC-040",
+      "outputs": [
+        "channel_metrics",
+        "traffic_summary",
+        "verified_conversions",
+        "roi_if_supported",
+        "source_refs"
+      ],
+      "skill_id": "SK-059",
+      "specialist": "Social Media Performance Reporter",
+      "status": "Not run",
+      "step": 5,
+      "task_id": "UC-040-T05"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "data-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "market",
+        "product",
+        "allowed_channels"
+      ],
+      "objective_id": "UC-041",
+      "outputs": [
+        "segment_profiles",
+        "evidence",
+        "exclusions"
+      ],
+      "skill_id": "SK-002",
+      "specialist": "Audience Researcher",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-041-T01"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-041-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-041",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-013",
+      "specialist": "Compliance Researcher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-041-T02"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "Funnel Builder",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-042",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-026",
+      "specialist": "Funnel Builder",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-042-T01"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "data-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-042-T01"
+      ],
+      "inputs": [
+        "market",
+        "product",
+        "allowed_channels"
+      ],
+      "objective_id": "UC-042",
+      "outputs": [
+        "segment_profiles",
+        "evidence",
+        "exclusions"
+      ],
+      "skill_id": "SK-002",
+      "specialist": "Audience Researcher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-042-T02"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "data-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "market",
+        "product",
+        "allowed_channels"
+      ],
+      "objective_id": "UC-043",
+      "outputs": [
+        "segment_profiles",
+        "evidence",
+        "exclusions"
+      ],
+      "skill_id": "SK-002",
+      "specialist": "Audience Researcher",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-043-T01"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "content-strategy",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-043-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-043",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-015",
+      "specialist": "Content Planner",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-043-T02"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "data-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "market",
+        "product",
+        "allowed_channels"
+      ],
+      "objective_id": "UC-044",
+      "outputs": [
+        "segment_profiles",
+        "evidence",
+        "exclusions"
+      ],
+      "skill_id": "SK-002",
+      "specialist": "Audience Researcher",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-044-T01"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "Funnel Builder",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-044-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-044",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-026",
+      "specialist": "Funnel Builder",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-044-T02"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "data-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "market",
+        "product",
+        "allowed_channels"
+      ],
+      "objective_id": "UC-045",
+      "outputs": [
+        "segment_profiles",
+        "evidence",
+        "exclusions"
+      ],
+      "skill_id": "SK-002",
+      "specialist": "Audience Researcher",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-045-T01"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-045-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-045",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-013",
+      "specialist": "Compliance Researcher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-045-T02"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "Funnel Builder",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-046",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-026",
+      "specialist": "Funnel Builder",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-046-T01"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "Conversion Analyst",
+      "connector_candidate": "Google Analytics",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-046-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-046",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-017",
+      "specialist": "Conversion Analyst",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-046-T02"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "Funnel Builder",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-047",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-026",
+      "specialist": "Funnel Builder",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-047-T01"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "CRM Follow-up Specialist",
+      "connector_candidate": "WhatsApp Business / Gmail",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-047-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-047",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-006",
+      "specialist": "CRM Follow-up Specialist",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-047-T02"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "CRM Follow-up Specialist",
+      "connector_candidate": "WhatsApp Business / Gmail",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-048",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-006",
+      "specialist": "CRM Follow-up Specialist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-048-T01"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "Identity & Tenant Guard",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-048-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-048",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-014",
+      "specialist": "Consent Checker",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-048-T02"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "Conversion Analyst",
+      "connector_candidate": "Google Analytics",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-049",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-017",
+      "specialist": "Conversion Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-049-T01"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "Funnel Builder",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-049-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-049",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-026",
+      "specialist": "Funnel Builder",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-049-T02"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "Conversion Analyst",
+      "connector_candidate": "Google Analytics",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-050",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-017",
+      "specialist": "Conversion Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-050-T01"
+    },
+    {
+      "agent_id": "AG-05",
+      "canonical_owner": "Identity & Tenant Guard",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-050-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-050",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-014",
+      "specialist": "Consent Checker",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-050-T02"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "FAQ Retrieval Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-051",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-023",
+      "specialist": "FAQ Retrieval Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-051-T01"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "Claims Reviewer",
+      "connector_candidate": "Internal product truth",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-051-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-051",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-012",
+      "specialist": "Claims Reviewer",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-051-T02"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "translation",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-052",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-052",
+      "specialist": "Translation Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-052-T01"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "copywriting",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-052-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-052",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-016",
+      "specialist": "Conversation Designer",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-052-T02"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "copywriting",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-053",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-016",
+      "specialist": "Conversation Designer",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-053-T01"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "Escalation Agent",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-053-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-053",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-020",
+      "specialist": "Escalation Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-053-T02"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "FAQ Retrieval Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-054",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-023",
+      "specialist": "FAQ Retrieval Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-054-T01"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "Claims Reviewer",
+      "connector_candidate": "Internal product truth",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-054-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-054",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-012",
+      "specialist": "Claims Reviewer",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-054-T02"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "Shipping Rate Agent",
+      "connector_candidate": "Logistics connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-055",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-042",
+      "specialist": "Shipping Rate Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-055-T01"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "FAQ Retrieval Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-055-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-055",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-023",
+      "specialist": "FAQ Retrieval Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-055-T02"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "CRM Follow-up Specialist",
+      "connector_candidate": "WhatsApp Business / Gmail",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-056",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-006",
+      "specialist": "CRM Follow-up Specialist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-056-T01"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "Identity & Tenant Guard",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-056-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-056",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-014",
+      "specialist": "Consent Checker",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-056-T02"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "Refund Case Agent",
+      "connector_candidate": "Payment provider TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-057",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-038",
+      "specialist": "Refund Case Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-057-T01"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "Escalation Agent",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-057-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-057",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-020",
+      "specialist": "Escalation Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-057-T02"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "Escalation Agent",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-058",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-020",
+      "specialist": "Escalation Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-058-T01"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "copywriting",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-058-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-058",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-016",
+      "specialist": "Conversation Designer",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-058-T02"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "Voice Telephony Agent",
+      "connector_candidate": "Dialpad optional",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-059",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-053",
+      "specialist": "Voice Telephony Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-059-T01"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "FAQ Retrieval Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-059-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-059",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-023",
+      "specialist": "FAQ Retrieval Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-059-T02"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "copywriting",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-060",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-016",
+      "specialist": "Conversation Designer",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-060-T01"
+    },
+    {
+      "agent_id": "AG-06",
+      "canonical_owner": "Conversion Analyst",
+      "connector_candidate": "Google Analytics",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-060-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-060",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-017",
+      "specialist": "Conversion Analyst",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-060-T02"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Supplier Dispatcher",
+      "connector_candidate": "Supplier connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-061",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-048",
+      "specialist": "Supplier Dispatcher",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-061-T01"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Fulfillment Planner",
+      "connector_candidate": "Supplier connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-061-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-061",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-025",
+      "specialist": "Fulfillment Planner",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-061-T02"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Order Validator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-062",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-033",
+      "specialist": "Order Validator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-062-T01"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Supplier Dispatcher",
+      "connector_candidate": "Supplier connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-062-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-062",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-048",
+      "specialist": "Supplier Dispatcher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-062-T02"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Shipping Tracker",
+      "connector_candidate": "Logistics connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "carrier_reference",
+        "authorized_connector"
+      ],
+      "objective_id": "UC-063",
+      "outputs": [
+        "tracking_events",
+        "exception_alerts"
+      ],
+      "skill_id": "SK-043",
+      "specialist": "Shipping Tracker",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-063-T01"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Supplier Dispatcher",
+      "connector_candidate": "Supplier connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-063-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-063",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-048",
+      "specialist": "Supplier Dispatcher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-063-T02"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Order Validator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-064",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-033",
+      "specialist": "Order Validator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-064-T01"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Finance Ledger Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-064-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-064",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-024",
+      "specialist": "Finance Ledger Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-064-T02"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Inventory Validator",
+      "connector_candidate": "Supabase / supplier TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-065",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-028",
+      "specialist": "Inventory Validator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-065-T01"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Checkout Integrator",
+      "connector_candidate": "Payment provider TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-065-T01"
+      ],
+      "inputs": [
+        "merchant_config",
+        "order_rules",
+        "payment_adapter"
+      ],
+      "objective_id": "UC-065",
+      "outputs": [
+        "checkout_test_result",
+        "integration_status",
+        "exceptions"
+      ],
+      "skill_id": "SK-011",
+      "specialist": "Checkout Integrator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-065-T02"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Shipping Rate Agent",
+      "connector_candidate": "Logistics connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-066",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-042",
+      "specialist": "Shipping Rate Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-066-T01"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Supplier Dispatcher",
+      "connector_candidate": "Supplier connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-066-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-066",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-048",
+      "specialist": "Supplier Dispatcher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-066-T02"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Order Validator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-067",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-033",
+      "specialist": "Order Validator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-067-T01"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Refund Case Agent",
+      "connector_candidate": "Payment provider TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-067-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-067",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-038",
+      "specialist": "Refund Case Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-067-T02"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Supplier Dispatcher",
+      "connector_candidate": "Supplier connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-068",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-048",
+      "specialist": "Supplier Dispatcher",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-068-T01"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Escalation Agent",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-068-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-068",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-020",
+      "specialist": "Escalation Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-068-T02"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-069",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-013",
+      "specialist": "Compliance Researcher",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-069-T01"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Fulfillment Planner",
+      "connector_candidate": "Supplier connector TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-069-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-069",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-025",
+      "specialist": "Fulfillment Planner",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-069-T02"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Order Validator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-070",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-033",
+      "specialist": "Order Validator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-070-T01"
+    },
+    {
+      "agent_id": "AG-07",
+      "canonical_owner": "Scheduler Agent",
+      "connector_candidate": "QwenWork scheduled tasks",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-070-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-070",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-041",
+      "specialist": "Scheduler Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-070-T02"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Finance Ledger Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-071",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-024",
+      "specialist": "Finance Ledger Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-071-T01"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-071-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-071",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-046",
+      "specialist": "Spend Controller",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-071-T02"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Finance Ledger Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-072",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-024",
+      "specialist": "Finance Ledger Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-072-T01"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Payment Reconciler",
+      "connector_candidate": "Payment provider TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-072-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-072",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-034",
+      "specialist": "Payment Reconciler",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-072-T02"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Margin Analyst",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "sku_prices",
+        "verified_costs",
+        "fee_schedule"
+      ],
+      "objective_id": "UC-073",
+      "outputs": [
+        "margin_table",
+        "break_even",
+        "unknown_cost_flags"
+      ],
+      "skill_id": "SK-030",
+      "specialist": "Margin Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-073-T01"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Finance Ledger Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-073-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-073",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-024",
+      "specialist": "Finance Ledger Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-073-T02"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Margin Analyst",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "sku_prices",
+        "verified_costs",
+        "fee_schedule"
+      ],
+      "objective_id": "UC-074",
+      "outputs": [
+        "margin_table",
+        "break_even",
+        "unknown_cost_flags"
+      ],
+      "skill_id": "SK-030",
+      "specialist": "Margin Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-074-T01"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-074-T01"
+      ],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-074",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-074-T02"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Margin Analyst",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "sku_prices",
+        "verified_costs",
+        "fee_schedule"
+      ],
+      "objective_id": "UC-075",
+      "outputs": [
+        "margin_table",
+        "break_even",
+        "unknown_cost_flags"
+      ],
+      "skill_id": "SK-030",
+      "specialist": "Margin Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-075-T01"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "market-research-reports",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-075-T01"
+      ],
+      "inputs": [
+        "product_category",
+        "geography",
+        "time_window"
+      ],
+      "objective_id": "UC-075",
+      "outputs": [
+        "demand_brief",
+        "evidence",
+        "uncertainty"
+      ],
+      "skill_id": "SK-019",
+      "specialist": "Demand Researcher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-075-T02"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Cashflow Forecaster",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-076",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-008",
+      "specialist": "Cashflow Forecaster",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-076-T01"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-076-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-076",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-046",
+      "specialist": "Spend Controller",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-076-T02"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Cashflow Forecaster",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-077",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-008",
+      "specialist": "Cashflow Forecaster",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-077-T01"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Margin Analyst",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-077-T01"
+      ],
+      "inputs": [
+        "sku_prices",
+        "verified_costs",
+        "fee_schedule"
+      ],
+      "objective_id": "UC-077",
+      "outputs": [
+        "margin_table",
+        "break_even",
+        "unknown_cost_flags"
+      ],
+      "skill_id": "SK-030",
+      "specialist": "Margin Analyst",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-077-T02"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Finance Ledger Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-078",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-024",
+      "specialist": "Finance Ledger Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-078-T01"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Report Narrator",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-078-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-078",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-040",
+      "specialist": "Report Narrator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-078-T02"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Payment Reconciler",
+      "connector_candidate": "Payment provider TBD",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-079",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-034",
+      "specialist": "Payment Reconciler",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-079-T01"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Finance Ledger Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-079-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-079",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-024",
+      "specialist": "Finance Ledger Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-079-T02"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Cashflow Forecaster",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-080",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-008",
+      "specialist": "Cashflow Forecaster",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-080-T01"
+    },
+    {
+      "agent_id": "AG-08",
+      "canonical_owner": "Finance Ledger Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-080-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-080",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-024",
+      "specialist": "Finance Ledger Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-080-T02"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Scheduler Agent",
+      "connector_candidate": "QwenWork scheduled tasks",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-081",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-041",
+      "specialist": "Scheduler Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-081-T01"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Objective Planner",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-081-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-081",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-031",
+      "specialist": "Objective Planner",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-081-T02"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Scheduler Agent",
+      "connector_candidate": "QwenWork scheduled tasks",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-082",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-041",
+      "specialist": "Scheduler Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-082-T01"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "market-research-reports",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-082-T01"
+      ],
+      "inputs": [
+        "product_category",
+        "geography",
+        "time_window"
+      ],
+      "objective_id": "UC-082",
+      "outputs": [
+        "demand_brief",
+        "evidence",
+        "uncertainty"
+      ],
+      "skill_id": "SK-019",
+      "specialist": "Demand Researcher",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-082-T02"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Scheduler Agent",
+      "connector_candidate": "QwenWork scheduled tasks",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-083",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-041",
+      "specialist": "Scheduler Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-083-T01"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Creative Generator",
+      "connector_candidate": "Wan Image API",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-083-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-083",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-018",
+      "specialist": "Creative Generator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-083-T02"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Objective Planner",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-084",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-031",
+      "specialist": "Objective Planner",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-084-T01"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Funnel Builder",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-084-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-084",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-026",
+      "specialist": "Funnel Builder",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-084-T02"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Identity & Tenant Guard",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-085",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-050",
+      "specialist": "Tenant Onboarding Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-085-T01"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "SK-058",
+      "connector_candidate": "Hashmeta",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-085-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-085",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-047",
+      "specialist": "Storefront Builder",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-085-T02"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Identity & Tenant Guard",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-086",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-050",
+      "specialist": "Tenant Onboarding Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-086-T01"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Identity & Tenant Guard",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-086-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-086",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-027",
+      "specialist": "Identity Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-086-T02"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Optimization Agent",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-087",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-032",
+      "specialist": "Optimization Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-087-T01"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Finance Ledger Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-087-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-087",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-024",
+      "specialist": "Finance Ledger Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-087-T02"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Objective Planner",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-088",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-031",
+      "specialist": "Objective Planner",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-088-T01"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Report Narrator",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-088-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-088",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-040",
+      "specialist": "Report Narrator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-088-T02"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Objective Planner",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-089",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-031",
+      "specialist": "Objective Planner",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-089-T01"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Specialist Router",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-089-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-089",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-045",
+      "specialist": "Specialist Router",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-089-T02"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Optimization Agent",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-090",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-032",
+      "specialist": "Optimization Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-090-T01"
+    },
+    {
+      "agent_id": "AG-09",
+      "canonical_owner": "Experiment Analyst",
+      "connector_candidate": "Google Analytics",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-090-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-090",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-022",
+      "specialist": "Experiment Analyst",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-090-T02"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-091",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-046",
+      "specialist": "Spend Controller",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-091-T01"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-091-T01"
+      ],
+      "inputs": [
+        "actor",
+        "tenant",
+        "action",
+        "resource",
+        "risk"
+      ],
+      "objective_id": "UC-091",
+      "outputs": [
+        "policy_decision",
+        "reason_code",
+        "obligations"
+      ],
+      "skill_id": "SK-035",
+      "specialist": "Policy Decision Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-091-T02"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-092",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-046",
+      "specialist": "Spend Controller",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-092-T01"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Identity & Tenant Guard",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-092-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-092",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-027",
+      "specialist": "Identity Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-092-T02"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "AIVORA SHIELD Monitor",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-093",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-051",
+      "specialist": "Threat Monitor",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-093-T01"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-093-T01"
+      ],
+      "inputs": [
+        "actor",
+        "tenant",
+        "action",
+        "resource",
+        "risk"
+      ],
+      "objective_id": "UC-093",
+      "outputs": [
+        "policy_decision",
+        "reason_code",
+        "obligations"
+      ],
+      "skill_id": "SK-035",
+      "specialist": "Policy Decision Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-093-T02"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Evidence Verifier",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-094",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-021",
+      "specialist": "Evidence Verifier",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-094-T01"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Audit & Recovery Controller",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-094-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-094",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-037",
+      "specialist": "Recovery & Audit Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-094-T02"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "actor",
+        "tenant",
+        "action",
+        "resource",
+        "risk"
+      ],
+      "objective_id": "UC-095",
+      "outputs": [
+        "policy_decision",
+        "reason_code",
+        "obligations"
+      ],
+      "skill_id": "SK-035",
+      "specialist": "Policy Decision Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-095-T01"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Audit & Recovery Controller",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-095-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-095",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-037",
+      "specialist": "Recovery & Audit Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-095-T02"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "AIVORA SHIELD Monitor",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-096",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-051",
+      "specialist": "Threat Monitor",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-096-T01"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Catalog Curator",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-096-T01"
+      ],
+      "inputs": [
+        "supplier_catalog",
+        "product_assets",
+        "market"
+      ],
+      "objective_id": "UC-096",
+      "outputs": [
+        "validated_catalog",
+        "rejected_rows",
+        "provenance_refs"
+      ],
+      "skill_id": "SK-009",
+      "specialist": "Catalog Curator",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-096-T02"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "deep-research",
+      "connector_candidate": "None",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "supplier_details",
+        "agreements",
+        "price_lists"
+      ],
+      "objective_id": "UC-097",
+      "outputs": [
+        "supplier_verification",
+        "exceptions",
+        "evidence_refs"
+      ],
+      "skill_id": "SK-049",
+      "specialist": "Supplier Verification Specialist",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-097-T01"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "AIVORA SHIELD Monitor",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-097-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-097",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-051",
+      "specialist": "Threat Monitor",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-097-T02"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Margin Analyst",
+      "connector_candidate": "Internal ledger",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "sku_prices",
+        "verified_costs",
+        "fee_schedule"
+      ],
+      "objective_id": "UC-098",
+      "outputs": [
+        "margin_table",
+        "break_even",
+        "unknown_cost_flags"
+      ],
+      "skill_id": "SK-030",
+      "specialist": "Margin Analyst",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-098-T01"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Scheduler Agent",
+      "connector_candidate": "QwenWork scheduled tasks",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-098-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-098",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-041",
+      "specialist": "Scheduler Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-098-T02"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Scheduler Agent",
+      "connector_candidate": "QwenWork scheduled tasks",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-099",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-041",
+      "specialist": "Scheduler Agent",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-099-T01"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Policy Decision Gateway",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-099-T01"
+      ],
+      "inputs": [
+        "actor",
+        "tenant",
+        "action",
+        "resource",
+        "risk"
+      ],
+      "objective_id": "UC-099",
+      "outputs": [
+        "policy_decision",
+        "reason_code",
+        "obligations"
+      ],
+      "skill_id": "SK-035",
+      "specialist": "Policy Decision Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-099-T02"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Report Narrator",
+      "connector_candidate": "Internal",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-100",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-040",
+      "specialist": "Report Narrator",
+      "status": "Not run",
+      "step": 1,
+      "task_id": "UC-100-T01"
+    },
+    {
+      "agent_id": "AG-10",
+      "canonical_owner": "Finance Ledger Agent",
+      "connector_candidate": "Supabase",
+      "dependency_note": "Proposed sequential dependency; validate DAG before dispatch",
+      "depends_on": [
+        "UC-100-T01"
+      ],
+      "inputs": [
+        "tenant_id",
+        "objective_id",
+        "task_id",
+        "validated_domain_inputs",
+        "source_refs"
+      ],
+      "objective_id": "UC-100",
+      "outputs": [
+        "typed_artifact",
+        "evidence_refs",
+        "uncertainty_flags",
+        "cost_actual",
+        "approval_requests"
+      ],
+      "skill_id": "SK-024",
+      "specialist": "Finance Ledger Agent",
+      "status": "Not run",
+      "step": 2,
+      "task_id": "UC-100-T02"
+    }
+  ],
+  "topo_ok": true
+}

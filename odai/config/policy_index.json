@@ -1,0 +1,189 @@
+{
+  "disposition_totals": {
+    "COVERED": 6,
+    "OWNER": 7,
+    "REPO": 9
+  },
+  "generated_from": "odai/dev_docs/registry_intake.json",
+  "intake_sha256": "73e172ce58b5aa775132aa20ff06bd3a454782c90ae9aaf5105b5c6f5c35d509",
+  "registry_version": "business-plane-v2.1-a1",
+  "row_count": 16,
+  "rows": [
+    {
+      "acceptance_test": "Reject cross-tenant reads and writes",
+      "class": "PR",
+      "control": "Tenant-scoped access",
+      "data_class": "All",
+      "disposition_dev01": "COVERED + REPO test",
+      "enforcement_anchor": "GUARD-05; DEV-05-SK-02 RLS; SEC-24 negative suite",
+      "policy_id": "PR-01",
+      "source_sheet": "07_Data_Privacy",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "No unnecessary identifiers in logs or model calls",
+      "class": "PR",
+      "control": "Minimize and redact inputs and telemetry",
+      "data_class": "Personal / sensitive",
+      "disposition_dev01": "REPO",
+      "enforcement_anchor": "DEV-12-SK-04 secret-data scan; DEV-07-SK-05 log redaction",
+      "policy_id": "PR-02",
+      "source_sheet": "07_Data_Privacy",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "No raw credentials in artifacts",
+      "class": "PR",
+      "control": "Secret vault; scoped access",
+      "data_class": "Credentials",
+      "disposition_dev01": "OWNER (+GUARD-03)",
+      "enforcement_anchor": "G1 bootstrap: broker/credential provisioning by protected admin; repo can only test absence",
+      "policy_id": "PR-03",
+      "source_sheet": "07_Data_Privacy",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "No production customer data by default",
+      "class": "PR",
+      "control": "Synthetic or approved masked data",
+      "data_class": "Development",
+      "disposition_dev01": "COVERED",
+      "enforcement_anchor": "Rev 2.1 mandates synthetic fixtures; dataset approval = owner (F before-writes)",
+      "policy_id": "PR-04",
+      "source_sheet": "07_Data_Privacy",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "Deny unapproved provider transfer",
+      "class": "PR",
+      "control": "Purpose-limited connector disclosure",
+      "data_class": "Confidential",
+      "disposition_dev01": "REPO + OWNER",
+      "enforcement_anchor": "GUARD-04 DLP egress allowlist in code; per-provider approval matrix owner-signed",
+      "policy_id": "PR-05",
+      "source_sheet": "07_Data_Privacy",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "Verify deletion and backup policy",
+      "class": "PR",
+      "control": "Retention and deletion",
+      "data_class": "All",
+      "disposition_dev01": "REPO + OWNER",
+      "enforcement_anchor": "DEV-05-SK-05 lifecycle jobs; processor/backup obligations = owner/vendor sign-off",
+      "policy_id": "PR-06",
+      "source_sheet": "07_Data_Privacy",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "Verify access and transport/storage controls",
+      "class": "PR",
+      "control": "Encryption and export controls",
+      "data_class": "All",
+      "disposition_dev01": "OWNER",
+      "enforcement_anchor": "Platform/infra evidence (transit/storage), not repo code; config assertion in CI",
+      "policy_id": "PR-07",
+      "source_sheet": "07_Data_Privacy",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "See DEV-01 \u00a75 enforcement anchor (WO-108 negative tests)",
+      "class": "SEC",
+      "control": "MONITOR",
+      "data_class": null,
+      "disposition_dev01": "COVERED + REPO",
+      "enforcement_anchor": "DEV-13-SK-01; heartbeat wiring not live -> test in WO-108",
+      "policy_id": "SEC-01",
+      "source_sheet": "08_Security_Policies",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "See DEV-01 \u00a75 enforcement anchor (WO-108 negative tests)",
+      "class": "SEC",
+      "control": "CHECK",
+      "data_class": null,
+      "disposition_dev01": "COVERED + PARTIAL LIVE",
+      "enforcement_anchor": "DEV-12-SK-01 preflight; engine beat gates exist; dispatch-time re-check missing -> REPO test",
+      "policy_id": "SEC-02",
+      "source_sheet": "08_Security_Policies",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "See DEV-01 \u00a75 enforcement anchor (WO-108 negative tests)",
+      "class": "SEC",
+      "control": "FILTER",
+      "data_class": null,
+      "disposition_dev01": "REPO",
+      "enforcement_anchor": "DEV-13-SK-03 + GUARD-04; fixture suite",
+      "policy_id": "SEC-03",
+      "source_sheet": "08_Security_Policies",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "See DEV-01 \u00a75 enforcement anchor (WO-108 negative tests)",
+      "class": "SEC",
+      "control": "CONTAIN",
+      "data_class": null,
+      "disposition_dev01": "OWNER",
+      "enforcement_anchor": "Requires control-service/protected runtime (G1); repo side = DEV-08-SK-04 quarantine states",
+      "policy_id": "SEC-04",
+      "source_sheet": "08_Security_Policies",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "See DEV-01 \u00a75 enforcement anchor (WO-108 negative tests)",
+      "class": "SEC",
+      "control": "RECOVER",
+      "data_class": null,
+      "disposition_dev01": "REPO + OWNER",
+      "enforcement_anchor": "DEV-03-SK-04 + DEV-10-SK-04 drill; recovery targets owner-approved",
+      "policy_id": "SEC-05",
+      "source_sheet": "08_Security_Policies",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "See DEV-01 \u00a75 enforcement anchor (WO-108 negative tests)",
+      "class": "SEC",
+      "control": "AUDIT",
+      "data_class": null,
+      "disposition_dev01": "COVERED",
+      "enforcement_anchor": "Evidence.append + append-only store outside agent write scope; store isolation = G1/owner",
+      "policy_id": "SEC-06",
+      "source_sheet": "08_Security_Policies",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "See DEV-01 \u00a75 enforcement anchor (WO-108 negative tests)",
+      "class": "SEC",
+      "control": "Budget",
+      "data_class": null,
+      "disposition_dev01": "REPO (+GUARD-06 budget)",
+      "enforcement_anchor": "DEV-12-SK-06; live cap primitive exists but reservation not atomic -> code item",
+      "policy_id": "SEC-07",
+      "source_sheet": "08_Security_Policies",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "See DEV-01 \u00a75 enforcement anchor (WO-108 negative tests)",
+      "class": "SEC",
+      "control": "Isolation",
+      "data_class": null,
+      "disposition_dev01": "OWNER + CONFIG",
+      "enforcement_anchor": "Separate credentials/scopes issued at bootstrap; repo test = cross-plane use denial (SEC-21)",
+      "policy_id": "SEC-08",
+      "source_sheet": "08_Security_Policies",
+      "status_source": "Proposed / not verified"
+    },
+    {
+      "acceptance_test": "See DEV-01 \u00a75 enforcement anchor (WO-108 negative tests)",
+      "class": "SEC",
+      "control": "Watchdog",
+      "data_class": null,
+      "disposition_dev01": "COVERED + REPO",
+      "enforcement_anchor": "DEV-13 advisory-only property already in contract; schedule wiring = config item",
+      "policy_id": "SEC-09",
+      "source_sheet": "08_Security_Policies",
+      "status_source": "Proposed / not verified"
+    }
+  ]
+}
