@@ -18,7 +18,7 @@ import { chatQ4 } from "./server/qwen4.mjs";
 import { startRun, decideSpend, userView, managementView, securityView } from "./server/odai/workflow.mjs";
 import { modeAccess, POLICY_VERSION, UNAVAILABLE_RULE_SETS } from "./server/odai/policy.mjs";
 import { get, DEMO_TENANT } from "./server/odai/store.mjs";
-import { createObjective, approve, resume, finalReport, project, view as objView } from "./server/odai/objectives.mjs";
+import { createObjective, approve, resume, finalReport, project, listObjectives, view as objView } from "./server/odai/objectives.mjs";
 import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
 
 const host = process.env.HOST;
@@ -281,9 +281,11 @@ async function odaiRoute(url, request, response) {
   const path = url.pathname.replace("/api/odai", "");
   try {
     if (path === "/company") { const { COMPANY } = await import("./server/odai/store.mjs"); return json({ tenant_id: tenant, company: COMPANY, note: "synthetic demo brand standing in for TGDO per owner instruction; swap odai/config/company_profile.json when real data arrives" }); }
-    if (path === "/objectives" && request.method === "POST") {
+    if (path === "/objectives") {
+    if (request.method === "GET") return json({ tenant_id: tenant, objectives: listObjectives(tenant) }); // WO-10R restore list
     let raw = ""; for await (const c of request) raw += c;
-    const { statement } = JSON.parse(raw || "{}");
+    const body = JSON.parse(raw || "{}");
+    const statement = body.statement || body.text || body.objective || body.utterance; // WO-10R restore V38 body fields
     return json(await createObjective(tenant, String(statement || "").slice(0, 300)));
   }
   if (path.startsWith("/objectives/")) {

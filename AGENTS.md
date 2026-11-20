@@ -213,3 +213,20 @@ Pack extracted (work/pack9); contracts/config/FNY catalog vendored into repo `od
   chain; `SELF_FILES` in `tools/guardrail_harness.mjs` now also covers `tools/authz.mjs` +
   `tools/verify_integrity.mjs`. Runtime surfaces (`src/`, `server.mjs`, `server/`) untouched — no architecture
   redesign; suite 55/55 green (43 baseline + 12 WO-09A).
+
+## HOTFIX WO-10R — objective create/list restored under the intents router (2026-11-20, no publish)
+
+- Live V40 audit: `POST /api/odai/objectives` answered `{"error":"not measurable…"}` for every V38-style body
+  and `GET /api/odai/objectives` returned `unknown odai path`, while `/intents` worked. Root cause: the WO-10
+  intents rewire consolidated objective create/list routing through a branch that parses ONLY the `statement`
+  body key and dropped the GET list branch (the orphaned `project`/`objView` imports in `server.mjs` are its
+  residue), so `text`/`objective`/`utterance` payloads interpret as empty text and GET falls through.
+- Fix (minimal): the `/objectives` branch now serves GET → `{tenant_id, objectives:[summary…]}` via new
+  `listObjectives(tenantId)` in `server/odai/objectives.mjs` (tenant-scoped, ordered by created_at), and POST
+  accepts `statement || text || objective || utterance` (V38 verbatim compatibility; empty/unmeasurable bodies
+  still fail closed with the same reason). Sub-routes approve/resume/report/GET-by-id untouched.
+- Regression proof: `tests/objectives.test.mjs` gained 6 real-HTTP tests (4 body fields × V38 wording →
+  measurable + 11-task/3-gate plan; GET list 200 contains created id; reject-path intact). Observed 4 failures
+  pre-fix, 20/20 post-fix in-file; full `npm test` green; lease WO-10R (paths=server/odai,tests) — the
+  parse/list branches live inline in `server.mjs` odaiRoute and the AGENTS.md note is this line; disclosed
+  on the SHIPPED ledger line. No security-class (sealed) files changed; no re-seal needed.

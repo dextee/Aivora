@@ -158,3 +158,44 @@ test("WO-10 USER bundle audit: chip wall gone, text affordance shipped, zero exr
   assert.equal(allSrc.includes("exchip"), false, "dead exchip reference remains");
   assert.equal(readFileSync(new URL("../src/styles.css", import.meta.url), "utf8").includes(".exchip"), false, "exchip CSS rule remains");
 });
+
+/* ============ WO-10R HOTFIX — objective create/list under the intents router ============
+ * Live V40 audit showed POST /api/odai/objectives answering {"error":"not measurable…"}
+ * for EVERY V38-style body (the create branch parses only the `statement` key after the
+ * intents rewire) and GET /api/odai/objectives falling through to "unknown odai path"
+ * (the list branch was dropped). These tests exercise the REAL HTTP handler end-to-end. */
+const V38_WORDING = "Sell 30 Lumen Wellness products from the FNYGlobal catalog in 90 days";
+let WO10R_ID = null;
+for (const field of ["text", "objective", "utterance", "statement"]) {
+  test(`WO-10R POST /objectives accepts V38 wording verbatim in the "${field}" field (measurable + plan structure)`, async () => {
+    const { status, body: o } = await post("/api/odai/objectives", { [field]: V38_WORDING });
+    assert.equal(status, 200);
+    assert.equal(o.error, undefined, `payload {"${field}": V38 wording} rejected: ${JSON.stringify(o)}`);
+    assert.ok(o.objective_id, "objective_id missing: " + JSON.stringify(o));
+    assert.equal(o.criterion.kind, "units_sold");
+    assert.equal(o.criterion.target_units, 30);
+    assert.equal(o.criterion.via_catalog, "FNYGlobal");
+    assert.match(o.criterion.brand, /Lumen/);
+    assert.equal(o.tasks.length, 11, "11-task D03 plan projected");
+    assert.equal(o.gates.length, 3, "3 owner gates projected");
+    assert.equal(o.state, "AWAITING_SPEND_APPROVAL", "gates stay closed on the accepted path");
+    if (field === "text") WO10R_ID = o.objective_id;
+  });
+}
+test("WO-10R GET /objectives returns 200 with the tenant's objectives list", async () => {
+  const r = await fetch(B + "/api/odai/objectives");
+  assert.equal(r.status, 200, "GET /api/odai/objectives must serve the list, not unknown-odai-path");
+  const body = await r.json();
+  const { DEMO_TENANT } = await import("../server/odai/store.mjs");
+  assert.equal(body.tenant_id, DEMO_TENANT, "default demo tenant scope");
+  assert.ok(Array.isArray(body.objectives), "objectives array missing: " + JSON.stringify(body).slice(0, 200));
+  assert.ok(body.objectives.length >= 1, "list is empty though POSTs just created objectives");
+  const ids = body.objectives.map((x) => x.objective_id);
+  if (WO10R_ID) assert.ok(ids.includes(WO10R_ID), "created objective not listed");
+  for (const x of body.objectives) assert.ok(x.objective_id && x.state && x.criterion, JSON.stringify(x).slice(0, 120));
+});
+test("WO-10R still rejects unmeasurable statements (restore parsing ≠ relax gate)", async () => {
+  const { status, body } = await post("/api/odai/objectives", { text: "make me rich eventually" });
+  assert.equal(status, 200);
+  assert.match(String(body.error), /not measurable/);
+});

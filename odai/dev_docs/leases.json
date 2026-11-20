@@ -57,5 +57,25 @@
     "revoked": true,
     "revoked_reason": "WO-09A SHIPPED (staged, no publish)",
     "revoked_at": "2026-11-20T12:26:36Z"
+  },
+  "WO-10R": {
+    "issued_at": "2026-11-20T13:45:53Z",
+    "expires_at": "2026-11-20T15:45:53Z",
+    "minutes": 120,
+    "paths": [
+      "server/odai",
+      "tests"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "check": 3,
+      "commit": 1
+    },
+    "revoked": false
   }
 }

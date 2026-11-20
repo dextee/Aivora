@@ -156,3 +156,11 @@ function beat_receipts_note() { return { manifest: "D03 tasks (fixed graph)", re
 
 export function view(obj) { return { objective_id: obj.objective_id, tenant_id: obj.tenant_id, criterion: obj.criterion, state: obj.state, progress: obj.progress, tasks: obj.tasks.map((x) => ({ id: x.id, state: x.state, specialist: x.specialist, deps: x.deps, evidence: x.evidence })), gates: obj.gates.map(({ id, scope, state, release_log }) => ({ id, scope, state, release_log })), report: obj.state === "REPORTED" ? classify(obj) : null }; }
 export function finalReport(tenantId, objective_id) { const obj = store.get(tenantId + "/" + objective_id); return obj ? classify(obj) : { error: "not found" }; }
+
+/* WO-10R: tenant-scoped objective list for GET /api/odai/objectives (summary projection;
+ * the per-objective view()/resume() route remains the full plan read path). */
+export function listObjectives(tenantId) {
+  const out = [];
+  for (const [k, o] of store) if (k.startsWith(tenantId + "/")) out.push({ objective_id: o.objective_id, tenant_id: o.tenant_id, statement: o.statement, criterion: o.criterion, state: o.state, created_at: o.created_at });
+  return out.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+}
