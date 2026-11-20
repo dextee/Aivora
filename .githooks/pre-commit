@@ -1,0 +1,34 @@
+#!/bin/bash
+# WO-111 preventive lease enforcement at the commit boundary (DEV-08 spec + owner directive 2026-11-21 §3).
+# Runs BEFORE the commit object exists. Fail-closed on every anomaly.
+set -u
+REPO_ROOT="$(git rev-parse --show-toplevel)" || exit 1
+cd "$REPO_ROOT" || exit 1
+GITDIR="$(git rev-parse --absolute-git-dir)" || exit 1
+MSG_FILE="$GITDIR/COMMIT_EDITMSG"
+[ -f "$MSG_FILE" ] || { echo "HOOK_DENY: no COMMIT_EDITMSG (cannot verify authorization)"; exit 1; }
+SUBJECT="$(head -n1 "$MSG_FILE")"
+# Primary lease channel (git -m never writes COMMIT_EDITMSG; subject is editor-flow fallback):
+if [ -n "${AIVORA_LEASE_ID:-}" ]; then WO="$AIVORA_LEASE_ID"; else WO="$(printf %s "$SUBJECT" | sed -n "s/^\([A-Za-z0-9._-]\{1,48\}\):.*/\1/p")"; fi
+LEDGER="odai/dev_docs/authz-ledger.txt"; NOW="$(date -u +%FT%TZ)"
+case "$SUBJECT" in
+  checkpoint:*|"cross-audit evidence"*)
+    while IFS= read -r p; do [ -n "$p" ] && echo "$NOW|HOOK_ALLOW_PLATFORM|checkpoint|$p" >> "$LEDGER"; done < <(git diff --cached --name-only)
+    echo "HOOK_ALLOW_PLATFORM (checkpoint custody flow)"; exit 0;;
+esac
+
+[ -n "$WO" ] || { echo "$NOW|HOOK_DENY|no-lease-prefix|$SUBJECT" >> "$LEDGER"; echo "HOOK_DENY: subject lacks '<lease-id>:' prefix"; exit 1; }
+[ -f tools/authz.mjs ] || { echo "HOOK_DENY: authz tool absent"; exit 1; }
+FAIL=0
+while IFS= read -r p; do
+  [ -z "$p" ] && continue
+  case "$p" in odai/dev_docs/authz-ledger.txt|odai/dev_docs/leases.json) continue;; esac
+  out="$(node tools/authz.mjs check "$WO" --op commit --path "$p" 2>&1)" || FAIL=1
+  [ "$FAIL" -eq 0 ] || echo "HOOK_BLOCK $WO $p :: $out" >&2
+done < <(git diff --cached --name-only)
+if [ "$FAIL" -ne 0 ]; then
+  echo "$NOW|HOOK_DENY|$WO|$SUBJECT" >> "$LEDGER"
+  exit 1
+fi
+echo "$NOW|HOOK_ALLOW|$WO|$(git diff --cached --name-only | tr '\n' '+' | sed 's/+$//')" >> "$LEDGER"
+exit 0

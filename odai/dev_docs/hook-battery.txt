@@ -1,0 +1,17 @@
+WO-111 BATTERY V3 2026-11-20T17:11:29Z clean-hook, per-case real exits, canonical chain only
+[1] missing-lease
+  exit=1
+[2] expired
+  exit=1
+[3] revoked
+  exit=1
+[4] ops-insufficient
+  exit=1
+[5] scope-mismatch (src)
+  exit=1
+[6] stale-message trap (no-prefix subject)
+  exit=1
+[7] bypass via --no-verify (documented detective-only)
+ bypass-commit exit=0 (0 = gap proven)
+9c37562 ZZZ-BYP: bypass probe
+[8] VALID allow: below in next command via real files (expect exit 0 through hook)
