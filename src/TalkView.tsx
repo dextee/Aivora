@@ -13,7 +13,7 @@ import { loadConfig, type LiveEvent } from "./lib";
  * tools, rtc.ts degrades once and TalkView keywords keep routing (toollessRef). */
 
 type Row =
-  | { who: "me" | "ai" | "sys" | "err"; text: string }
+  | { who: "me" | "ai" | "sys" | "err"; text: string; label?: string }
   | { who: "biz" }
   | { who: "pair"; src: string; out: string }
   | { who: "log"; log: Record<string, unknown> };
@@ -37,6 +37,11 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
   const [odaiU, setOdaiU] = useState<{ objective: string | null; tasks_done?: string; whats_done: string[]; awaiting: string | null; company?: { name: string; synthetic?: boolean } } | null>(null);
   const pairOpen = useRef(false);
   const toollessRef = useRef(false);
+
+  /* V31 — Qwen4-Max text composer (independent of the voice session) */
+  const [q4text, setQ4text] = useState("");
+  const q4busy = useRef(false);
+  const q4hist = useRef<{ role: string; content: string }[]>([]); // rolling context, last 12 exchanges
 
   useEffect(() => { feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight }); }, [rows, state]);
   useEffect(() => {
@@ -189,6 +194,65 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     connect("omni");
   }
 
+  async function askQ4() {
+    const text = q4text.trim();
+    if (!text || q4busy.current) return;
+    q4busy.current = true;
+    setQ4text("");
+    q4hist.current = [...q4hist.current, { role: "user", content: text }].slice(-24);
+    setRows((r) => [...r, { who: "me", text }, { who: "ai", text: "", label: "Qwen4-Max" }]);
+    let acc = "";
+    const patch = (t: string) => setRows((r) => {
+      const c = [...r]; const last = c[c.length - 1];
+      if (last && last.who === "ai" && last.label === "Qwen4-Max") c[c.length - 1] = { ...last, text: t };
+      return c;
+    });
+    try {
+      const cfg = loadConfig();
+      const res = await fetch(`/api/q4/chat?_t=${Date.now()}`, {
+        method: "POST",
+        headers: { "content-type": "application/json", ...(cfg?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(cfg)) } : {}) },
+        body: JSON.stringify({ messages: q4hist.current }),
+        signal: AbortSignal.timeout(180_000),
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(j.error || `HTTP ${res.status}`);
+      }
+      const reader = res.body!.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split("\n"); buf = lines.pop() ?? "";
+        for (const line of lines) {
+          const t = line.trim();
+          if (!t.startsWith("data:")) continue;
+          const payload = t.slice(5).trim();
+          if (payload === "[DONE]" || !payload) continue;
+          let obj: { delta?: string; error?: string } | null = null;
+          try { obj = JSON.parse(payload); } catch { continue; }
+          if (obj?.error) throw new Error(obj.error);
+          if (typeof obj?.delta === "string" && obj.delta) { acc += obj.delta; patch(acc); }
+        }
+      }
+      if (acc) q4hist.current = [...q4hist.current, { role: "assistant", content: acc }].slice(-24);
+      if (!acc) patch("(no text came back — try again or use the mic)");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (acc) patch(`${acc} ⚠ ${msg}`);
+      else {
+        setRows((r) => {
+          const c = [...r]; const last = c[c.length - 1];
+          if (last && last.who === "ai" && last.label === "Qwen4-Max") c.pop();
+          return [...c, { who: "err" as const, text: `Qwen4-Max: ${msg}` }];
+        });
+      }
+    } finally { q4busy.current = false; }
+  }
+
   return (
     <div className="view talkview">
       <div className="conv talkfeed" ref={feedRef}>
@@ -215,8 +279,8 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
                     <div className="btxt" style={{ fontWeight: 600 }}>{r.out || "…"}</div></div>
                 </div>
               )
-              : <div className="bub"><span className="tag">{r.who === "me" ? "You" : "AIVORA"}</span>
-                  <div className="btxt">{r.text}</div><time>{fmt(secs)}</time></div>}
+              : <div className="bub"><span className="tag">{r.label ?? (r.who === "me" ? "You" : "AIVORA")}</span>
+                  <div className="btxt">{r.text || "…"}</div><time>{fmt(secs)}</time></div>}
           </div>
         ))}
       </div>
@@ -237,6 +301,14 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
               : <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><rect x="9" y="2.5" width="6" height="12" rx="3" fill="currentColor" /><path d="M5 11.5a7 7 0 0 0 14 0M12 18.5V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>}
         </button>
       </div>
+
+      <form className="q4bar" onSubmit={(e) => { e.preventDefault(); void askQ4(); }}>
+        <input value={q4text} onChange={(e) => setQ4text(e.target.value)} placeholder="Ask Qwen4-Max anything..."
+          aria-label="Ask Qwen4-Max anything" autoComplete="off" />
+        <button type="submit" className="q4send" aria-label="Send to Qwen4-Max">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 16-2.5-5.5L4 12z" fill="currentColor" /></svg>
+        </button>
+      </form>
     </div>
   );
 }

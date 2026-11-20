@@ -369,3 +369,13 @@ button { font-family: inherit; }
 .usermode .compose input::placeholder { color: #5c7a67; }
 /* V30 deploy marker: survives CSS minification; rendered off-screen, no visual effect */
 .usermode::before { content: "LIGHT THEME, BLACK TEXT"; position: fixed; top: 0; left: 100%; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); pointer-events: none; }
+
+/* ============ V31 — Qwen4-Max text composer (USER mode talk view, bottom) ============ */
+.q4bar { flex: 0 0 auto; display: flex; gap: 8px; align-items: center; padding: 9px 12px calc(11px + env(safe-area-inset-bottom)); background: #f6faf6; border-top: 1px solid #d8e6db; }
+.q4bar input { flex: 1; min-width: 0; background: #fff; color: #000; border: 1.5px solid #cfded3; border-radius: 999px; padding: 11px 15px; font: 600 13.5px var(--font); outline: none; }
+.q4bar input::placeholder { color: #5c7a67; }
+.q4bar input:focus { border-color: var(--wa-teal); box-shadow: 0 0 0 3px rgba(7,94,84,.08); }
+.q4send { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%; border: none; background: radial-gradient(circle at 32% 28%, #3ee07f, var(--wa-green) 60%, #16a34a); color: #06331f; display: grid; place-items: center; cursor: pointer; box-shadow: 0 4px 12px -2px rgba(37,211,102,.55); transition: transform .12s ease; }
+.q4send:active { transform: scale(.92); }
+.usermode .q4bar { background: #f6faf6; border-top-color: #d8e6db; }
+.usermode .q4bar input { background: #fff; border-color: #cfded3; color: #000; }

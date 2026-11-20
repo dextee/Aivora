@@ -14,6 +14,7 @@ import { extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
 import { storeRun, storeDiag, BUILD } from "./server/hashmeta.mjs";
+import { chatQ4 } from "./server/qwen4.mjs";
 import { startRun, decideSpend, userView, managementView, securityView } from "./server/odai/workflow.mjs";
 import { modeAccess, POLICY_VERSION, UNAVAILABLE_RULE_SETS } from "./server/odai/policy.mjs";
 import { get, DEMO_TENANT } from "./server/odai/store.mjs";
@@ -114,6 +115,9 @@ const server = createServer(async (request, response) => {
     if (url.pathname === "/api/store/generate" && request.method === "POST")
       return storeStream(request, response);
 
+    if (url.pathname === "/api/q4/chat" && request.method === "POST")
+      return q4Chat(request, response);
+
     if (url.pathname.startsWith("/api/odai/")) return odaiRoute(url, request, response);
 
     if (url.pathname === "/api/store/diag")
@@ -192,6 +196,56 @@ async function analyze(request, response) {
 
 function sendResponse(response, out) {
   return send(response, out.status, out.body, out.type);
+}
+
+/* POST /api/q4/chat — Qwen4-Max text composer (V31).
+ * Body {messages:[{role,content(string)}]} hard-capped 64 KB; last 30 used.
+ * Responds text/event-stream with data:{"delta":"..."} lines, ends data:[DONE].
+ * 4 s comment heartbeats keep the Pages gateway buffering-free. Key never logged. */
+async function q4Chat(request, response) {
+  const k = KEY();
+  let auth = null;
+  try { auth = JSON.parse(decodeURIComponent(request.headers["x-aivora-auth"] || "null")); } catch { /* optional */ }
+  const useKey = k || auth?.key;
+  if (!useKey)
+    return send(response, 503, JSON.stringify({ error: "No Model Studio key — add DASHSCOPE_API_KEY to the Page env or connect a key under 🔐." }), "application/json; charset=utf-8");
+
+  let raw = "";
+  for await (const c of request) {
+    raw += c;
+    if (raw.length > 65_536) return send(response, 413, JSON.stringify({ error: "payload too large" }), "application/json; charset=utf-8");
+  }
+  let msgIn;
+  try { msgIn = JSON.parse(raw || "{}").messages; } catch { return send(response, 400, JSON.stringify({ error: "bad json" }), "application/json; charset=utf-8"); }
+  if (!Array.isArray(msgIn)) return send(response, 400, JSON.stringify({ error: "messages[] required" }), "application/json; charset=utf-8");
+
+  const cleaned = msgIn
+    .filter((m) => (m?.role === "user" || m?.role === "assistant") && typeof m.content === "string" && m.content.length > 0)
+    .slice(-30);
+  if (!cleaned.some((m) => m.role === "user"))
+    return send(response, 400, JSON.stringify({ error: "at least one user message required" }), "application/json; charset=utf-8");
+
+  const sys = { role: "system", content: [{ text: "You are AIVORA's Qwen4-Max text brain. Be concise and helpful. Reply in the users language." }] };
+  const nativeMsgs = [sys, ...cleaned.map((m) => ({ role: m.role, content: [{ text: m.content }] }))];
+
+  response.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", "x-accel-buffering": "no" });
+  const hb = setInterval(() => { try { response.write(": hb\n\n"); } catch { /* closed */ } }, 4000);
+  try {
+    await chatQ4(nativeMsgs, {
+      key: useKey,
+      ws: auth?.ws || WORKSPACE(),
+      region: auth?.region || REGION(),
+    }, (text) => {
+      if (!text) return;
+      try { response.write(`data: ${JSON.stringify({ delta: text })}\n\n`); } catch { /* closed */ }
+    });
+  } catch (e) {
+    const msg = String(e?.message || e).split(useKey).join("[key]").slice(0, 300);
+    try { response.write(`data: ${JSON.stringify({ error: msg })}\n\n`); } catch { /* closed */ }
+  } finally {
+    clearInterval(hb);
+    try { response.write("data: [DONE]\n\n"); response.end(); } catch { /* closed */ }
+  }
 }
 
 async function storeStream(request, response) {
