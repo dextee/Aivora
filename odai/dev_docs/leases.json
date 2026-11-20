@@ -79,5 +79,26 @@
     "revoked": true,
     "revoked_reason": "HOTFIX WO-10R SHIPPED (staged, no publish; files: server.mjs odaiRoute objectives branch + import, server/odai/objectives.mjs listObjectives, tests/objectives.test.mjs +6 real-HTTP tests, AGENTS.md no",
     "revoked_at": "2026-11-20T13:58:36Z"
+  },
+  "WO-UI01": {
+    "issued_at": "2026-11-20T14:35:38Z",
+    "expires_at": "2026-11-20T15:35:38Z",
+    "minutes": 60,
+    "paths": [
+      "src",
+      "tests"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "UI-01 SHIPPED (staged, NO publish; files: src/TalkView.tsx expandable chips + typed-objective path, src/IntentChips.tsx NEW chip/plan-card module, src/styles.css UI-01 light block + intentlist removed",
+    "revoked_at": "2026-11-20T14:35:58Z"
   }
 }

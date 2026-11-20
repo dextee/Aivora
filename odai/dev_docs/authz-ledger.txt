@@ -10,3 +10,8 @@
 2026-11-20T13:20:31Z|DENY|AUDIT-NONE|op=check|path=-|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
 2026-11-20T13:45:53Z|ISSUE|WO-10R|ops=check,commit|paths=server/odai,tests|minutes=120|budget=12|single_use=0|expires_at=2026-11-20T15:45:53Z
 2026-11-20T13:58:36Z|REVOKE|WO-10R|reason=HOTFIX WO-10R SHIPPED (staged, no publish; files: server.mjs odaiRoute objectives branch + import, server/odai/objectives.mjs listObjectives, tests/objectives.test.mjs +6 real-HTTP tests, AGENTS.md no
+2026-11-20T14:10:25Z|ISSUE|WO-UI01|ops=check|paths=src,tests|minutes=60|budget=12|single_use=0|expires_at=2026-11-20T15:10:25Z
+2026-11-20T14:34:55Z|DENY|WO-UI01|op=commit|path=-|reason=OP_NOT_ALLOWED|detail=lease ops=check
+2026-11-20T14:35:37Z|REVOKE|WO-UI01|reason=ops misissue: initial issue omitted --ops commit; watchdog DENY committed as designed (fail-closed observed); reissuing correctly for remaining protected actions
+2026-11-20T14:35:38Z|ISSUE|WO-UI01|ops=check,commit|paths=src,tests|minutes=60|budget=12|single_use=0|expires_at=2026-11-20T15:35:38Z
+2026-11-20T14:35:58Z|REVOKE|WO-UI01|reason=UI-01 SHIPPED (staged, NO publish; files: src/TalkView.tsx expandable chips + typed-objective path, src/IntentChips.tsx NEW chip/plan-card module, src/styles.css UI-01 light block + intentlist removed
