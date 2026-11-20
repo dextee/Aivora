@@ -324,3 +324,16 @@ button { font-family: inherit; }
 .mgmt .hub-head, .mgmt .mission b, .sec .sec-hero h2 { color: #fff; }
 .mgmt .fineprint, .sec .fineprint { color: #a9bcc6; font-weight: 700; }
 .mgmt .node small, .mgmt .mission { color: #dfeadf; }
+/* ===== BLACK TEXT RULE (owner, V29): every light surface uses true black ===== */
+:root { --ink: #000000; --ink2: #333d43; }
+.bub, .card, .modal, .optcard, .transout, .docspad input, .docspad textarea, .darea,
+.chatrow .mid, .seclabel, .pillbar, .lpill, .tryline, .sticker, .mstat { color: #000; }
+.bub .btxt, .bub time, .bubble, .card h4, .optcard h4, .fld > span, .gate p,
+.donelist li, .exchip, .talk-hero h2, .talk-hero p, .tryline, .mab, .gobtn, .btn { color: #000; }
+.bub time { color: #333; }
+.usermode .row.user .bub, .usermode .row.user .bub .btxt, .usermode .row.user .bub time { color: #000; }
+.usermode .bub, .usermode .bub .btxt { color: #000; }
+.usermode .bub time { color: #374151; }
+.lpill.sel, .pill.sel, .mab { font-weight: 800; }
+.mgmt .node, .mgmt .node small, .mgmt .node b { color: #000; }
+/* dark-surface text stays near-white for contrast (black on forest/navy is invisible) */
