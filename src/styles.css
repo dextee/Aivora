@@ -299,3 +299,28 @@ button { font-family: inherit; }
 .hello p { font-size: 12.5px; color: #9fd8b4; margin-top: 4px; }
 
 .brandchip { display: inline-block; margin-left: 8px; background: rgba(46,230,107,.14); border: 1px solid rgba(46,230,107,.4); color: #b9f5cf; font: 800 10px var(--font); letter-spacing: .06em; padding: 3px 9px; border-radius: 999px; vertical-align: middle; }
+/* readability pass — near-white text for real; green is an accent, not body copy */
+.bubrow.wide { max-width: 100%; width: 100%; }
+.usermode { color: #fff; }
+.usermode .hello h2 { color: #ffffff; }
+.usermode .hello p { color: #e3efe6; }
+.usermode .brandchip { color: #fff; background: rgba(46,230,107,.22); border-color: rgba(46,230,107,.6); }
+.usermode .exchip { color: #fff; background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.34); font-weight: 700; }
+.usermode .exchip:active { background: rgba(46,230,107,.32); }
+.usermode .talk-status { color: #eff7f1; font-weight: 700; }
+.usermode .talk-status.on { color: #fff; }
+.usermode .bizcard { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.26); }
+.usermode .bizcard h4 { color: #ffffff; }
+.usermode .biz label { color: #cfe1d5; }
+.usermode .biz b { color: #ffffff; }
+.usermode .biz i, .usermode .biz i.up { color: #6cf0a0; font-weight: 900; }
+.usermode .donelist li { background: rgba(255,255,255,.07); color: #ffffff; font-weight: 600; }
+.usermode .donelist li::before { color: #8ff2b6; }
+.usermode .donelist li.awaiting { color: #ffd166; }
+.usermode .fineprint { color: #c2d5c9; font-weight: 600; }
+.usermode .row.user .bub, .usermode .row.user .bub .btxt, .usermode .row.user .bub time { color: #0c2417; }
+.mgmt .tracebox span, .sec .seclg span { color: #edf6ef; font-weight: 600; }
+.mgmt .tracebox em, .sec .seclg em { color: #a7e8c0; }
+.mgmt .hub-head, .mgmt .mission b, .sec .sec-hero h2 { color: #fff; }
+.mgmt .fineprint, .sec .fineprint { color: #a9bcc6; font-weight: 700; }
+.mgmt .node small, .mgmt .mission { color: #dfeadf; }

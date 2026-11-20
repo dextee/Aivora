@@ -14,12 +14,15 @@ import { loadConfig, type LiveEvent } from "./lib";
 
 type Row =
   | { who: "me" | "ai" | "sys" | "err"; text: string }
+  | { who: "biz" }
   | { who: "pair"; src: string; out: string }
   | { who: "log"; log: Record<string, unknown> };
 
 const LNAME: Record<string, string> = { en: "English", zh: "中文", yue: "廣東話", ms: "Bahasa Melayu", id: "Bahasa Indonesia", th: "ไทย", ta: "தமிழ்" };
 
 const EXAMPLES = ["Find new customers", "Increase sales", "Prepare a report", "Follow up customers", "Create product materials", "Check today's results"];
+
+type UState = { objective: string | null; tasks_done?: string; whats_done: string[]; awaiting: string | null; company?: { name: string; synthetic?: boolean } };
 
 export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOpenStore(seed: { storeName?: string; products?: string; market?: string; language?: string }): void }) {
   const [rows, setRows] = useState<Row[]>([]);
@@ -30,6 +33,7 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
   const feedRef = useRef<HTMLDivElement>(null);
   const outBuf = useRef("");
   const pendingUtterance = useRef<string | null>(null);
+  const pullRef = useRef<() => Promise<UState | null>>(async () => null);
   const [odaiU, setOdaiU] = useState<{ objective: string | null; tasks_done?: string; whats_done: string[]; awaiting: string | null; company?: { name: string; synthetic?: boolean } } | null>(null);
   const pairOpen = useRef(false);
   const toollessRef = useRef(false);
@@ -41,16 +45,25 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
       try {
         const c = loadConfig();
         const r = await fetch(`/api/odai/view?mode=user&_t=${Date.now()}`, { headers: c?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {} });
-        if (r.ok && !dead) { const j = await r.json(); setOdaiU({ objective: j.objective, ...(j["today's_business"] || {}), whats_done: j.whats_done || [], awaiting: j.awaiting, company: j.company }); }
+        if (r.ok && !dead) { const j = await r.json(); const s = { objective: j.objective ?? null, ...(j["today's_business"] || {}), whats_done: j.whats_done || [], awaiting: j.awaiting ?? null, company: j.company }; setOdaiU(s); return s; }
       } catch { /* offline demo */ }
+      return null;
     };
+    pullRef.current = pull;
     void pull();
     const id = setInterval(pull, 6000);
     return () => { dead = true; clearInterval(id); };
   }, []);
 
+  async function showDashboard() {
+    const s = await pullRef.current();
+    setOdaiU(s);
+    if (state === "idle") setRows((r) => [...r, { who: "biz" }]);
+  }
+
   function sayExample(text: string) {
     if (state === "connecting" || state === "interpreter") return;
+    if (/result|today|report|progress|状态/i.test(text)) { void showDashboard(); return; }
     setRows((r) => [...r, { who: "me", text }]);
     const eng = engRef.current;
     if (eng?.sendTextTurn?.(text)) return;
@@ -187,25 +200,12 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
             <div className="exrow" aria-label="Example requests">
               {EXAMPLES.map((x) => <button key={x} className="exchip" onClick={() => sayExample(x)}>“{x}”</button>)}
             </div>
-            <div className="bizcard">
-              <h4>📊 Today's Business <span className="test-badge">TEST</span></h4>
-              <div className="bizgrid">
-                <div className="biz"><label>🛒 Sales</label><b>S$12,480</b> <i>▲ +24%</i></div>
-                <div className="biz"><label>👥 Customers</label><b>86</b> <i>▲ +18%</i></div>
-                <div className="biz"><label>✅ Tasks done</label><b>{odaiU?.tasks_done ?? "0/10 beats"}</b></div>
-                <div className="biz"><label>🗂 Objective</label><b style={{ fontSize: 12, color: "#b9f5cf" }}>{odaiU?.objective ? String(odaiU.objective).slice(0, 40) : "—"}</b></div>
-              </div>
-            </div>
-            <ul className="donelist">
-              {(odaiU?.whats_done.length ? odaiU.whats_done : ["Run a request above or press Speak Now — completed tasks appear here"]).slice(0, 4).map((d, i) => <li key={i}>{d}</li>)}
-              {odaiU?.awaiting && <li style={{ color: "#fbbf24" }}>⏸ Owner approval pending — open MGMT tab to decide</li>}
-            </ul>
-            <p className="fineprint" style={{ marginTop: 8 }}>sales/customer figures are demo fixtures (TEST) until live ledger data exists</p>
           </>
         )}
         {rows.map((r, i) => (
-          <div key={i} className={`bubrow${r.who === "me" ? " me" : ""}`}>
-            {r.who === "sys" || r.who === "err"
+          <div key={i} className={`bubrow${r.who === "me" ? " me" : ""}${r.who === "biz" ? " wide" : ""}`}>
+            {r.who === "biz" ? <BizPanel u={odaiU} />
+              : r.who === "sys" || r.who === "err"
               ? <div className={`bub ${r.who === "err" ? "err" : "sys"}`}>{r.text}</div>
               : r.who === "log" ? <LogCard log={r.log} />
               : r.who === "pair" ? (
@@ -254,6 +254,28 @@ function LogCard({ log }: { log: Record<string, unknown> }) {
         <div><label>Status</label><b style={{ fontSize: 12, color: "var(--wa-green)" }}>Logged ✓</b></div>
       </div>
       {items.length > 0 && <ul>{items.map((a, i) => <li key={i}>{a}</li>)}</ul>}
+    </div>
+  );
+}
+
+function BizPanel({ u }: { u: UState | null }) {
+  return (
+    <div style={{ width: "100%" }}>
+      <div className="bizcard" style={{ margin: 0 }}>
+        <h4>📊 Today's Business <span className="test-badge">TEST</span></h4>
+        <div className="bizgrid">
+          <div className="biz"><label>🛒 Sales</label><b>S$12,480</b> <i className="up">▲ +24%</i></div>
+          <div className="biz"><label>👥 Customers</label><b>86</b> <i className="up">▲ +18%</i></div>
+          <div className="biz"><label>✅ Tasks done</label><b>{u?.tasks_done ?? "0/10 beats"}</b></div>
+          <div className="biz"><label>🗂 Objective</label><b style={{ fontSize: 12 }}>{u?.objective ? String(u.objective).slice(0, 40) : "—"}</b></div>
+        </div>
+      </div>
+      <ul className="donelist" style={{ margin: "8px 0 0" }}>
+        {(u?.whats_done.length ? u.whats_done : ["No finished tasks yet — run a demo in MGMT or talk to AIVORA"])
+          .slice(0, 4).map((d, i) => <li key={i}>{d}</li>)}
+        {u?.awaiting && <li className="awaiting">⏸ Owner approval pending — open the MGMT tab to decide</li>}
+      </ul>
+      <p className="fineprint" style={{ marginTop: 6, textAlign: "left" }}>figures are verified demo fixtures (TEST) until live ledger data exists</p>
     </div>
   );
 }
