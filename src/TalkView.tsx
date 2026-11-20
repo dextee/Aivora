@@ -30,7 +30,7 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
   const feedRef = useRef<HTMLDivElement>(null);
   const outBuf = useRef("");
   const pendingUtterance = useRef<string | null>(null);
-  const [odaiU, setOdaiU] = useState<{ objective: string | null; tasks_done?: string; whats_done: string[]; awaiting: string | null } | null>(null);
+  const [odaiU, setOdaiU] = useState<{ objective: string | null; tasks_done?: string; whats_done: string[]; awaiting: string | null; company?: { name: string; synthetic?: boolean } } | null>(null);
   const pairOpen = useRef(false);
   const toollessRef = useRef(false);
 
@@ -41,7 +41,7 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
       try {
         const c = loadConfig();
         const r = await fetch(`/api/odai/view?mode=user&_t=${Date.now()}`, { headers: c?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {} });
-        if (r.ok && !dead) { const j = await r.json(); setOdaiU({ objective: j.objective, ...(j["today's_business"] || {}), whats_done: j.whats_done || [], awaiting: j.awaiting }); }
+        if (r.ok && !dead) { const j = await r.json(); setOdaiU({ objective: j.objective, ...(j["today's_business"] || {}), whats_done: j.whats_done || [], awaiting: j.awaiting, company: j.company }); }
       } catch { /* offline demo */ }
     };
     void pull();
@@ -181,7 +181,9 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
       <div className="conv talkfeed" ref={feedRef}>
         {rows.length === 0 && (
           <>
-            <div className="hello"><h2>Hello, Boss! 👋</h2><p>Just tell me what you want done — say it out loud, in any language.</p></div>
+            <div className="hello"><h2>Hello, Boss! 👋</h2>
+                <p>Just tell me what you want done — say it out loud, in any language.
+                  {odaiU?.company ? <span className="brandchip">{odaiU.company.name}{odaiU.company.synthetic ? " · demo brand" : ""}</span> : null}</p></div>
             <div className="exrow" aria-label="Example requests">
               {EXAMPLES.map((x) => <button key={x} className="exchip" onClick={() => sayExample(x)}>“{x}”</button>)}
             </div>

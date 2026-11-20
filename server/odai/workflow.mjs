@@ -4,7 +4,7 @@
  * Persistence (increment 3): best-effort mirror writes to the page database; reads
  * prefer the database and fall back to the in-memory store. DB never blocks the demo.
  */
-import { get, logEvent, profitSnapshot, DEMO_TENANT } from "./store.mjs";
+import { get, logEvent, profitSnapshot, DEMO_TENANT, COMPANY } from "./store.mjs";
 import { evaluate, POLICY_VERSION } from "./policy.mjs";
 import * as db from "./db.mjs";
 
@@ -155,7 +155,8 @@ export async function userView(tenantId) {
   const done = (s ? s.rec.filter((r) => r.decision !== "APPROVE").map((r) => r.summary) : receipts.filter((r) => !r.awaiting).map((r) => BEAT_LABELS[r.beat]?.[2] ?? r.summary));
   return { objective: s?.run?.objective ?? t.trace.find((x) => x.kind === "RUN_STARTED")?.objective ?? null,
     "today's_business": { tasks_done: `${(s ? s.rec.filter((r) => r.decision !== "APPROVE" && r.decision !== "NEVER").length : receipts.filter((r) => !r.awaiting).length)}/10 beats`, data_state: "TEST · database" },
-    whats_done: done.slice(-4), awaiting: awaiting ? "spending_approval" : null };
+    whats_done: done.slice(-4), awaiting: awaiting ? "spending_approval" : null,
+    company: { name: COMPANY.company_name, synthetic: COMPANY.is_synthetic, slot: COMPANY.profile_slot };
 }
 export async function managementView(tenantId) {
   const t = get(tenantId);
@@ -166,6 +167,7 @@ export async function managementView(tenantId) {
   const receipts = s ? s.rec.map((r) => ({ runId: r.run_id, beat: r.beat, id: r.id, summary: r.summary, decision: r.decision, demo_mode: r.demo_mode, awaiting: r.decision === "APPROVE" }))
     : t.receipts;
   return { specialists: SPECIALISTS, hub: "QwenWork AI brain", mission, trace, receipts, source: s ? "database" : "memory",
+    company: { name: COMPANY.company_name, synthetic: COMPANY.is_synthetic },
     note: "decision summaries shown; private chain-of-thought never displayed (ui contract)" };
 }
 export async function securityView(tenantId) {

@@ -138,6 +138,15 @@ describe("odai http workflow", () => {
     assert.equal(other.receipts.length, 0);
   });
 
+  test("TGDO stand-in brand: Lumen Wellness present, clearly synthetic", async () => {
+    const c = await jget("/api/odai/company");
+    assert.equal(c.company.company_name, "Lumen Wellness");
+    assert.equal(c.company.is_synthetic, true);
+    assert.equal(c.company.profile_slot, "the-good-doctor-organization");
+    const mv = await jget("/api/odai/view?mode=management");
+    assert.equal(mv.company.name, "Lumen Wellness");
+  });
+
   test("mode nav rejects unknown; grants never escalate", async () => {
     const r = await fetch(`${base}/api/odai/view?mode=superuser`);
     assert.equal(r.status, 403);

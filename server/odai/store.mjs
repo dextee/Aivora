@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const load = (p) => JSON.parse(readFileSync(fileURLToPath(new URL(p, import.meta.url)), "utf8"));
 const catalog = load("../../odai/data/catalog_fnyglobal_seeded.json");
+export const COMPANY = load("../../odai/config/company_profile.json");
 const tenantCfg = load("../../odai/config/tenant_business.json");
 
 const tenants = new Map();

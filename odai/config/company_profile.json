@@ -1,0 +1,23 @@
+{
+  "schema_version": "9.0.0",
+  "profile_slot": "the-good-doctor-organization",
+  "status_note": "Owner instruction 2026-11-20: TGDO profile not yet supplied — synthetic stand-in 'Lumen Wellness' invented for the staging demo. When real TGDO data arrives, replace this file and flip verification_status via human review (import_rules.profile_review_required_before_real_publication=true; public_profile_only).",
+  "is_synthetic": true,
+  "company_name": "Lumen Wellness",
+  "legal_form": "The Good Doctor Organization (demo stand-in — not a real entity relationship)",
+  "business_type": "Wellness retail & traditional-Chinese-wellness services",
+  "location": "Singapore · Johor Bahru",
+  "founded_year": "SYNTHETIC — do not cite",
+  "description": "Two-shop wellness brand curating TCM-inspired daily wellness products. Sells authorised retail lines online and in-store; emphasises plain-language guidance, elderly-friendly service (voice-first, dialects), and transparent pricing.",
+  "offerings": [
+    { "name": "Daily TCM nutrition bundles", "linked_supplier_catalog": "FNYGlobal (10 quarantined web listings)" },
+    { "name": "Anti-ageing programme sets", "linked_supplier_catalog": "FNYGlobal" },
+    { "name": "In-shop wellness consultation (demo)", "pricing": "S$45 / 30 min (SYNTHETIC figure)" }
+  ],
+  "typical_customer": "45–70 y/o SG/MY families; Malay, Hokkien, Cantonese and Mandarin speakers",
+  "voice_languages_demo": ["Hokkien/闽南话", "廣東話", "普通话", "English", "Bahasa Melayu"],
+  "contact": { "channel": "WhatsApp (draft-only in demo; connector NOT_CONNECTED)" },
+  "figures_policy": "ALL financial figures in this profile and its demo runs are synthetic/TEST — never cited as actual (ui contract: actual or TEST).",
+  "verification_status": "SYNTHETIC_DEMO — not independently verified, no rights representation",
+  "public_profile_only": true
+}

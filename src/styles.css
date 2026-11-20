@@ -297,3 +297,5 @@ button { font-family: inherit; }
 .hello { padding: 16px 18px 4px; }
 .hello h2 { font: 800 23px var(--display); }
 .hello p { font-size: 12.5px; color: #9fd8b4; margin-top: 4px; }
+
+.brandchip { display: inline-block; margin-left: 8px; background: rgba(46,230,107,.14); border: 1px solid rgba(46,230,107,.4); color: #b9f5cf; font: 800 10px var(--font); letter-spacing: .06em; padding: 3px 9px; border-radius: 999px; vertical-align: middle; }

@@ -5,7 +5,7 @@ import { loadConfig } from "./lib";
  * QwenWork AI Brain hub + 6 specialists + live AI Execution Trace + governed
  * human spend gate. Shows explainable decision summaries only (never CoT). */
 type Receipt = { runId: string; beat: number; id: string; role: string; summary: string; decision?: string; awaiting?: boolean; demo_mode: string };
-type MView = { mission: string; specialists: string[]; trace: { ts: string; runId?: string; beat?: number; actor?: string; kind: string; decision?: string; note?: string }[]; receipts: Receipt[]; data_mode: string };
+type MView = { mission: string; specialists: string[]; company?: { name: string; synthetic?: boolean }; trace: { ts: string; runId?: string; beat?: number; actor?: string; kind: string; decision?: string; note?: string }[]; receipts: Receipt[]; data_mode: string };
 
 const ROLE_ICON: Record<string, string> = { research: "🔍", catalog: "🗄️", website: "🌐", marketing: "📢", watch: "🛡️", report: "📊", orchestrator: "🧠", "human-gate": "👤", "catalog+website": "🌐" };
 const PHASE: Record<number, string> = { 1: "Understand", 2: "Plan", 3: "Assign", 4: "Execute", 5: "Approval", 6: "Execute", 7: "Coordinate", 8: "Execute", 9: "Verify", 10: "Report" };
@@ -50,7 +50,7 @@ export function ManagementView() {
     <div className="mgmt">
       <div className="hub">
         <div className="hub-head"><span>🧠 QwenWork AI Brain — Orchestration Platform</span><span className="chip-led">{running ? "● Coordinating" : v?.receipts.length ? "● Ready" : "● Idle"}</span></div>
-        <div className="mission">🎯 Mission: <b>{v?.mission !== "—" ? v?.mission : "run a demo below"}</b> <span className="test-badge">TEST</span></div>
+        <div className="mission">🎯 {v?.company ? `${v.company.name} · ` : ""}Mission: <b>{v?.mission !== "—" ? v?.mission : "run a demo below"}</b> <span className="test-badge">TEST</span></div>
         <div className="nodes six">
           {(v?.specialists || ["research", "catalog", "website", "marketing", "watch", "report"]).map((s) => {
             const beatByRole: Record<string, number> = { research: 3, catalog: 4, website: 4, marketing: 6, watch: 7, report: 10 };

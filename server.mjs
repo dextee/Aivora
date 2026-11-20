@@ -224,6 +224,7 @@ async function odaiRoute(url, request, response) {
   const json = (obj, status = 200) => send(response, status, JSON.stringify(obj), "application/json; charset=utf-8");
   const path = url.pathname.replace("/api/odai", "");
   try {
+    if (path === "/company") { const { COMPANY } = await import("./server/odai/store.mjs"); return json({ tenant_id: tenant, company: COMPANY, note: "synthetic demo brand standing in for TGDO per owner instruction; swap odai/config/company_profile.json when real data arrives" }); }
     if (path === "/modes") return json({ contract: "ui_modes_9_0", policy_version: POLICY_VERSION, unavailable_rule_sets: UNAVAILABLE_RULE_SETS, modes: ["user", "management", "security"], mode_change_grants_permission: false });
     if (path === "/view") {
       const mode = url.searchParams.get("mode");
