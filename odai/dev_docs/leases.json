@@ -80,6 +80,68 @@
     "revoked_reason": "HOTFIX WO-10R SHIPPED (staged, no publish; files: server.mjs odaiRoute objectives branch + import, server/odai/objectives.mjs listObjectives, tests/objectives.test.mjs +6 real-HTTP tests, AGENTS.md no",
     "revoked_at": "2026-11-20T13:58:36Z"
   },
+  "WO-111C": {
+    "issued_at": "2026-11-20T17:13:18Z",
+    "expires_at": "2026-11-20T17:58:18Z",
+    "minutes": 45,
+    "paths": [
+      ".githooks/",
+      "odai/dev_docs/",
+      "tools/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 3
+    },
+    "revoked": false
+  },
+  "WO-111D": {
+    "issued_at": "2026-11-20T17:21:38Z",
+    "expires_at": "2026-11-20T17:51:38Z",
+    "minutes": 30,
+    "paths": [
+      "tools/",
+      "tests/",
+      ".githooks/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 3
+    },
+    "revoked": true,
+    "revoked_reason": "cycle complete; companion run gets own lease",
+    "revoked_at": "2026-11-20T17:24:24Z"
+  },
+  "WO-111E": {
+    "issued_at": "2026-11-20T17:24:24Z",
+    "expires_at": "2026-11-20T17:54:24Z",
+    "minutes": 30,
+    "paths": [
+      "tools/",
+      "tests/",
+      ".githooks/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-112": {
     "issued_at": "2026-11-20T15:50:57Z",
     "expires_at": "2026-11-20T17:20:57Z",

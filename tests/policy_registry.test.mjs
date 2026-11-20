@@ -107,7 +107,7 @@ const getj = async (u) => { const r = await fetch(B + u); return { status: r.sta
 function authzFixture(t) {
   const dir = mkdtempSync(path.join(tmpdir(), "wo-a2-policy-"));
   t.after(() => { try { rmSync(dir, { recursive: true, force: true }); } catch { /* tmp cleanup */ } });
-  const secFiles = ["tools/authz.mjs", "tools/verify_integrity.mjs", "tools/guardrails_preflight.mjs", "tools/guardrail_harness.mjs", "tests/authz.test.mjs", "tools/SECURITY-FILES.sha256"];
+  const secFiles = [".githooks/pre-commit", "tools/authz.mjs", "tools/verify_integrity.mjs", "tools/guardrails_preflight.mjs", "tools/guardrail_harness.mjs", "tests/authz.test.mjs", "tools/SECURITY-FILES.sha256"];
   for (const f of secFiles) {
     const src = path.join(repoRoot, f);
     assert.ok(existsSync(src), "A2 fixture needs repo file: " + f);

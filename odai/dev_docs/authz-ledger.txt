@@ -30,3 +30,32 @@
 2026-11-20T15:50:57Z|REVOKE|WO-112|reason=scope misissue: bare-dir lease entries grant nothing under pathAllowed prefix semantics (tests/, odai/config/, server/odai/ required); task-mandated artifact locations odai/fixtures/awa, odai/dev_docs
 2026-11-20T15:50:57Z|ISSUE|WO-112|ops=check,commit|paths=odai/config/,tests/,server/odai/,odai/fixtures/,odai/dev_docs/,package.json|minutes=90|budget=24|single_use=0|expires_at=2026-11-20T17:20:57Z
 2026-11-20T16:07:22Z|REVOKE|WO-112|reason=WO-112 SHIPPED (staged, NO publish; files: odai/fixtures/awa 37 fixture files, server/odai/awa_eval.mjs NEW, tests/awa_scenarios.test.mjs NEW 13 tests, package.json test-chain wiring, odai/dev_docs/sh
+2026-11-20T17:11:46Z|DENY|ZZZ-BYP|op=commit|path=.githooks/pre-commit|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+2026-11-20T17:11:46Z|DENY|ZZZ-BYP|op=commit|path=odai/dev_docs/hook-battery.txt|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+2026-11-20T17:11:46Z|DENY|ZZZ-BYP|op=commit|path=odai/dev_docs/wo111c-note.md|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+2026-11-20T17:11:46Z|HOOK_DENY|ZZZ-BYP|ZZZ-BYP: bypass probe
+2026-11-20T17:12:34Z|DENY|WO-111C|stage=revoke|reason=NO_LEASE|detail=cycle
+2026-11-20T17:12:34Z|ISSUE|WO-111C|ops=check|paths=.githooks,odai/dev_docs,tools|minutes=45|budget=12|single_use=0|expires_at=2026-11-20T17:57:34Z
+2026-11-20T17:12:34Z|DENY|WO-111C|op=commit|path=.githooks/pre-commit|reason=OP_NOT_ALLOWED|detail=lease ops=check
+2026-11-20T17:12:34Z|DENY|WO-111C|op=commit|path=odai/dev_docs/hook-battery.txt|reason=OP_NOT_ALLOWED|detail=lease ops=check
+2026-11-20T17:12:34Z|DENY|WO-111C|op=commit|path=odai/dev_docs/wo111c-note.md|reason=OP_NOT_ALLOWED|detail=lease ops=check
+2026-11-20T17:12:34Z|HOOK_DENY|WO-111C|ZZZ-BYP: bypass probe
+2026-11-20T17:12:35Z|DENY|ZZZ-N9|op=commit|path=.githooks/pre-commit|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+2026-11-20T17:12:35Z|DENY|ZZZ-N9|op=commit|path=odai/dev_docs/hook-battery.txt|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+2026-11-20T17:12:35Z|DENY|ZZZ-N9|op=commit|path=odai/dev_docs/wo111c-note.md|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+2026-11-20T17:12:35Z|DENY|ZZZ-N9|op=commit|path=odai/dev_docs/zzz.txt|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+2026-11-20T17:12:35Z|HOOK_DENY|ZZZ-N9|ZZZ-BYP: bypass probe
+2026-11-20T17:12:59Z|REVOKE|WO-111C|reason=ops misissue — evidence of default-deny working
+2026-11-20T17:12:59Z|ISSUE|WO-111C|ops=check,commit|paths=.githooks,odai/dev_docs,tools|minutes=45|budget=12|single_use=0|expires_at=2026-11-20T17:57:59Z
+2026-11-20T17:13:00Z|DENY|WO-111C|op=commit|path=.githooks/pre-commit|reason=PATH_NOT_ALLOWED|detail=path=.githooks/pre-commit scope=.githooks,odai/dev_docs,tools
+2026-11-20T17:13:00Z|DENY|WO-111C|op=commit|path=odai/dev_docs/hook-battery.txt|reason=PATH_NOT_ALLOWED|detail=path=odai/dev_docs/hook-battery.txt scope=.githooks,odai/dev_docs,tools
+2026-11-20T17:13:00Z|DENY|WO-111C|op=commit|path=odai/dev_docs/wo111c-note.md|reason=PATH_NOT_ALLOWED|detail=path=odai/dev_docs/wo111c-note.md scope=.githooks,odai/dev_docs,tools
+2026-11-20T17:12:59Z|HOOK_DENY|WO-111C|ZZZ-BYP: bypass probe
+2026-11-20T17:13:18Z|REVOKE|WO-111C|reason=path-prefix misissue — third self-deny, all correct
+2026-11-20T17:13:18Z|ISSUE|WO-111C|ops=check,commit|paths=.githooks/,odai/dev_docs/,tools/|minutes=45|budget=12|single_use=0|expires_at=2026-11-20T17:58:18Z
+2026-11-20T17:13:18Z|HOOK_ALLOW|WO-111C|.githooks/pre-commit+odai/dev_docs/hook-battery.txt+odai/dev_docs/wo111c-note.md
+2026-11-20T17:21:38Z|ISSUE|WO-111D|ops=check,commit|paths=tools/,tests/,.githooks/,odai/dev_docs/|minutes=30|budget=12|single_use=0|expires_at=2026-11-20T17:51:38Z
+2026-11-20T17:21:38Z|HOOK_ALLOW|WO-111D|tests/authz.test.mjs+tools/SECURITY-FILES.sha256+tools/verify_integrity.mjs
+2026-11-20T17:21:39Z|REVOKE|WO-111D|reason=WO-111D SHIPPED (owner token authorisation 2026-11-21; no publish)
+2026-11-20T17:24:24Z|REVOKE|WO-111D|reason=cycle complete; companion run gets own lease
+2026-11-20T17:24:24Z|ISSUE|WO-111E|ops=check,commit|paths=tools/,tests/,.githooks/,odai/dev_docs/|minutes=30|budget=12|single_use=0|expires_at=2026-11-20T17:54:24Z
