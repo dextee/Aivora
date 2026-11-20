@@ -11,6 +11,7 @@
     "build": "vite build && node scripts/prepare-publish.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "start": "node server.mjs",
+    "precheck": "node tools/guardrails_preflight.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test tests/runtime.test.mjs tests/odai.test.mjs tests/q4.test.mjs tests/objectives.test.mjs"
   },

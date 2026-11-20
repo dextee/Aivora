@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 const root = new URL("../", import.meta.url);
 let child; const B = "http://127.0.0.1:8309";
 const post = async (u, b) => jsonOf(await fetch(B + u, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) }));
@@ -55,3 +55,22 @@ test("resume re-projects without re-executing (checkpoint semantics)", async () 
 });
 // capture objective id from first test via module-level:
 test("capture objective id", async () => { const { body: o } = await post("/api/odai/objectives", { statement: "Sell 200 units via FNYGlobal catalog for growth 30% in 90 days" }); assert.ok(o.objective_id || o.error); });
+
+/* WO-02 (DEV-12): technical preflight on dispatch */
+test("preflight tool exits 0 in repo tree", () => {
+  const res = spawnSync(process.execPath, ["tools/guardrails_preflight.mjs"], { cwd: new URL(".", root).pathname, encoding: "utf8" });
+  assert.equal(res.error, undefined, JSON.stringify(res.error?.message || ""));
+  assert.equal(res.status, 0, "stdout=" + res.stdout + " stderr=" + res.stderr);
+});
+test("approve still behaves normally when preflight passes (no bypass, no breakage)", async () => {
+  const { body: o } = await post("/api/odai/objectives", { statement: OBJ });
+  assert.ok(o.objective_id, JSON.stringify(o));
+  await post("/api/odai/objectives/" + o.objective_id + "/approve", { scope: "approve_publish" }); // must stay held-NEVER, unaffected
+  const { body: a } = await post("/api/odai/objectives/" + o.objective_id + "/approve", { scope: "approve_spend", cap: 100 });
+  assert.notEqual(a.outcome, "PREFLIGHT_BLOCKED");
+  assert.equal(a.state, "REPORTED");
+  const st = Object.fromEntries(a.tasks.map((t) => [t.id, t.state]));
+  assert.equal(st.watch_verify, "done"); assert.equal(st.fulfillment_sim, "simulated");
+  const pub = a.gates.find((g) => g.id === "approve_publish");
+  assert.equal(pub.state, "approved_held_EXTERNAL_NEVER"); // 9.0 rules bind regardless of preflight pass
+});

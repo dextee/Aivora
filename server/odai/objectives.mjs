@@ -7,6 +7,8 @@
 import { get, logEvent } from "./store.mjs";
 import * as wf from "./workflow.mjs";
 import * as db from "./db.mjs";
+import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 
 /* task graph: every task resolves from beat receipts (source of truth) */
 const TASKS = [
@@ -96,13 +98,32 @@ export async function project(obj) {
 }
 
 /* owner releases a gate. SPEND resumes real beats via D04 (decideSpend).
-   PUBLISH/COMMS are recorded approved but remain held: D08 says external write NEVER. */
+   PUBLISH/COMMS are recorded approved but remain held: D08 says external write NEVER.
+   WO-02 (DEV-12): before dispatching spend, run tools/guardrails_preflight.mjs.
+   A non-zero exit blocks dispatch with GATE/PREFLIGHT_FAILED + PREFLIGHT_BLOCKED.
+   This is additive hardening, never a bypass: regardless of the preflight result,
+   resume stays blocked by the 9.0 connector-readiness rules (external writes NEVER).
+   Note: publish artifacts do not ship tools/, so deployed runtimes find no tool and
+   treat it as "not run" (no-op) rather than a false G3 failure — a genuine non-zero exit always blocks. */
+function preflightBlock(tenantId, obj) {
+  const roots = [process.cwd(), new URL("../../", import.meta.url).pathname];
+  const root = roots.find((r) => existsSync(r + "/tools/guardrails_preflight.mjs"));
+  if (!root) return null;
+  const res = spawnSync(process.execPath, ["tools/guardrails_preflight.mjs"], { cwd: root, encoding: "utf8" });
+  if (res.status === null || res.status === undefined) return null; // spawn failure/killed: no exit code — not a failed verdict
+  if (res.status === 0) return null;
+  const reason = String(res.stderr || res.error?.message || "").trim().slice(-200) || ("preflight exited " + res.status + " with no stderr");
+  logEvent(get(tenantId), { runId: obj.run_id, beat: "·", actor: "guardrails", kind: "GATE", decision: "BLOCK", note: "PREFLIGHT_FAILED: " + reason });
+  return { outcome: "PREFLIGHT_BLOCKED", reason };
+}
 export async function approve(tenantId, objective_id, scope, cap = 150) {
   const obj = store.get(tenantId + "/" + objective_id);
   if (!obj) return { error: "objective not found (cold instance? re-create — durable replay lands in later version)" };
   if (!obj.approvals.includes(scope)) obj.approvals.push(scope);
   obj.approval_log = [...(obj.approval_log || []), { scope, at: new Date().toISOString(), actor: "OWNER", binding: scope === "approve_spend" ? `workflow resume cap S$${cap}` : "recorded; external write stays NEVER under 9.0 connector readiness — nothing publishes or sends " }];
   if (scope === "approve_spend" && obj.state !== "REPORTED") {
+    const blocked = preflightBlock(tenantId, obj);
+    if (blocked) { obj.approvals.pop(); return blocked; }
     const res = await wf.decideSpend(tenantId, obj.run_id, true, cap);
     if (res.outcome !== "RESUMED") { obj.approvals.pop(); return { error: "resume refused by workflow", res }; }
   }
