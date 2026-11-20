@@ -137,3 +137,6 @@ Pack extracted (work/pack9); contracts/config/FNY catalog vendored into repo `od
 - G3 never replace src with compiled
 - G4 lockfile-authoritative deps reconciliation
 - G5 provenance JSON never imported
+- WO-01 (2026-11-20): F-1 provenance audit of V36→V38 committed to odai/dev_docs/f1-provenance-report.md — verdict RUNTIME-CLEAN; V37/V38 carried zero runtime-file change, so the pilot should not have published them at all.
+- WO-02 (2026-11-20): approve() now runs tools/guardrails_preflight.mjs (npm run precheck) before wf.decideSpend — non-zero exit blocks dispatch with GATE/PREFLIGHT_FAILED + PREFLIGHT_BLOCKED (additive only; 9.0 external-write NEVER unchanged); suite 24/24; published as V39 staging (deployment 305e4d13), /api/health + /api/odai/modes 200.
+- WO-04 (2026-11-20): tools/release_evidence.mjs records dist sha256 manifest + HEAD OID + TAP summary into odai/dev_docs/evidence/<version>.json; V39 evidence captured (24/24 green); docs-only — no republish.
