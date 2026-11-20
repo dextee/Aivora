@@ -108,3 +108,8 @@ Pack extracted (work/pack9); contracts/config/FNY catalog vendored into repo `od
 - Packaging honesty: the V32 tar arrived with a bad gzip CRC; deliverables were applied with the damage
   repaired (indent-space mangling, one route-segment destructuring fix, quantity regex widened so
   "100 Good Doctor wellness products" parses — verified by the shipped suite).
+
+## V34 — USER-mode business-intent chips (2026-11-20)
+- TalkView idle hero: EXAMPLES replaced by `BIZ_INTENTS` — ten [label, utterance] pairs (Start My Business → Protect My Business); tap sends the UTTERANCE via sayExample. Rendered as a compact 2-column grid, bold label + em dash + phrase (V34 block appended to `src/styles.css`, usermode + plain fallbacks).
+- sayExample intercepts: dashboard test extended with track|spending|profit (Manage My Money → Today's Business bubble); new pre-check `protect.*(safe)|keep my (money|business).*safe` → SHIELD sys row (widened `.*` so the chip phrase "keep my money and business safe" actually triggers).
+- No tryline element existed in the hero (CSS-only leftovers); no other behaviour touched.

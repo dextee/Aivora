@@ -20,7 +20,20 @@ type Row =
 
 const LNAME: Record<string, string> = { en: "English", zh: "中文", yue: "廣東話", ms: "Bahasa Melayu", id: "Bahasa Indonesia", th: "ไทย", ta: "தமிழ்" };
 
-const EXAMPLES = ["Find new customers", "Increase sales", "Prepare a report", "Follow up customers", "Create product materials", "Check today's results"];
+/* V34 — ten business intents (label, utterance sent on tap). Owner directive
+ * 2026-11-20: replace the old example chips; same slot, same chip style. */
+const BIZ_INTENTS: readonly (readonly [string, string])[] = [
+  ["Start My Business", "Help me start earning"],
+  ["Find Products", "What can I sell?"],
+  ["Set Up My Online Shop", "Help me sell online"],
+  ["Make Advertisements", "Promote my products"],
+  ["Find Customers", "Bring me buyers"],
+  ["Talk to Customers", "Answer questions and help me sell"],
+  ["Deliver My Products", "Handle orders and deliveries"],
+  ["Manage My Money", "Track spending, sales and profits"],
+  ["Run My Business Automatically", "Make money while I sleep"],
+  ["Protect My Business", "Keep my money and business safe"],
+];
 
 type UState = { objective: string | null; tasks_done?: string; whats_done: string[]; awaiting: string | null; company?: { name: string; synthetic?: boolean } };
 
@@ -68,7 +81,11 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
 
   function sayExample(text: string) {
     if (state === "connecting" || state === "interpreter") return;
-    if (/result|today|report|progress|状态/i.test(text)) { void showDashboard(); return; }
+    if (/protect.*(safe)|keep my (money|business).*safe/i.test(text)) {
+      setRows((r) => [...r, { who: "sys", text: "SHIELD keeps watch over publishing, spending and data — see the SHIELD tab (simulated)." }]);
+      return;
+    }
+    if (/result|today|report|progress|track|spending|profit|状态/i.test(text)) { void showDashboard(); return; }
     setRows((r) => [...r, { who: "me", text }]);
     const eng = engRef.current;
     if (eng?.sendTextTurn?.(text)) return;
@@ -261,8 +278,12 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
             <div className="hello"><h2>Hello, Boss! 👋</h2>
                 <p>Just tell me what you want done — say it out loud, in any language.
                   {odaiU?.company ? <span className="brandchip">{odaiU.company.name}{odaiU.company.synthetic ? " · demo brand" : ""}</span> : null}</p></div>
-            <div className="exrow" aria-label="Example requests">
-              {EXAMPLES.map((x) => <button key={x} className="exchip" onClick={() => sayExample(x)}>“{x}”</button>)}
+            <div className="exrow" aria-label="Business requests">
+              {BIZ_INTENTS.map(([label, phrase]) => (
+                <button key={label} className="exchip" onClick={() => sayExample(phrase)}>
+                  <b>{label}</b>— {phrase}
+                </button>
+              ))}
             </div>
           </>
         )}

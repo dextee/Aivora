@@ -34,7 +34,7 @@ test("no autonomous external action: engine refuses to complete spend gate by it
 test("approve spend → D04 resumes beats (engine delegates, never duplicates)", async () => {
   const { body: a } = await post("/api/odai/objectives/" + SHARED + "/approve", { scope: "approve_spend", cap: 120 });
   const st = Object.fromEntries(a.tasks.map((t) => [t.id, t.state]));
-  assert.equal(st.watch_verify, "done"); // NEVER-expected block verified
+  assert.equal(st.watch_verify, "done");   // NEVER-expected block verified
   assert.equal(st.channel_package, "done"); assert.equal(st.fulfillment_sim, "simulated");
   assert.equal(st.final_report, "done"); assert.equal(a.state, "REPORTED");
   assert.ok(st.marketing_plan === "done" && st.schedule === "done");

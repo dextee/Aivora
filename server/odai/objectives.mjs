@@ -96,12 +96,12 @@ export async function project(obj) {
 }
 
 /* owner releases a gate. SPEND resumes real beats via D04 (decideSpend).
- * PUBLISH/COMMS are recorded approved but remain held: D08 says external write NEVER. */
+   PUBLISH/COMMS are recorded approved but remain held: D08 says external write NEVER. */
 export async function approve(tenantId, objective_id, scope, cap = 150) {
   const obj = store.get(tenantId + "/" + objective_id);
   if (!obj) return { error: "objective not found (cold instance? re-create — durable replay lands in later version)" };
   if (!obj.approvals.includes(scope)) obj.approvals.push(scope);
-  obj.approval_log = [...(obj.approval_log || []), { scope, at: new Date().toISOString(), actor: "OWNER", binding: scope === "approve_spend" ? `workflow resume cap S$${cap}` : "recorded; external write stays NEVER under 9.0 connector_readiness — nothing publishes or sends " }];
+  obj.approval_log = [...(obj.approval_log || []), { scope, at: new Date().toISOString(), actor: "OWNER", binding: scope === "approve_spend" ? `workflow resume cap S$${cap}` : "recorded; external write stays NEVER under 9.0 connector readiness — nothing publishes or sends " }];
   if (scope === "approve_spend" && obj.state !== "REPORTED") {
     const res = await wf.decideSpend(tenantId, obj.run_id, true, cap);
     if (res.outcome !== "RESUMED") { obj.approvals.pop(); return { error: "resume refused by workflow", res }; }
