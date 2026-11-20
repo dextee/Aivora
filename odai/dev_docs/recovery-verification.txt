@@ -370,3 +370,91 @@ Scope: NO PUBLISH, no production touch, no task/automation mutation. This log + 
   Zero publishes; zero production touches; zero task/automation mutations; no secrets read, printed,
   committed or bundled by this run; online version stays V39 (staged-only change set).
 ================================================================
+================================================================
+CROSS-AUDIT 2026-11-20T13:20:28Z (session-independent evidence) — appended by independent cross-audit run
+CROSS-AUDIT 2026-11-20T13:20:28Z (session-independent evidence)
+repo=/mnt/pages/page-repo-1255a831-bc45-4ee3-a572-8ff3e587ad2a head_before=1c92b19
+---[1] git log --format='%h %s' -6
+1c92b19 WO-09A: audit trail — post-shipment action denied (REVOKED lease)
+73dea2a WO-09A: close lease with SHIPPED ledger line (staged, no publish)
+5ba323b WO-09A: authz leases, integrity manifest, ledger, WO-08 independent verification
+f17e115 checkpoint: save QW Page source
+0420920 checkpoint: save QW Page source
+1a8637c WO-10: intents to engine, minimal USER
+---[2] node tools/verify_integrity.mjs ; echo exit=$?
+usage: node tools/verify_integrity.mjs seal|check [--root dir]
+exit=5
+  (bare invocation is a usage error; formals were: `node tools/verify_integrity.mjs check` -> INTEGRITY OK: 5 sealed enforcement files verified, exit=0 | `node tools/verify_integrity.mjs seal` was NOT run (no writes to the seal manifest))
+---[3] node tools/guardrails_preflight.mjs ; echo exit=$?
+preflight clear: single-server ✓ provenance-inert ✓ lockfile ✓ single-policy ✓ editable-src ✓ test-gate ✓ single-dispatcher ✓
+exit=0
+---[4] node --test tests/authz.test.mjs 2>&1 | tail -14
+ok 12 - live ledger stays clean for this suite and the repo seal verifies at every step
+  ---
+  duration_ms: 145.648858
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2264.304489
+---[5] LEASE DRILLS (authz.mjs)
+issue AUDIT-OK --paths tools --minutes 9
+LEASE_OK AUDIT-OK ops=check paths=tools budget=12 single_use=0 expires=2026-11-20T13:29:30Z
+exit=0
+check AUDIT-OK --op check (expect live->0)
+GRANT AUDIT-OK op=check used=1/12
+exit=0
+revoke AUDIT-OK reason
+REVOKED AUDIT-OK reason=cross-audit drill: revoked-lease denial test
+exit=0
+check AUDIT-OK --op check (expect revoked->2)
+DENIED AUDIT-OK op=check reason=REVOKED detail=cross-audit drill: revoked-lease denial test
+exit=2
+issue AUDIT-EXP --paths tools --minutes 0
+LEASE_OK AUDIT-EXP ops=check paths=tools budget=12 single_use=0 expires=2026-11-20T13:20:31Z
+exit=0
+check AUDIT-EXP --op check (expect expired->2)
+DENIED AUDIT-EXP op=check reason=EXPIRED detail=expires_at=2026-11-20T13:20:31Z
+exit=2
+check AUDIT-NONE --op check (expect no-lease->2)
+DENIED AUDIT-NONE op=check reason=NO_LEASE detail=no lease for this WO id in odai/dev_docs/leases.json
+exit=2
+---[6] tail -6 odai/dev_docs/authz-ledger.txt
+2026-11-20T13:20:30Z|ISSUE|AUDIT-OK|ops=check|paths=tools|minutes=9|budget=12|single_use=0|expires_at=2026-11-20T13:29:30Z
+2026-11-20T13:20:30Z|REVOKE|AUDIT-OK|reason=cross-audit drill: revoked-lease denial test
+2026-11-20T13:20:30Z|DENY|AUDIT-OK|op=check|path=-|reason=REVOKED|detail=cross-audit drill: revoked-lease denial test
+2026-11-20T13:20:31Z|ISSUE|AUDIT-EXP|ops=check|paths=tools|minutes=0|budget=12|single_use=0|expires_at=2026-11-20T13:20:31Z
+2026-11-20T13:20:31Z|DENY|AUDIT-EXP|op=check|path=-|reason=EXPIRED|detail=expires_at=2026-11-20T13:20:31Z
+2026-11-20T13:20:31Z|DENY|AUDIT-NONE|op=check|path=-|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+---[7] grep -A4 'WO-08 INDEPENDENT' odai/dev_docs/recovery-verification.txt | head -8
+WO-08 INDEPENDENT VERIFICATION 2026-11-20T12:26Z: VERIFIED
+================================================================
+Work order: WO-09A acceptance stage (DEV-11 independent acceptance of the WO-08 close)
+Page: app-1fe44043-4ed153f9 (aivora-odai-realtime, dynamic, clupxd6g.qwenwork.page, online V39)
+Repo: /mnt/pages/page-repo-1255a831-bc45-4ee3-a572-8ff3e587ad2a
+--
+[5] DEV-11 VERDICT — WO-08 INDEPENDENT VERIFICATION: VERIFIED
+  Recovery/backup material independently regenerated and hash-manifested at HEAD f17e115d; restoration from
+---[8] WO-10 audit
+exit=0
+INTENTS: 10
+grep -c 'Run My Business Automatically' src/TalkView.tsx (expect 0 post-WO-10; record actual):
+0
+exit=1
+grep -c 'What can you run for me' src/TalkView.tsx (expect >=1):
+2
+exit=0
+grep -rc intents server.mjs | head -1:
+4
+---[9] build + test
+build_exit=0
+# tests 55
+# pass 55
+# fail 0
+AUDIT-SHA 318f4a9f6f8bca55be7f97c83a6f13c6088a231f919c6b19a1605a5ed078cf74

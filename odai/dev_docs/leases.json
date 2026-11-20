@@ -1,4 +1,38 @@
 {
+  "AUDIT-EXP": {
+    "issued_at": "2026-11-20T13:20:31Z",
+    "expires_at": "2026-11-20T13:20:31Z",
+    "minutes": 0,
+    "paths": [
+      "tools"
+    ],
+    "ops": [
+      "check"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
+  "AUDIT-OK": {
+    "issued_at": "2026-11-20T13:20:30Z",
+    "expires_at": "2026-11-20T13:29:30Z",
+    "minutes": 9,
+    "paths": [
+      "tools"
+    ],
+    "ops": [
+      "check"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "check": 1
+    },
+    "revoked": true,
+    "revoked_reason": "cross-audit drill: revoked-lease denial test",
+    "revoked_at": "2026-11-20T13:20:30Z"
+  },
   "WO-09A": {
     "issued_at": "2026-11-20T12:20:44Z",
     "expires_at": "2026-11-20T13:50:44Z",

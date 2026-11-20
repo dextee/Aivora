@@ -2,3 +2,9 @@
 2026-11-20T12:20:44Z|DENY|WO-09A|op=publish|path=-|reason=OP_NOT_ALLOWED|detail=publish requires an owner token; none present
 2026-11-20T12:26:36Z|REVOKE|WO-09A|reason=WO-09A SHIPPED (staged, no publish)
 2026-11-20T12:27:04Z|DENY|WO-09A|op=commit|path=-|reason=REVOKED|detail=WO-09A SHIPPED (staged, no publish)
+2026-11-20T13:20:30Z|ISSUE|AUDIT-OK|ops=check|paths=tools|minutes=9|budget=12|single_use=0|expires_at=2026-11-20T13:29:30Z
+2026-11-20T13:20:30Z|REVOKE|AUDIT-OK|reason=cross-audit drill: revoked-lease denial test
+2026-11-20T13:20:30Z|DENY|AUDIT-OK|op=check|path=-|reason=REVOKED|detail=cross-audit drill: revoked-lease denial test
+2026-11-20T13:20:31Z|ISSUE|AUDIT-EXP|ops=check|paths=tools|minutes=0|budget=12|single_use=0|expires_at=2026-11-20T13:20:31Z
+2026-11-20T13:20:31Z|DENY|AUDIT-EXP|op=check|path=-|reason=EXPIRED|detail=expires_at=2026-11-20T13:20:31Z
+2026-11-20T13:20:31Z|DENY|AUDIT-NONE|op=check|path=-|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
