@@ -182,3 +182,34 @@ Pack extracted (work/pack9); contracts/config/FNY catalog vendored into repo `od
 - WO-06 (2026-11-20, tranche B): tools/watchd.mjs + tests/watchd.test.mjs — DEV-13 AI-watching-AI daemon: SELECT-only reads of odai_trace/odai_receipt via the page database control API (token via curl config, never argv/logs), redacted view (kind/beat/actor/decision/rule/note≤120), five detectors, incidents are containment REQUESTS only (odai/dev_docs/watch/incidents/) — self-approval rejection encoded + tested; live sample: 7 DISPATCH_NON_ALLOW signals (governed TEST decisions), 0 hard signals; suite 37/37.
 - WO-07 (2026-11-20, tranche B): full-source tar + git bundle + sha256 manifest stored OUTSIDE the repo; secret audit zero hits; isolated restore drill PASS (HEAD match, manifest check, node --check, preflight); artifacts delivered via Drive share links in odai/dev_docs/wo07-backup-report.md; NO publish, NO production touch.
 - WO-08 (2026-11-20, tranche B recovery verification): verdict **WO-08 VERIFIED** — recorded only in `odai/dev_docs/recovery-verification.txt` (single rolling evidence log). WO-07 outputs + the tranche STEP-0 four-gate PASS confirmed from that run; refreshed authoritative material for HEAD `bead5b6c` (tar 443,420 B / 62 files == `git ls-files`; bundle 524,078 B, complete history; sha256 manifest); isolated drill in /tmp replayed identical HEAD + byte-identical tracked tree and passed `node --check`, preflight, `npm ci`, build, `npm test` 37/37 OFF the live repo; rollback confirmed available via one Publish call against sealed immutable Artifacts (ledger V1..V39, online V39 `060d225b`; rollback targets V38 `e076db65`, V37 `c777a2b8`, V36 `9b828eae`). NO publish, NO rollback executed.
+
+## WO-09A — pre-exec authorization leases + integrity watchdog (2026-11-20, no publish)
+
+- **`tools/authz.mjs`** — deterministic authorization BEFORE an action, not after. `issue <WO-ID>
+  --paths <csv> --minutes N [--ops check,commit] [--budget 12] [--single-use]` · `touch <WO-ID>` ·
+  `check <WO-ID> --op <op> [--path <p>]` · `revoke <WO-ID> <why>` · `status`. Store
+  `odai/dev_docs/leases.json` `{id:{issued_at,expires_at,minutes,paths,ops,budget,single_use,used_by_op,revoked}}`.
+  EVERY protected action must call `check` first; a denial exits **2** with one machine reason —
+  `EXPIRED | REVOKED | OVER_BUDGET (op count > budget, default 12) | PATH_NOT_ALLOWED | OP_NOT_ALLOWED |
+  CONSUMED_RESUME (single-use lease already spent) | HALTED (`odai/dev_docs/HALT` present) | NO_LEASE |
+  INTEGRITY_FAILED`. Grants are recorded in the lease's `used_by_op`, never in the audit log.
+  `publish` is grantable only while `ODAI_OWNER_TOKEN` is present in the environment (presence only, value
+  never read/logged/stored) — tokenless, publish cannot be issued and can never pass check. Re-issue after
+  revoke is the only resume path; there is no resume without authorization.
+- **Halt sentinel**: `odai/dev_docs/HALT` (file existence = the same guard pattern as the dispatch
+  sentinel). While present, every `issue`/`check`/`touch` is denied `HALTED`; `status` (read) and `revoke`
+  (emergency close) stay available.
+- **Audit log**: `odai/dev_docs/authz-ledger.txt`, append-only, one pipe-delimited line per
+  `ISSUE` / `DENY` / `REVOKE` — the single live evidence log now.
+- **`tools/verify_integrity.mjs`** — watchdog over the six security files
+  (`tools/authz.mjs`, `tools/verify_integrity.mjs`, `tools/guardrails_preflight.mjs`,
+  `tools/guardrail_harness.mjs`, `tests/authz.test.mjs`, and its own seal `tools/SECURITY-FILES.sha256`).
+  `seal` writes the sha256 list; `check` exits **1** on ANY mismatch, missing/unreadable protected file,
+  stale/unparsable row, or **missing seal** — fail-closed, never "no news". `authz check` runs the watchdog
+  before granting and before consuming budget, so a disabled watchdog ⇒ `NO-GRANT`. Convention (watchman
+  audits externally, WO-06 harness/`watchd` wiring): these six files are never edited without an owner token.
+- **Wiring**: `npm run authz`, `npm run integrity` (check), `npm run integrity:seal`; `tests/authz.test.mjs`
+  (12 proofs = the six failure scenarios + halt/hygiene/decision-table/seal/inertness) joins the `npm test`
+  chain; `SELF_FILES` in `tools/guardrail_harness.mjs` now also covers `tools/authz.mjs` +
+  `tools/verify_integrity.mjs`. Runtime surfaces (`src/`, `server.mjs`, `server/`) untouched — no architecture
+  redesign; suite 55/55 green (43 baseline + 12 WO-09A).

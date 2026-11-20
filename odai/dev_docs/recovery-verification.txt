@@ -268,3 +268,105 @@ Scope: NO PUBLISH, NO production touch. Repo change = append-only block in this 
   Secrets: none read, printed, committed, or bundled by this run. No scheduled task or automation was created,
   updated, triggered, paused, or deleted. NO PUBLISH — online version stays V39.
 ================================================================
+
+================================================================
+WO-08 INDEPENDENT VERIFICATION 2026-11-20T12:26Z: VERIFIED
+================================================================
+Work order: WO-09A acceptance stage (DEV-11 independent acceptance of the WO-08 close)
+Page: app-1fe44043-4ed153f9 (aivora-odai-realtime, dynamic, clupxd6g.qwenwork.page, online V39)
+Repo: /mnt/pages/page-repo-1255a831-bc45-4ee3-a572-8ff3e587ad2a
+Entry HEAD: f17e115d17b192e2693c67c595c355e91f75c0ae
+Access: page_repo resolve(managed/update) -> prepare -> open — succeeded first attempt, no retry.
+Scope: NO PUBLISH, no production touch, no task/automation mutation. This log + the WO-09A code set only.
+
+[0] QUOTE OF THE FINAL PRIOR BLOCK (verbatim lines, odai/dev_docs/recovery-verification.txt)
+  "2026-11-20T12:01Z — WO-08 RECOVERY VERIFICATION — VERIFIED (re-run at current HEAD)"
+  "Access: page_repo resolve(managed/update) -> prepare -> open — first open returned HEAD 1a8637c6;
+   a concurrent verification run committed checkpoint 0420920 (evidence-log-only edit) during this drill,
+   so this run re-opened (HEAD 042092010516ea637fdb2a76c8f93597fa4ebc39) and re-authored all material at the
+   authoritative HEAD."
+  "DRILL VERDICT: PASS — the bundle replays an identical HEAD; the tar reproduces a byte-identical tracked
+   tree; the restored tree alone passes syntax check, guardrails preflight, npm ci, production build and the
+   full 43-test suite — all OFF the live repository (no .git)."
+  "WO-08 VERIFIED. ... rollback to a prior immutable version confirmed available via sealed-Artifact
+   republish (none performed)."
+  "Secrets: none read, printed, committed, or bundled by this run. ... NO PUBLISH — online version stays V39."
+
+[1] OWN DRILL — AUTHORITATIVE MATERIAL REGENERATED AT ENTRY HEAD (this sandbox, /tmp/wo08ind)
+  git bundle create /tmp/wo08ind/wo09a.bundle --all      -> 539,687 B; `git bundle verify`: complete history.
+  git fsck --connectivity-only --no-dangling (live repo) -> clean.
+  tar czf /tmp/wo08ind/wo09a.tar.gz (repo minus node_modules, dist, .qw-pages, .git) -> 470,406 B, 71 members
+    = 65 tracked + the 6 WO-09A files staged by this work order (authz.mjs, verify_integrity.mjs,
+    SECURITY-FILES.sha256, tests/authz.test.mjs, leases.json, authz-ledger.txt) -> TAR_EQUALS_TRACKED+WO-09A_SET.
+  sha256 manifest (/tmp/wo08ind/wo09a.sha256; `sha256sum -c` -> both OK):
+    374c08f88837cbdbd9c3974239e9ecdc750cac0da78f4a1f809cfbbc95803a46  wo09a.tar.gz
+    9711f84dd8339cd3c6bcf39a063bf278b574d2c7f0dbb6863605469f44c93a43  wo09a.bundle
+  Secret audit, two layers, honest reporting: filename scan of the tar listing
+    (env|key|secret|sk-|bearer|token|credential|pem) -> 1 HIT: ./src/vite-env.d.ts, which is the Vite
+    scaffold type reference (content: `/// <reference types="vite/client" />`) -> BENIGN false positive,
+    no credential material. Streamed-content scan of the extracted tree for sk-[A-Za-z0-9]{12,},
+    AKIA…, BEGIN PRIVATE KEY, ghp_…, xoxb/a/p/rs-…, and long Bearer tokens -> 0 files. DASHSCOPE_API_KEY
+    exists only as an environment-name string in source; no key value is present in tree, tar or bundle.
+  NOTE: WO-07's Drive-delivered copies are of HEAD 9538a972 and the previous WO-08 records are of HEAD
+  04209201; the material above is the independent re-creation at the current authoritative HEAD f17e115d,
+  which supersedes them for this close. Refresh of the owner's persistent copies = separate request.
+
+[2] OWN ISOLATED RESTORATION DRILL (out of live repo — /tmp/wo08ind; live repo untouched, clean through it)
+  command                                                     | result
+  git clone /tmp/wo08ind/wo09a.bundle /tmp/wo08ind/clone      | CLONE_OK
+  git -C clone rev-parse HEAD                                 | f17e115d17b192e2693c67c595c355e91f75c0ae
+                                                              == repo HEAD -> HEAD_MATCH_OK
+  tar xzf wo09a.tar.gz -C /tmp/wo08ind/tree                   | EXTRACT_OK (71 members)
+  sha256sum -c wo09a.sha256                                   | tar OK · bundle OK -> MANIFEST_OK
+  per-file sha256 of all 65 `git ls-files` paths, tree vs repo | DIFFS=0 MISSING=0 -> FULLTREE_IDENTICAL
+  node --check server.mjs (extracted copy)                    | exit 0 -> NODE_CHECK_OK
+  node tools/guardrails_preflight.mjs (extracted copy)        | exit 0 -> "preflight clear: single-server ✓
+                                                              provenance-inert ✓ lockfile ✓ single-policy ✓
+                                                              editable-src ✓ test-gate ✓ single-dispatcher ✓"
+  node tools/verify_integrity.mjs check (extracted copy)      | exit 0 -> INTEGRITY OK: 5 sealed enforcement
+                                                              files verified (the seal travels with the tree)
+  node tools/authz.mjs issue WO-08-IND --paths tools/,odai/dev_docs/ --minutes 10 --ops check,commit | exit 0
+  node tools/authz.mjs check WO-08-IND --op check --path tools/authz.mjs (self-test lease)           | exit 0
+                                                              -> "GRANT WO-08-IND op=check path=tools/authz.mjs used=1/12"
+  node tools/authz.mjs check WO-08-IND --op publish                                             | exit 2
+                                                              -> DENIED reason=OP_NOT_ALLOWED (no owner token)
+  node --test tests/authz.test.mjs (extracted copy, no node_modules — pure node builtins)       | exit 0 —
+                                                              12 tests / 12 pass / 0 fail (all six WO-09A
+                                                              failure scenarios PASS off the live repo)
+  Extracted-copy audit trail written only inside /tmp: 2 ledger lines (ISSUE WO-08-IND, DENY op=publish).
+  DRILL VERDICT: PASS — bundle replays an identical HEAD, tar reproduces a byte-identical tracked tree, and
+  that tree alone is syntactically valid, preflight-clear, integrity-sealed and authorization-enforcing
+  WITHOUT the live repository. The recovery material is real, not assumed.
+
+[3] INDEPENDENT ACCEPTANCE RE-EXAMINATION OF THE PRIOR WO-08 CLAIMS
+  a) WO-07 backup outputs (tar+bundle+manifest+Drive links, secret audit) — re-quoted from
+     odai/dev_docs/wo07-backup-report.md and confirmed present/tracked in this tree.
+  b) STEP-0 four-prerequisite gate (F-1 RUNTIME-CLEAN · evidence/V39.json · preflight 0 · build+test 0)
+     — all four still hold at f17e115d (evidence and provenance docs tracked; gates re-run below).
+  c) Rollback availability — NOT re-asserted by mutating anything: read-only per policy; every publish
+     seals an immutable Artifact and the online route (V39) is a single republish away. No publish,
+     no rollback, no production touch performed here.
+  d) Discrepancy found and reported honestly: the prior WO-08 block recorded "62 files"/"65 files"
+     member counts against different HEADs; at f17e115d the tracked count is 65 and this WO-09A close
+     adds 6 tracked files (71). No contradiction in substance — identical HEAD + identical tracked tree.
+
+[4] ACCEPT GATES RUN IN THE LIVE REPO BEFORE THIS COMMIT
+  node tools/guardrails_preflight.mjs   -> exit 0 (seven gates ✓)
+  node tools/verify_integrity.mjs check -> exit 0 (5 sealed enforcement files verified)
+  npm run build                         -> exit 0 (vite + prepare-publish staged)
+  npm test                              -> exit 0 — TAP tail: 1..47 / # tests 55 / # suites 3 /
+                                           # pass 55 / # fail 0 / # cancelled 0 / # skipped 0 / # todo 0
+                                           (43 baseline + 12 WO-09A; runtime+odai+q4+objectives+
+                                           guardrails-harness+watchd+authz all wired into one chain)
+  node tools/authz.mjs status           -> WO-09A ACTIVE ops=check,commit budget=12, halt clear,
+                                           owner_token=absent, integrity=OK
+  Authorization for this change set: `authz check WO-09A --op commit` GRANTED before staging; the lease is
+  closed by the recorded `WO-09A SHIPPED (staged, no publish)` ledger line (odai/dev_docs/authz-ledger.txt).
+
+[5] DEV-11 VERDICT — WO-08 INDEPENDENT VERIFICATION: VERIFIED
+  Recovery/backup material independently regenerated and hash-manifested at HEAD f17e115d; restoration from
+  only that material replays an identical HEAD and an identical tracked tree, and runs green on syntax,
+  guardrails preflight, integrity seal and the WO-09A authorization/enforcement suite outside the live repo.
+  Zero publishes; zero production touches; zero task/automation mutations; no secrets read, printed,
+  committed or bundled by this run; online version stays V39 (staged-only change set).
+================================================================

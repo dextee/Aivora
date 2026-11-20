@@ -11,8 +11,10 @@
  *                                            --simulate substitutes the list (drill-only, never commits)
  *   self-check --wo <wo.json> [--changed t] [--json]
  *                                          — refuses to run when a harness-owned enforcement file
- *                                            (SELF_FILES: the harness itself, tools/watchd.mjs) is in
- *                                            the changed set without a DEV-08-ordered-work-order scope
+ *                                            (SELF_FILES: the harness itself, tools/watchd.mjs, and since
+ *                                            WO-09A tools/authz.mjs + tools/verify_integrity.mjs — all four
+ *                                            additions are DEV-08-ordered) is in the changed set without a
+ *                                            DEV-08-ordered-work-order scope
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -21,7 +23,9 @@ import path from "node:path";
 
 export const HARNESS_PATH = "tools/guardrail_harness.mjs";
 export const WATCHD_PATH = "tools/watchd.mjs";
-export const SELF_FILES = [HARNESS_PATH, WATCHD_PATH];
+export const AUTHZ_PATH = "tools/authz.mjs";                 // WO-09A (DEV-08 ordered)
+export const WATCHDOG_PATH = "tools/verify_integrity.mjs";   // WO-09A (DEV-08 ordered)
+export const SELF_FILES = [HARNESS_PATH, WATCHD_PATH, AUTHZ_PATH, WATCHDOG_PATH];
 export const PREFLIGHT_PATH = "tools/guardrails_preflight.mjs";
 export const EXIT = { OK: 0, PREFLIGHT_FAILED: 1, FAIL_CLOSED: 2, UNAUTHORIZED_PATH: 3, SELF_MODIFICATION: 4, USAGE: 5 };
 /* Runtime surfaces frozen for security-class WOs (WO-05/06/07). The src/ prefix covers nested dirs too. */
