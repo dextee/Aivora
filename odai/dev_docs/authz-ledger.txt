@@ -1,3 +1,4 @@
 2026-11-20T12:20:44Z|ISSUE|WO-09A|ops=check,commit|paths=tools/,tests/,odai/dev_docs/,package.json,AGENTS.md|minutes=90|budget=12|single_use=|expires_at=2026-11-20T13:50:44Z
 2026-11-20T12:20:44Z|DENY|WO-09A|op=publish|path=-|reason=OP_NOT_ALLOWED|detail=publish requires an owner token; none present
 2026-11-20T12:26:36Z|REVOKE|WO-09A|reason=WO-09A SHIPPED (staged, no publish)
+2026-11-20T12:27:04Z|DENY|WO-09A|op=commit|path=-|reason=REVOKED|detail=WO-09A SHIPPED (staged, no publish)
