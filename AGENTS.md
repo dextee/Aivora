@@ -130,3 +130,10 @@ Pack extracted (work/pack9); contracts/config/FNY catalog vendored into repo `od
 - No tryline element existed in the hero (CSS-only leftovers); no other behaviour touched.
 
 - V34 note: ten business-intent chips shipped + verified live on clupxd6g.qwenwork.page (V36 deploy; bundle contains "Run My Business Automatically", "Find new customers" gone).
+
+## Standing Guardrails (DEV-12) — enforced by tools/guardrails_preflight.mjs
+- G1 single-server/single-policy/single-dispatcher
+- G2 diff-before-migrate
+- G3 never replace src with compiled
+- G4 lockfile-authoritative deps reconciliation
+- G5 provenance JSON never imported
