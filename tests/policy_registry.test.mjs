@@ -6,10 +6,13 @@
  * real spawned engine HTTP for the business-plane proofs — same boot pattern as
  * objectives.test.mjs / registry.test.mjs; nothing in server/, odai/ or src/ is mutated here).
  *
- * Honest-red channel (owner rule): the SUITE never goes red in A2. Where a policy is NOT
- * enforced by the current server (SEC-05 atomic budget reservation), the failing expectation
- * is written to tests/policy_gaps.txt as a TODO-marked, byte-stable gap report — evidence for
- * the server-plane fixer — while the suite records GAP-DOCUMENTED and stays green.
+ * Honest-red channel (owner rule for batch A2, SUPERSEDED FOR SEC-05 by WO-SEC05): where a
+ * policy was NOT enforced, the failing expectation was written to tests/policy_gaps.txt while
+ * the suite stayed green. WO-SEC05 landed the server-plane fix for SEC-05 atomic budget
+ * reservation, so the SEC-05 proofs below assert the ENFORCED posture HARD (a regression
+ * turns the suite red); the file now carries the byte-stable GREEN report, with the original
+ * red evidence preserved only in trailing comment history. Every other A2 policy proof is
+ * unchanged.
  *
  * Coverage (WO-A2 owner labels; sheet provenance noted per test):
  *   PR-02 field minimization ......... registry task payloads carry no PII columns (sheet PR-02)
@@ -17,7 +20,7 @@
  *   PR-06 provenance ................. every money event has a source tag (sheet PR-02/PR-06 + SEC-06 anchors; owner label PR-06)
  *   SEC-02 ........................... lease check on protected action (fixture authz)
  *   SEC-03 ........................... revoked-lease denial (fixture authz)
- *   SEC-05 ........................... atomic budget reservation ATTEMPT — proves current weakness (HTTP + ledger)
+ *   SEC-05 ........................... atomic budget reservation ENFORCED (WO-SEC05; HTTP + ledger + N=20 live stress)
  *   SEC-08 ........................... cross-plane denial: dev lease cannot touch business plane and vice versa (SEC-21 anchor)
  *   SEC-09 ........................... watchdog advisory-only: authz denial independent of patrol
  *
@@ -367,101 +370,214 @@ test("SEC-03: revoking a lease that never existed fails closed (cannot revoke hi
   assert.ok(readLedgerLines(dir).some((l) => l.includes("|DENY|WO-A2-GHOST|stage=revoke|")), "failed revocation still recorded");
 });
 /* ======================================================================================
- * SEC-05 — atomic budget reservation ATTEMPT (owner A2 scope of the Budget control; no
- * server fix is allowed in this batch). Two concurrent reservations of RM250 against a
- * declared RM300 cap: if BOTH are accepted (engine has per-action checks only — cap is
- * "recorded, ledger-cumulative enforcement lands with the durable attach", see
- * server/odai/objectives.mjs registryApprove note — and reservations/holds simply do not
- * exist in the ledger API), overspend is PROVEN and this batch records the red verdict in
- * tests/policy_gaps.txt (TODO marker) instead of failing the suite, per the owner rule.
- * If a future server build refuses the second move, the gap report removes itself.
- * ===================================================================================== */
+ * SEC-05 — atomic budget reservation ENFORCED (owner server-plane follow-up to the A2 red
+ * report = WO-SEC05, 2026-11-21). The acceptance posture recorded in the original gap held
+ * that the second concurrent reservation must be REJECTED once held+ask would exceed the
+ * cap; the server now does exactly that via server/odai/reservations.mjs (synchronous
+ * single-thread critical-section CAS, row state machine held -> consumed | released,
+ * expiry sweep, reconcile invariants). These proofs assert the enforced behavior HARD:
+ *   - engine HTTP path: two concurrent approve_spend cap:250 on the RM300-criterion
+ *     objective (UC-091) -> EXACTLY ONE gate ALLOW, loser BLOCK /OVER_REMAINING_BUDGET;
+ *     the cap was already an ACTIVE HOLD at creation (held, not merely checked).
+ *   - WO-104 ledger path: two concurrent RM250 out-appends against the registered RM300
+ *     cap -> one lands, one REJECTED "OVER_BUDGET"; money_out never reaches RM500.
+ *   - N=20 live-HTTP stress of parallel RM25 asks against the RM300 hold.
+ * The reservation API the old report PROVED ABSENT must now exist and be exercised.
+ * ====================================================================================== */
 const GAP_MARK = "TODO(WO-A2/SEC-05)";
-function gapReportText() {
+/* Byte-stable GREEN report. Written by the SEC-05 proof only while every enforcement
+ * assertion above is passing; deterministic — regenerate = rerun the suite. Do not
+ * hand-edit. The retired marker string itself never appears in this report (history is
+ * kept below in comments without it), so the A2-FINAL scan for GAP_MARK finds no
+ * outstanding red channel. */
+function greenReportText() {
   return [
-    GAP_MARK + " HONEST RED EVIDENCE — atomic budget reservation NOT enforced (policy sheet 08, Budget control)",
-    "Source: tests/policy_registry.test.mjs (batch A2). Deterministic byte-stable report; regenerate = rerun suite. Do not hand-edit.",
+    "SEC-05 GREEN EVIDENCE — atomic budget reservation ENFORCED (policy sheet 08, Budget control)",
+    "Source: tests/policy_registry.test.mjs (WO-SEC05 server-plane remediation of the batch A2 gap report). Deterministic byte-stable report; regenerate = rerun suite. Do not hand-edit.",
     "",
-    "PROVEN WEAKNESS 1 (engine HTTP, objective path):",
-    "  Objective criterion money_cap_myr = 300 (registry UC-091, statement \"Don't spend more than RM300.\").",
-    "  Two CONCURRENT POST /api/odai/objectives/{id}/approve {scope:\"approve_spend\", cap:250} both return",
-    "  gate policy_decision ALLOW. Cumulative approved budget RM500 > RM300 declared cap. The gate-check",
-    "  compares each ask against the cap per action; no reservation decrements the remaining budget.",
+    "ENFORCED BEHAVIOR 1 (engine HTTP, objective path):",
+    "  Objective criterion money_cap_myr = 300 (registry UC-091). At CREATION the full RM300 becomes a",
+    "  HELD reservation (state machine held -> consumed | released) — the cap is held before the owner",
+    "  approves, not merely recorded. Two CONCURRENT POST /api/odai/objectives/{id}/approve",
+    "  {scope:\"approve_spend\", cap:250} now yield EXACTLY ONE ALLOW; the concurrent loser returns",
+    "  policy_decision BLOCK reason OVER_REMAINING_BUDGET (RM250 consumed + RM250 ask > RM300 cap —",
+    "  no RM500 cumulative state is reachable). A regression of this posture turns the suite RED.",
+    "  Concurrency stress over the live spawned engine (N=20 parallel asks of RM25 against the RM300",
+    "  hold): exactly 12 ALLOW, 8 deterministic refusals, the budget snapshot on EVERY response",
+    "  satisfies held + consumed <= cap, final consumed == RM300, reconcile violations: none.",
     "",
-    "PROVEN WEAKNESS 2 (WO-104 ledger, the money path the engine uses):",
-    "  Two appends of RM250 with direction=out against the same RM300 cap BOTH succeed;",
-    "  moneyTotals().money_out reaches RM500. appendMoneyEvent validates schema + provenance, never budget.",
-    "  No reserve()/hold()/commit()/rollback() API exists (server/odai/ledger.mjs). objectives.mjs records",
-    "  the cap binding verbatim: \"cap RM300 recorded (ledger-cumulative enforcement lands with the durable attach)\".",
+    "ENFORCED BEHAVIOR 2 (WO-104 ledger, the money path):",
+    "  appendMoneyEvent is budget-bound: against a REGISTERED cap, money_out (read) + ask (CAS, one",
+    "  synchronous critical section) must stay <= cap before the append mutates the ledger. Two",
+    "  concurrent RM250 out-appends against the RM300 cap: exactly ONE lands; money_out stays RM250;",
+    "  the second returns status REJECTED with an OVER_BUDGET reason. The reservation API the red",
+    "  report proved absent now exists on the ledger module — reserveBudget / holdBudget /",
+    "  commitReservation / releaseHolds — re-exported from server/odai/reservations.mjs and exercised",
+    "  by this suite. Scopes without a registered cap keep the documented cap-absent fact posture.",
     "",
-    "WHY RED-BUT-DOCUMENTED: the acceptance posture for atomic reservation is: second concurrent reservation",
-    "  must be REJECTED or queued until held_budget + ask <= cap. Current server cannot satisfy it and batch",
-    "  A2 is tests-plane only (owner rule: honest red in THIS report, suite stays green; NO server fix here).",
+    "MECHANISM (WO-SEC05 step 2-3):",
+    "  reserve(scope_id, amount) = atomic compare-and-set against remaining cap (held/consumed/released",
+    "  row state machine). approve/gate-check consumes HELD reservations ONLY; expiry (TTL, default",
+    "  120 min for creation holds) releases holds automatically; reconcileBudget() reports",
+    "  held-vs-consumed-vs-cap invariants with machine-checkable violations[]. Node serves the engine",
+    "  on one event-loop thread and no primitive awaits across its compare-and-mutate, so concurrent",
+    "  requests strictly serialize — the single-thread critical-section posture the original REQUIRED",
+    "  FOLLOW-UP named as acceptable (SELECT ... FOR UPDATE equivalent).",
     "",
-    "REQUIRED FOLLOW-UP (server plane, separate work order): add tenant+objective-scoped reservation holds with",
-    "  atomic check-and-reserve (single-thread critical section or durable SELECT ... FOR UPDATE equivalent),",
-    "  commit/expire lifecycle, and gate-check enforcement of ask <= cap - sum(outstanding_holds_out).",
+    "STILL HONEST (durability slot, unchanged repo posture):",
+    "  Authoritative reservations are per-process memory (FC-ephemeral) and die with the instance,",
+    "  exactly like the objective rows and the ledger itself. The durable projection lands with an",
+    "  odai_budget_reservation table through the existing odai db module (migration via the control",
+    "  API — the app never runs DDL); nothing here fakes persistence.",
     "",
-    "STATUS: GAP PRESENT — this file exists because the suite proved overspend is possible on the current build.",
+    "STATUS: SEC-05 ENFORCED — the gap marker was removed from this file by the suite at green;",
+    "  original red evidence is preserved below as comment history only.",
+    "",
+    "# ---- HISTORY (comments): original honest-red report of batch A2, retired at green ----",
+    "# HONEST RED EVIDENCE — atomic budget reservation NOT enforced (policy sheet 08, Budget control).",
+    "# PROVEN WEAKNESS 1 (engine HTTP, objective path): two CONCURRENT approve requests of cap:250",
+    "#   against the UC-091 RM300-criterion objective BOTH returned gate policy_decision ALLOW",
+    "#   (cumulative RM500 > RM300); the gate-check compared each ask against the cap per action and",
+    "#   no reservation decremented the remaining budget.",
+    "# PROVEN WEAKNESS 2 (WO-104 ledger): two appends of RM250 direction=out against the same RM300",
+    "#   cap BOTH succeeded — moneyTotals().money_out reached RM500; appendMoneyEvent validated",
+    "#   schema + provenance, never budget, and NO reserve()/hold()/commit()/rollback() API existed.",
+    "#   objectives.mjs recorded the cap binding verbatim as \"cap RM300 recorded (ledger-cumulative",
+    "#   enforcement lands with the durable attach)\".",
+    "# WHY RED-BUT-DOCUMENTED (batch A2 owner rule, tests-plane only): acceptance posture requires the",
+    "#   second concurrent reservation to be REJECTED or queued until held_budget + ask <= cap; this",
+    "#   suite recorded GAP-DOCUMENTED and stayed green while the server fix was a separate work order.",
+    "# REQUIRED FOLLOW-UP as written then: tenant+objective-scoped reservation holds with atomic",
+    "#   check-and-reserve (single-thread critical section or durable SELECT ... FOR UPDATE",
+    "#   equivalent), commit/expire lifecycle, and gate-check enforcement of",
+    "#   ask <= cap - sum(outstanding_holds_out). Delivered by WO-SEC05; the former TODO marker was",
+    "#   retired when the scenario first went green.",
     "",
   ].join("\n");
 }
 
-test("SEC-05: two concurrent RM250 reservations against an RM300 cap — overspend attempt measured honestly", { skip: HARD_SKIP }, async (t) => {
+test("SEC-05: two concurrent RM250 reservations against an RM300 cap — EXACTLY ONE ALLOW (WO-SEC05 enforced)", { skip: HARD_SKIP }, async (t) => {
   if (!httpReady(t)) return;
-  /* attempt 1: engine HTTP spend-gate, concurrent */
+  /* scenario 1: engine HTTP spend gate — the former red evidence measured honestly */
   const TEN = "a2-sec05-tenant";
   const created = await post("/api/odai/objectives?tenant=" + TEN, { statement: "Don't spend more than RM300." });
   assert.equal(created.status, 200);
   const oid = created.body.objective_id;
   assert.equal(created.body.criterion.kind, "money_cap_myr");
   assert.equal(created.body.criterion.cap_myr, 300, "declared cap RM300");
+  /* WO-SEC05 step 3: the spend path requests the reservation BEFORE anyone awaits owner
+   * approval — the cap arrives HELD (held=full declared cap, consumed=0), not checked. */
+  assert.ok(created.body.budget, "money-capped objective creation registers + holds the declared cap");
+  assert.equal(created.body.budget.cap_myr, 300);
+  assert.equal(created.body.budget.held_myr, 300, "cap HELD pre-approval, not merely checked");
+  assert.equal(created.body.budget.consumed_myr, 0);
+
   const [r1, r2] = await Promise.all([
     post("/api/odai/objectives/" + oid + "/approve?tenant=" + TEN, { scope: "approve_spend", cap: 250 }),
     post("/api/odai/objectives/" + oid + "/approve?tenant=" + TEN, { scope: "approve_spend", cap: 250 }),
   ]);
-  const allowed = [r1, r2].filter((r) => r.body && r.body.gate_decision && r.body.gate_decision.policy_decision === "ALLOW").length;
+  const decisions = [r1, r2]
+    .map((r) => (r.body && r.body.gate_decision ? r.body.gate_decision.policy_decision : "MISSING"))
+    .sort();
+  assert.deepEqual(decisions, ["ALLOW", "BLOCK"], "the red SEC-05 scenario must now yield EXACTLY ONE allow (atomic reservation; a regression goes SUITE-RED)");
+  const loser = [r1, r2].find((r) => r.body.gate_decision.policy_decision === "BLOCK").body;
+  assert.match(String(loser.gate_decision.reason_code || ""), /OVER_REMAINING_BUDGET/);
+  assert.match(String(loser.note || ""), /refused/i, "concurrency loser is refused with an honest note");
+  for (const r of [r1, r2]) {
+    const b = r.body.gate_decision.budget;
+    assert.ok(b, "every spend decision carries the budget snapshot");
+    assert.ok(b.held_myr + b.consumed_myr <= b.cap_myr, "sum(held)+consumed <= cap on EVERY response: " + JSON.stringify(b));
+    assert.equal(b.within_cap, true);
+  }
+  const state = await getj("/api/odai/objectives/" + oid + "?tenant=" + TEN);
+  assert.equal(state.body.budget.consumed_myr, 250, "cumulative approved spend stops at RM250 of RM300 — no RM500 state exists");
+  assert.equal(state.body.budget.held_myr, 50, "the unspent balance stays HELD (released only by expiry or explicit release)");
+  assert.deepEqual(Array.isArray(state.body.budget.violations) ? state.body.budget.violations : [], [], "reconciliation invariants clean");
+  if (!state.body.approvals) assert.ok(state.body.gates.some((g) => g.state === "approved_cap_recorded"), "gate shows the single winner");
 
-  /* attempt 2: ledger append path — the money facts themselves */
+  /* scenario 2: WO-104 ledger — the money path now enforces the budget itself.
+   * The primitives the red report proved ABSENT must exist HERE (ledger re-export surface). */
   const L = "a2-sec05-ledger-tenant";
+  const LS = "OBJ-A2-SEC05";
+  for (const present of ["reserveBudget", "holdBudget", "commitReservation", "releaseHolds"])
+    assert.equal(typeof ledger[present], "function", "WO-SEC05: reservation API " + present + " must exist on the money path (absence was the proven weakness)");
+  assert.equal(ledger.registerBudgetScope(L, LS, 300).ok, true, "RM300 cap registered for the ledger probe scope");
   const appends = await Promise.all([
-    (async () => skills.skill_ledger_append({ tenant_id: L, objective_id: "OBJ-A2-SEC05", task_id: "T-AD-BUY-1", source_refs: ["A2:concurrent-1"], amount_myr: 250, direction: "out" }))(),
-    (async () => skills.skill_ledger_append({ tenant_id: L, objective_id: "OBJ-A2-SEC05", task_id: "T-AD-BUY-2", source_refs: ["A2:concurrent-2"], amount_myr: 250, direction: "out" }))(),
+    (async () => skills.skill_ledger_append({ tenant_id: L, objective_id: LS, task_id: "T-AD-BUY-1", source_refs: ["A2:concurrent-1"], amount_myr: 250, direction: "out" }))(),
+    (async () => skills.skill_ledger_append({ tenant_id: L, objective_id: LS, task_id: "T-AD-BUY-2", source_refs: ["A2:concurrent-2"], amount_myr: 250, direction: "out" }))(),
   ]);
-  const outTotals = ledger.moneyTotals(L, { objective_id: "OBJ-A2-SEC05" });
-  const refusals = appends.filter((a) => a.status !== "OK").length;
-  /* The MONEY proof is the ledger outcome itself: an overspend stands if the full RM500 landed.
-   * The HTTP approve probe (allowed) is corroborating gate evidence, recorded but never load-bearing —
-   * retraction requires the engine to have DEMONSTRABLY refused at least one append within cap. */
-  const overspend_possible = outTotals.money_out > 300 && refusals === 0;
-  const enforced_posture = refusals >= 1 && outTotals.money_out <= 300;
+  const lands = appends.filter((a) => a.status === "OK").length;
+  const refusals = appends.filter((a) => a.status === "REJECTED");
+  assert.equal(refusals.length, 1, "one of two concurrent RM250 out-appends is REJECTED, deterministically");
+  assert.equal(lands, 1);
+  assert.match(JSON.stringify(refusals[0]), /OVER_BUDGET/, "refusal is budget enforcement (SEC-05), not schema noise");
+  const outTotals = ledger.moneyTotals(L, { objective_id: LS });
+  assert.equal(outTotals.money_out, 250, "ledger-cumulative money_out pinned <= RM300 cap — the RM500 outcome is unreachable");
+  const rec = ledger.reconcileBudget(L, LS);
+  assert.equal(rec.cap_myr, 300);
+  assert.deepEqual(rec.violations, [], "reconcile reports held-vs-consumed-vs-cap invariants clean");
 
-  /* no reservation primitive exists at all — attempt was genuinely all the engine offers */
-  for (const absent of ["reserveBudget", "holdBudget", "commitReservation", "releaseHolds"])
-    assert.equal(ledger[absent], undefined, "reservation API must be exercised where it exists; ledger." + absent + " is absent (this is the weakness)");
+  /* lifetime primitives exercised on the money path (the red report asked for exactly this API) */
+  assert.equal(ledger.holdBudget(L, LS, 100, { ttlMinutes: 30 }).ok, true, "reserve within remaining cap lands a HELD reservation");
+  assert.equal(ledger.holdBudget(L, LS, 250).ok, false, "reserve beyond remaining cap refused atomically (OVER_REMAINING_CAP)");
+  assert.equal(ledger.commitReservation(L, LS, 100).ok, true, "approve consumes the HELD reservation (held -> consumed)");
+  assert.equal(ledger.commitReservation(L, LS, 10).ok, false, "approve() consumes HELD reservations only — nothing held, nothing consumed");
+  assert.equal(ledger.releaseHolds(L, LS, "a2-lifecycle-decline").ok, true);
+  const life = ledger.reconcileBudget(L, LS);
+  assert.equal(life.held_myr, 0, "no holds left after consume + release");
+  assert.equal(life.consumed_myr, 100, "approval-axis consumption recorded (money axis independently at RM250)");
+  assert.deepEqual(life.violations, [], "lifecycle kept every invariant clean");
+  /* expiry releases holds (gap-file REQUIRED FOLLOW-UP: "commit/expire lifecycle") */
+  const LE = "a2-sec05-expiry-tenant";
+  assert.equal(ledger.registerBudgetScope(LE, "OBJ-A2-EXPIRY", 300).ok, true);
+  assert.equal(ledger.holdBudget(LE, "OBJ-A2-EXPIRY", 300, { ttlMinutes: 0 }).ok, true, "zero-TTL hold issued");
+  const exp = ledger.expireHolds(LE, "OBJ-A2-EXPIRY");
+  assert.ok(exp.expired_holds >= 1, "expired holds are released");
+  const eb = ledger.reconcileBudget(LE, "OBJ-A2-EXPIRY");
+  assert.equal(eb.held_myr, 0);
+  assert.equal(eb.available_myr, 300, "expiry returns the full held cap for reuse");
 
-  if (overspend_possible) {
-    writeFileSync(GAPS_FILE, gapReportText(), "utf8");
-    const back = readFileSync(GAPS_FILE, "utf8");
-    assert.ok(back.includes(GAP_MARK), "red verdict requires the TODO marker file");
-    assert.ok(back.includes("RM500"), "gap report quotes the overspend arithmetic");
-    console.log("SEC-05: TWO CONCURRENT RESERVATIONS BOTH ACCEPTED (RM500 committed > RM300 cap; HTTP gate ALLOW x" + allowed + ") -> GAP-DOCUMENTED in tests/policy_gaps.txt (suite stays green; server fix is NOT this batch)");
-    setV("SEC-05", "GAP-DOCUMENTED");
-    return;
+  /* green evidence replaces the former red channel — byte-stable file, marker retired */
+  writeFileSync(GAPS_FILE, greenReportText(), "utf8");
+  const back = readFileSync(GAPS_FILE, "utf8");
+  assert.ok(!back.includes(GAP_MARK), "gap marker removed by the suite ONLY while green — and history kept below it in comments");
+  assert.ok(back.startsWith("SEC-05 GREEN EVIDENCE"), "byte-stable green report is the current verdict");
+  assert.ok(back.includes("EXACTLY ONE ALLOW"), "green report quotes the enforced posture");
+  console.log("SEC-05: ENFORCED (HTTP gate loser refused; ledger money_out RM250 <= RM300; reservations exercised) — gap marker retired from tests/policy_gaps.txt");
+  setV("SEC-05", "ENFORCED");
+});
+
+test("SEC-05 STRESS: N=20 parallel RM25 reservations against the RM300 cap over live spawned-engine HTTP", { skip: HARD_SKIP }, async (t) => {
+  if (!httpReady(t)) return;
+  const TEN = "a2-sec05-stress-tenant";
+  const created = await post("/api/odai/objectives?tenant=" + TEN, { statement: "Don't spend more than RM300." });
+  assert.equal(created.status, 200);
+  const oid = created.body.objective_id;
+  assert.equal(created.body.budget.held_myr, 300, "cap fully HELD before the storm");
+  const rs = await Promise.all(Array.from({ length: 20 }, () =>
+    post("/api/odai/objectives/" + oid + "/approve?tenant=" + TEN, { scope: "approve_spend", cap: 25 })));
+  let allow = 0; let block = 0;
+  for (const r of rs) {
+    assert.equal(r.status, 200);
+    const d = r.body.gate_decision;
+    assert.ok(d, "every parallel response carries a gate decision");
+    const b = d.budget;
+    assert.ok(b, "every parallel spend decision carries the budget snapshot");
+    assert.ok(b.held_myr + b.consumed_myr <= b.cap_myr, "sum(held) <= cap ALWAYS holds (snapshot: " + JSON.stringify(b) + ")");
+    if (d.policy_decision === "ALLOW") allow++;
+    else if (d.policy_decision === "BLOCK") block++;
+    else assert.fail("unexpected spend decision class: " + d.policy_decision + " (decision-table fail-closed posture intact)");
   }
-  if (enforced_posture) {
-    /* the engine DEMONSTRABLY refused at least one concurrent reservation: retract honestly */
-    if (existsSync(GAPS_FILE) && readFileSync(GAPS_FILE, "utf8").includes(GAP_MARK)) {
-      rmSync(GAPS_FILE, { force: true });
-      console.log("SEC-05: engine refused the second concurrent reservation (refusals=" + refusals + ", money_out=" + outTotals.money_out + ") — stale gap report retracted (verdict ENFORCED)");
-    }
-    setV("SEC-05", "ENFORCED");
-    return;
-  }
-  /* measurement inconclusive — default to preserving the red report; never silently retract */
-  writeFileSync(GAPS_FILE, gapReportText(), "utf8");
-  console.log("SEC-05: INCONCLUSIVE measurement (refusals=" + refusals + ", money_out=" + outTotals.money_out + ", gate ALLOW x" + allowed + ") — gap report KEPT by default safety posture");
-  setV("SEC-05", "GAP-DOCUMENTED");
+  assert.equal(allow, 12, "deterministic: exactly 12 x RM25 fit inside the RM300 hold");
+  assert.equal(block, 8, "the other 8 face DETERMINISTIC rejection of over-cap asks");
+  const loser = rs.find((r) => r.body.gate_decision.policy_decision === "BLOCK");
+  assert.match(String(loser.body.gate_decision.reason_code || ""), /OVER_REMAINING_BUDGET/);
+  const fin = await getj("/api/odai/objectives/" + oid + "?tenant=" + TEN);
+  assert.equal(fin.body.budget.consumed_myr, 300, "cumulative approved spend == cap exactly");
+  assert.equal(fin.body.budget.held_myr, 0, "no held balance left after full consumption");
+  assert.ok(fin.body.budget.within_cap, "zero overspend");
+  assert.deepEqual(fin.body.budget.violations, [], "held-vs-consumed-vs-cap reconciliation clean after the storm");
+  console.log("SEC-05 STRESS: 20xRM25 vs RM300 -> ALLOW x" + allow + " BLOCK x" + block + " consumed=RM" + fin.body.budget.consumed_myr + "/" + fin.body.budget.cap_myr + " — deterministic, zero overspend");
 });
 /* ======================================================================================
  * SEC-08 — separate business and development trust planes (sheet 08 Isolation). Negative

@@ -14,6 +14,10 @@ import { existsSync } from "node:fs";
  * G1 posture: no second dispatcher/policy evaluator introduced. */
 import { matchObjective, planFor, criterionFromText } from "./registry.mjs";
 import { skill_gate_check, skill_report_compose } from "./skills.mjs";
+/* WO-SEC05 (SEC-05 remediation): declared money caps become ATOMIC HOLDS at objective
+ * creation — the spend path requests the reservation BEFORE anyone awaits owner approval,
+ * and the approval route through skill_gate_check consumes held reservations only. */
+import { registerBudgetScope, holdBudget, reconcileBudget } from "./reservations.mjs";
 
 /* task graph: every task resolves from beat receipts (source of truth) */
 const TASKS = [
@@ -93,9 +97,22 @@ async function createRegistryObjective(tenantId, incoming, match, plan) {
     dispatch_validation: { edges_validated: true, note: "registry edges validated (DAG) before dispatch — dispatch itself stays held until skills/connectors land" },
     acceptance: plan.acceptance, measurable_via: plan.measurable_via,
   };
+  /* WO-SEC05 (gap scenario 1, engine HTTP path): the declared cap is REGISTERED and HELD
+   * atomically at creation — before anyone awaits owner approval — so the budget is held,
+   * not merely recorded. The old posture ("cap RM300 recorded ... lands with the durable
+   * attach") let two concurrent RM250 approvals both ALLOW against RM300. Fail-closed:
+   * if the hold is refused, the objective is not created. */
+  if (criterion && criterion.kind === "money_cap_myr" && Number(criterion.cap_myr) > 0) {
+    const reg = registerBudgetScope(tenantId, objective_id, Number(criterion.cap_myr), { registry_objective_id: plan.registry_objective_id });
+    if (!reg.ok) return { error: "budget scope registration refused (fail closed, WO-SEC05): " + reg.reason + " " + (reg.detail || "") };
+    const hold = holdBudget(tenantId, objective_id, Number(criterion.cap_myr), { source: "objective-create-hold", note: "cap held pre-approval (SEC-05 fix; expireHolds releases)" });
+    if (!hold.ok) return { error: "budget hold refused (fail closed, WO-SEC05): " + hold.reason + " " + (hold.detail || "") };
+    obj.budget_scope = objective_id;
+  }
   obj.progress = registryProgress(obj);
   store.set(tenantId + "/" + objective_id, obj);
   logEvent(get(tenantId), { runId: "·", beat: "·", actor: "orchestrator", kind: "OBJECTIVE_CREATED_REGISTRY", decision: "ALLOW", note: `${objective_id} -> ${obj.registry_objective_id} score=${obj.router_score} criterion=${criterion.kind || "artifact"}` });
+  if (obj.budget_scope) logEvent(get(tenantId), { runId: "·", beat: "·", actor: "guardrails", kind: "BUDGET_HOLD", decision: "ALLOW", note: `${objective_id} RM${criterion.cap_myr} HELD pre-gate (WO-SEC05)` });
   await persist(obj);
   return view(obj);
 }
@@ -112,9 +129,20 @@ async function registryApprove(obj, scope, cap) {
   if (decision.status !== "OK") return { error: "gate-check refused: " + (decision.reason || String(decision.missing)) };
   const d = decision.typed_artifact;
   if (d.policy_decision === "HOLD") { const v = view(obj); v.gate_decision = d; v.note = "spend approval needs owner confirm (approve again with cap)"; return v; }
+  if (g.scope === "spend" && d.policy_decision !== "ALLOW") {
+    /* WO-SEC05: a spend approval whose ask is not covered by the HELD reservation is
+     * REFUSED ATOMICALLY — the concurrency loser. Nothing is recorded as approved, the
+     * gate stays in its prior state, no budget moves, and the refusal is audit-trailed. */
+    const b = d.budget || {};
+    logEvent(get(obj.tenant_id), { runId: "·", beat: "·", actor: "guardrails", kind: "GATE", decision: "BLOCK", note: `${obj.objective_id} ${scope} refused ${d.reason_code}: ask RM${cap} vs held RM${b.held_myr ?? "?"} / available RM${b.available_myr ?? "?"} of cap RM${b.cap_myr ?? capMyr} (WO-SEC05)` });
+    await persist(obj);
+    const v = view(obj); v.gate_decision = d;
+    v.note = "spend gate REFUSED by atomic budget reservation (WO-SEC05): held+consumed can never exceed the declared cap; concurrent losers are rejected, never queued overspend";
+    return v;
+  }
   if (!obj.approvals.includes(scope)) obj.approvals.push(scope);
   obj.approval_log = [...(obj.approval_log || []), { scope, at: new Date().toISOString(), actor: "OWNER", decision: d.policy_decision, reason_code: d.reason_code,
-    binding: g.scope === "spend" ? `cap RM${capMyr || cap} recorded (ledger-cumulative enforcement lands with the durable attach)` : "recorded; external write stays NEVER under 9.0 connector readiness" }];
+    binding: g.scope === "spend" ? `cap RM${capMyr || cap}: RM${cap} HELD at creation → CONSUMED by this owner approval (WO-SEC05 atomic reservation; gate enforced held+consumed<=cap, ledger bound to the same scope)` : "recorded; external write stays NEVER under 9.0 connector readiness" }];
   g.state = d.policy_decision === "BLOCK" ? "approved_held_EXTERNAL_NEVER" : g.scope === "spend" ? "approved_cap_recorded" : g.scope === "review" ? "advisory_recorded" : "released_pending_connectors";
   g.release_log = obj.approval_log[obj.approval_log.length - 1];
   obj.state = registryStateFor(obj.gates, obj.approvals);
@@ -259,7 +287,7 @@ export function classify(obj) {
 }
 function beat_receipts_note() { return { manifest: "D03 tasks (fixed graph)", receipts: "D04 beats 1–10 (workflow.mjs)", policy: "D08 R01–R19 + connector gate", storage: "D10 odai_* tables (trace/receipt/run/approval)", simulated_boundary: "beat-9 order TEST_SIMULATED; supplier handoff PREPARED_NOT_SENT" }; }
 
-export function view(obj) { return { objective_id: obj.objective_id, tenant_id: obj.tenant_id, criterion: obj.criterion, state: obj.state, progress: obj.progress, ...(obj.plan_source ? { plan_source: obj.plan_source, registry_objective_id: obj.registry_objective_id, business_family: obj.business_family, router_score: obj.router_score, measurable_via: obj.measurable_via, registry_statement: obj.registry_statement } : {}), tasks: obj.tasks.map((x) => ({ id: x.id, state: x.state, specialist: x.specialist, deps: x.deps, step: x.step, evidence: x.evidence })), gates: obj.gates.map(({ id, scope, state, release_log }) => ({ id, scope, state, release_log })), report: obj.state === "REPORTED" ? classify(obj) : null }; }
+export function view(obj) { return { objective_id: obj.objective_id, tenant_id: obj.tenant_id, criterion: obj.criterion, state: obj.state, progress: obj.progress, ...(obj.plan_source ? { plan_source: obj.plan_source, registry_objective_id: obj.registry_objective_id, business_family: obj.business_family, router_score: obj.router_score, measurable_via: obj.measurable_via, registry_statement: obj.registry_statement } : {}), ...(obj.budget_scope ? { budget: reconcileBudget(obj.tenant_id, obj.budget_scope) } : {}), tasks: obj.tasks.map((x) => ({ id: x.id, state: x.state, specialist: x.specialist, deps: x.deps, step: x.step, evidence: x.evidence })), gates: obj.gates.map(({ id, scope, state, release_log }) => ({ id, scope, state, release_log })), report: obj.state === "REPORTED" ? classify(obj) : null }; }
 export function finalReport(tenantId, objective_id) { const obj = store.get(tenantId + "/" + objective_id); return obj ? classify(obj) : { error: "not found" }; }
 
 /* WO-10R: tenant-scoped objective list for GET /api/odai/objectives (summary projection;

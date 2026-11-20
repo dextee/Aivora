@@ -11,6 +11,10 @@
 import { get } from "./store.mjs";
 import { appendMoneyEvent, moneyEvents, moneyTotals } from "./ledger.mjs";
 import { loadSkillContract } from "./registry.mjs";
+/* WO-SEC05: the spend gate now consumes ATOMIC BUDGET RESERVATIONS (SEC-05 remediation).
+ * Reservations live in server/odai/reservations.mjs — synchronous single-thread critical
+ * section CAS; approve consumes HELD reservations only; held+consumed never exceed the cap. */
+import { budgetScope, consumeHold } from "./reservations.mjs";
 
 const req = (input, keys) => keys.filter((k) => input[k] === undefined || input[k] === null || input[k] === "" || (Array.isArray(input[k]) && !input[k].length));
 
@@ -107,22 +111,43 @@ export function skill_evidence_append(input = {}) {
 
 /* ---- gate-check (SK-035; CTRL-06 shim) — one action against its mapped gate scope.
  * Reuses the existing fail-closed posture: unknown scope/risk DENIES. Engine gateway
- * itself untouched.
+ * itself untouched. WO-SEC05: spend decisions are made ATOMICALLY against registered
+ * budget reservations (held -> consumed state machine in reservations.mjs), so the
+ * cumulative approved spend can never exceed a declared cap under concurrency.
  * in : actor, tenant, action, resource, risk, gate?{scope}, owner_approved?, amount_myr?, cap_myr?
- * out: policy_decision, reason_code, obligations (+envelope sidecars) */
+ * out: policy_decision, reason_code, obligations (+envelope sidecars incl budget snapshot) */
 export function skill_gate_check(input = {}) {
   const missing = req(input, ["actor", "tenant", "action", "resource", "risk"]);
   if (missing.length) return { status: "NEEDS_INPUT", missing, policy_decision: "DENY", reason_code: "inputs_absent", obligations: [] };
   const gate = input.gate || null;
   const scope = gate ? String(gate.scope) : null;
   let policy_decision = "ALLOW"; let reason_code = "within_allowed_actions";
+  let budgetSnapshot = null;
   const obligations = ["log decision", "tenant-scoped record only"];
   if (scope === "spend") {
     const cap = Number(input.cap_myr || 0);
     const ask = Number(input.amount_myr || 0);
+    /* WO-SEC05 (SEC-05 remediation): where the objective's declared cap was REGISTERED as a
+     * budget scope (money_cap objectives hold their full cap at creation, before the owner
+     * acts), an approval must consume a HELD reservation atomically — the gate enforces
+     * ask <= cap - (held + consumed), not merely asks ask <= cap per action. The consume is a
+     * synchronous compare-and-set inside reservations.mjs' critical section: two concurrent
+     * approvals can never both pass. */
+    const tenantId = String(input.tenant || "");
+    const scopeId = String(input.resource || "");
+    const registered = scopeId ? budgetScope(tenantId, scopeId) : null;
     if (!input.owner_approved) { policy_decision = "HOLD"; reason_code = "AWAITING_SPEND_APPROVAL"; }
-    else if (cap && ask > cap) { policy_decision = "BLOCK"; reason_code = "OVER_HARD_CAP_" + cap; }
-    else { policy_decision = "ALLOW"; reason_code = "owner_approved_within_cap"; }
+    else if (cap && ask > cap) { policy_decision = "BLOCK"; reason_code = "OVER_HARD_CAP_" + cap; budgetSnapshot = registered; }
+    else if (registered) {
+      const res = consumeHold(tenantId, scopeId, ask, { source: "SK-035:gate-check:" + String(input.action) });
+      if (res.ok) { policy_decision = "ALLOW"; reason_code = "owner_approved_reservation_consumed"; }
+      else { policy_decision = "BLOCK"; reason_code = "OVER_REMAINING_BUDGET"; }
+      budgetSnapshot = res.budget || registered;
+      obligations.push("gate check CONSUMED a held reservation atomically (WO-SEC05) — held+consumed<=cap enforced at decision time");
+    } else {
+      policy_decision = "ALLOW"; reason_code = "owner_approved_within_cap";
+      obligations.push("no registered budget scope — per-action cap check only; declared caps become holds at objective creation (WO-SEC05)");
+    }
     obligations.push("spend requires owner gate (R12 pattern; no auto-spending)");
   } else if (scope === "publish" || scope === "comms" || scope === "external_write") {
     policy_decision = "BLOCK";
@@ -138,7 +163,7 @@ export function skill_gate_check(input = {}) {
   }
   return {
     status: "OK", policy_decision, reason_code, obligations,
-    typed_artifact: { policy_decision, reason_code, action: String(input.action) },
+    typed_artifact: { policy_decision, reason_code, action: String(input.action), ...(budgetSnapshot ? { budget: budgetSnapshot } : {}) },
     evidence_refs: ["gate_check:" + String(input.action)],
     uncertainty_flags: scope ? [] : ["scope_unmapped_fail_closed"],
     cost_actual: 0, approval_requests: policy_decision === "HOLD" ? ["approve_spend"] : [],

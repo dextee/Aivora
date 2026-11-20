@@ -1,24 +1,60 @@
-TODO(WO-A2/SEC-05) HONEST RED EVIDENCE — atomic budget reservation NOT enforced (policy sheet 08, Budget control)
-Source: tests/policy_registry.test.mjs (batch A2). Deterministic byte-stable report; regenerate = rerun suite. Do not hand-edit.
+SEC-05 GREEN EVIDENCE — atomic budget reservation ENFORCED (policy sheet 08, Budget control)
+Source: tests/policy_registry.test.mjs (WO-SEC05 server-plane remediation of the batch A2 gap report). Deterministic byte-stable report; regenerate = rerun suite. Do not hand-edit.
 
-PROVEN WEAKNESS 1 (engine HTTP, objective path):
-  Objective criterion money_cap_myr = 300 (registry UC-091, statement "Don't spend more than RM300.").
-  Two CONCURRENT POST /api/odai/objectives/{id}/approve {scope:"approve_spend", cap:250} both return
-  gate policy_decision ALLOW. Cumulative approved budget RM500 > RM300 declared cap. The gate-check
-  compares each ask against the cap per action; no reservation decrements the remaining budget.
+ENFORCED BEHAVIOR 1 (engine HTTP, objective path):
+  Objective criterion money_cap_myr = 300 (registry UC-091). At CREATION the full RM300 becomes a
+  HELD reservation (state machine held -> consumed | released) — the cap is held before the owner
+  approves, not merely recorded. Two CONCURRENT POST /api/odai/objectives/{id}/approve
+  {scope:"approve_spend", cap:250} now yield EXACTLY ONE ALLOW; the concurrent loser returns
+  policy_decision BLOCK reason OVER_REMAINING_BUDGET (RM250 consumed + RM250 ask > RM300 cap —
+  no RM500 cumulative state is reachable). A regression of this posture turns the suite RED.
+  Concurrency stress over the live spawned engine (N=20 parallel asks of RM25 against the RM300
+  hold): exactly 12 ALLOW, 8 deterministic refusals, the budget snapshot on EVERY response
+  satisfies held + consumed <= cap, final consumed == RM300, reconcile violations: none.
 
-PROVEN WEAKNESS 2 (WO-104 ledger, the money path the engine uses):
-  Two appends of RM250 with direction=out against the same RM300 cap BOTH succeed;
-  moneyTotals().money_out reaches RM500. appendMoneyEvent validates schema + provenance, never budget.
-  No reserve()/hold()/commit()/rollback() API exists (server/odai/ledger.mjs). objectives.mjs records
-  the cap binding verbatim: "cap RM300 recorded (ledger-cumulative enforcement lands with the durable attach)".
+ENFORCED BEHAVIOR 2 (WO-104 ledger, the money path):
+  appendMoneyEvent is budget-bound: against a REGISTERED cap, money_out (read) + ask (CAS, one
+  synchronous critical section) must stay <= cap before the append mutates the ledger. Two
+  concurrent RM250 out-appends against the RM300 cap: exactly ONE lands; money_out stays RM250;
+  the second returns status REJECTED with an OVER_BUDGET reason. The reservation API the red
+  report proved absent now exists on the ledger module — reserveBudget / holdBudget /
+  commitReservation / releaseHolds — re-exported from server/odai/reservations.mjs and exercised
+  by this suite. Scopes without a registered cap keep the documented cap-absent fact posture.
 
-WHY RED-BUT-DOCUMENTED: the acceptance posture for atomic reservation is: second concurrent reservation
-  must be REJECTED or queued until held_budget + ask <= cap. Current server cannot satisfy it and batch
-  A2 is tests-plane only (owner rule: honest red in THIS report, suite stays green; NO server fix here).
+MECHANISM (WO-SEC05 step 2-3):
+  reserve(scope_id, amount) = atomic compare-and-set against remaining cap (held/consumed/released
+  row state machine). approve/gate-check consumes HELD reservations ONLY; expiry (TTL, default
+  120 min for creation holds) releases holds automatically; reconcileBudget() reports
+  held-vs-consumed-vs-cap invariants with machine-checkable violations[]. Node serves the engine
+  on one event-loop thread and no primitive awaits across its compare-and-mutate, so concurrent
+  requests strictly serialize — the single-thread critical-section posture the original REQUIRED
+  FOLLOW-UP named as acceptable (SELECT ... FOR UPDATE equivalent).
 
-REQUIRED FOLLOW-UP (server plane, separate work order): add tenant+objective-scoped reservation holds with
-  atomic check-and-reserve (single-thread critical section or durable SELECT ... FOR UPDATE equivalent),
-  commit/expire lifecycle, and gate-check enforcement of ask <= cap - sum(outstanding_holds_out).
+STILL HONEST (durability slot, unchanged repo posture):
+  Authoritative reservations are per-process memory (FC-ephemeral) and die with the instance,
+  exactly like the objective rows and the ledger itself. The durable projection lands with an
+  odai_budget_reservation table through the existing odai db module (migration via the control
+  API — the app never runs DDL); nothing here fakes persistence.
 
-STATUS: GAP PRESENT — this file exists because the suite proved overspend is possible on the current build.
+STATUS: SEC-05 ENFORCED — the gap marker was removed from this file by the suite at green;
+  original red evidence is preserved below as comment history only.
+
+# ---- HISTORY (comments): original honest-red report of batch A2, retired at green ----
+# HONEST RED EVIDENCE — atomic budget reservation NOT enforced (policy sheet 08, Budget control).
+# PROVEN WEAKNESS 1 (engine HTTP, objective path): two CONCURRENT approve requests of cap:250
+#   against the UC-091 RM300-criterion objective BOTH returned gate policy_decision ALLOW
+#   (cumulative RM500 > RM300); the gate-check compared each ask against the cap per action and
+#   no reservation decremented the remaining budget.
+# PROVEN WEAKNESS 2 (WO-104 ledger): two appends of RM250 direction=out against the same RM300
+#   cap BOTH succeeded — moneyTotals().money_out reached RM500; appendMoneyEvent validated
+#   schema + provenance, never budget, and NO reserve()/hold()/commit()/rollback() API existed.
+#   objectives.mjs recorded the cap binding verbatim as "cap RM300 recorded (ledger-cumulative
+#   enforcement lands with the durable attach)".
+# WHY RED-BUT-DOCUMENTED (batch A2 owner rule, tests-plane only): acceptance posture requires the
+#   second concurrent reservation to be REJECTED or queued until held_budget + ask <= cap; this
+#   suite recorded GAP-DOCUMENTED and stayed green while the server fix was a separate work order.
+# REQUIRED FOLLOW-UP as written then: tenant+objective-scoped reservation holds with atomic
+#   check-and-reserve (single-thread critical section or durable SELECT ... FOR UPDATE
+#   equivalent), commit/expire lifecycle, and gate-check enforcement of
+#   ask <= cap - sum(outstanding_holds_out). Delivered by WO-SEC05; the former TODO marker was
+#   retired when the scenario first went green.
