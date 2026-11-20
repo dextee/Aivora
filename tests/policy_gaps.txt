@@ -1,0 +1,24 @@
+TODO(WO-A2/SEC-05) HONEST RED EVIDENCE — atomic budget reservation NOT enforced (policy sheet 08, Budget control)
+Source: tests/policy_registry.test.mjs (batch A2). Deterministic byte-stable report; regenerate = rerun suite. Do not hand-edit.
+
+PROVEN WEAKNESS 1 (engine HTTP, objective path):
+  Objective criterion money_cap_myr = 300 (registry UC-091, statement "Don't spend more than RM300.").
+  Two CONCURRENT POST /api/odai/objectives/{id}/approve {scope:"approve_spend", cap:250} both return
+  gate policy_decision ALLOW. Cumulative approved budget RM500 > RM300 declared cap. The gate-check
+  compares each ask against the cap per action; no reservation decrements the remaining budget.
+
+PROVEN WEAKNESS 2 (WO-104 ledger, the money path the engine uses):
+  Two appends of RM250 with direction=out against the same RM300 cap BOTH succeed;
+  moneyTotals().money_out reaches RM500. appendMoneyEvent validates schema + provenance, never budget.
+  No reserve()/hold()/commit()/rollback() API exists (server/odai/ledger.mjs). objectives.mjs records
+  the cap binding verbatim: "cap RM300 recorded (ledger-cumulative enforcement lands with the durable attach)".
+
+WHY RED-BUT-DOCUMENTED: the acceptance posture for atomic reservation is: second concurrent reservation
+  must be REJECTED or queued until held_budget + ask <= cap. Current server cannot satisfy it and batch
+  A2 is tests-plane only (owner rule: honest red in THIS report, suite stays green; NO server fix here).
+
+REQUIRED FOLLOW-UP (server plane, separate work order): add tenant+objective-scoped reservation holds with
+  atomic check-and-reserve (single-thread critical section or durable SELECT ... FOR UPDATE equivalent),
+  commit/expire lifecycle, and gate-check enforcement of ask <= cap - sum(outstanding_holds_out).
+
+STATUS: GAP PRESENT — this file exists because the suite proved overspend is possible on the current build.
