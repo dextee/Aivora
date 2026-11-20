@@ -177,6 +177,94 @@ Scope: NO PUBLISH, no production touch. Single evidence file appended (this bloc
    Only this evidence log changed in this run (append-only block); no runtime file was modified, so the
    WO-10 commit remains the single canonical commit for the work order. Zero button wall confirmed.
    No objective was created or executed autonomously; 9.0 external-write NEVER unchanged.
-   Secrets: none read, printed, committed, or bundled. No scheduled task or automation was created,
-   updated, triggered, paused, or deleted. NO PUBLISH invoked — online version stays V39.
- ================================================================
+  Secrets: none read, printed, committed, or bundled. No scheduled task or automation was created,
+  updated, triggered, paused, or deleted. NO PUBLISH invoked — online version stays V39.
+
+================================================================
+2026-11-20T12:01Z — WO-08 RECOVERY VERIFICATION — VERIFIED (re-run at current HEAD)
+================================================================
+Work order: WO-08 recovery verification execution (DEV-10 primary, DEV-11 verdict)
+Page: app-1fe44043-4ed153f9 (aivora-odai-realtime, dynamic, clupxd6g.qwenwork.page, online V39)
+Repo: /mnt/pages/page-repo-1255a831-bc45-4ee3-a572-8ff3e587ad2a
+Access: page_repo resolve(managed/update) -> prepare -> open — first open returned HEAD 1a8637c6;
+  a concurrent verification run committed checkpoint 0420920 (evidence-log-only edit) during this drill,
+  so this run re-opened (HEAD 042092010516ea637fdb2a76c8f93597fa4ebc39) and re-authored all material at the
+  authoritative HEAD. App diff 1a8637c..HEAD = this file only; no app source changed. Worktree clean throughout.
+Scope: NO PUBLISH, NO production touch. Repo change = append-only block in this single evidence log.
+
+[1] WO-07 OUTPUT CONFIRMATION + STEP-0 PREREQUISITE GATE (in-repo records)
+  odai/dev_docs/wo07-backup-report.md — present; WO-07 outputs recorded:
+    tar aivora-source-complete.tar.gz 426,298 B / 55 files (repo minus node_modules, dist, .qw-pages, .git) ·
+    bundle aivora-git-history.bundle 505,967 B complete-history at entry 9538a972 · manifest.sha256
+    (tar bb1ce498…8bfa9c / bundle e59079a5…a15004) · "Result: zero secret-bearing files in either artifact" ·
+    delivery NOT blocked — 3 active Drive links under /backups/tranche-B/.
+  tranche STEP-0 prerequisite gate lines, quoted verbatim from odai/dev_docs/tranche-report.md:
+    a | F-1 verdict in `f1-provenance-report.md` | **RUNTIME-CLEAN** (WO-01 audit; V37/V38 zero runtime delta; no unexplained src/ diffs)
+    b | Evidence JSON for latest version | `odai/dev_docs/evidence/V39.json` present; V39 = last published version (deployment 305e4d13); records certifying commit `060d225b…`
+    c | `node tools/guardrails_preflight.mjs` | exit **0** (all seven gates ✓)
+    d | `npm run build && npm test` | exit **0** — TAP 24 tests / 24 pass / 0 fail (pre-tranche baseline)
+  Corroboration in sandbox: f1-provenance-report.md + evidence/V39.json both tracked & present.
+
+[2] AUTHORITATIVE RECOVERY MATERIAL REGENERATED (this sandbox, HEAD 04209201)
+  git bundle create /tmp/v08.bundle --all -> 539,405 B; `git bundle verify`: okay, complete history, refs main+HEAD = 04209201…
+  tar czf /tmp/v08.tar.gz (repo minus node_modules, dist, .qw-pages, .git) -> 454,524 B; 65 regular members.
+  Parity: tar member list == `git ls-files` (65 == 65) -> TAR_EQUALS_TRACKED.
+  Secret audit: filename scan of tar listing -> 0 hits. Streamed content regex count = 2, both BENIGN false
+    positives inside the two evidence .md docs (literal scan regex printed in wo07-backup-report.md:29; and the
+    substring "ta-sk-execution" in tranche-report.md:50). git grep confirms no credential-bearing file. Honest note:
+    an earlier WO-08 run reported 0 because it counted filenames only.
+  sha256 manifest (/tmp/v08-manifest.sha256):
+    f237b1b09d128af8f8316236b3ccfb96828f2d6eced89623956024e9781d5c66  v08.tar.gz
+    c656668c21eb2d2694595131722715f053dfbad8343fcbe1a06ad041924c0b82  v08.bundle
+  Supersedes the prior 2026-11-20T11:27Z WO-08 block's snapshot (HEAD bead5b6c) for the CURRENT authoritative HEAD.
+
+[3] ISOLATED RESTORATION DRILL (out of live repo — /tmp/v08r; live repo untouched, clean after)
+  rm -rf /tmp/v08r; mkdir -p /tmp/v08r/tree                        | SETUP_OK
+  git clone /tmp/v08.bundle /tmp/v08r/clone                         | CLONE_OK
+  git -C clone rev-parse HEAD                                       | 042092010516ea637fdb2a76c8f93597fa4ebc39 == repo HEAD -> HEAD_MATCH_OK
+  git fsck --connectivity-only --no-dangling (clone)                | no errors -> GIT_OBJECTS_OK
+  tar xzf /tmp/v08.tar.gz -C /tmp/v08r/tree                         | EXTRACT_OK (65 files)
+  sha256sum -c /tmp/v08-manifest.sha256                             | v08.tar.gz OK · v08.bundle OK -> MANIFEST_OK
+  diff vs repo — server.mjs                                         | IDENTICAL -> KEYFILE_IDENTICAL
+  diff vs repo — package.json                                       | IDENTICAL -> KEYFILE_IDENTICAL
+  diff vs repo — src/TalkView.tsx                                   | IDENTICAL -> KEYFILE_IDENTICAL
+  diff vs repo — odai/migrations/*                                  | IDENTICAL (001_init.sql) -> KEYFILE_IDENTICAL
+  diff -rq restored tree vs repo over `git ls-files` (65 files)     | WHOLE_TREE_DIFFS=0 -> FULLTREE_IDENTICAL
+  node --check server.mjs (restored tree)                           | exit 0 -> NODE_CHECK_OK
+  node tools/guardrails_preflight.mjs (restored)                    | exit 0 — "preflight clear: single-server ✓ provenance-inert ✓ lockfile ✓ single-policy ✓ editable-src ✓ test-gate ✓ single-dispatcher ✓"
+  npm ci --silent (restored tree)                                   | exit 0 -> NPM_CI_OK
+  npm run build (restored tree)                                     | exit 0 — vite "✓ 36 modules transformed", "✓ built in 724ms";
+                                                                      dist/index.html 1.17 kB · dist/assets/index-CEd1gdtn.css 27.96 kB · dist/assets/index-BHRX1g2z.js 196.00 kB; prepare-publish staged .qw-pages/publish
+  npm test (restored tree)                                          | exit 0 — TAP tail:
+                                                                      # tests 43 / # suites 3 / # pass 43 / # fail 0 / # cancelled 0 / # skipped 0 / # todo 0
+  DRILL VERDICT: PASS — the bundle replays an identical HEAD; the tar reproduces a byte-identical tracked
+  tree; the restored tree alone passes syntax check, guardrails preflight, npm ci, production build and the
+  full 43-test suite — all OFF the live repository (no .git).
+
+[4] ROLLBACK AVAILABILITY ASSERTION (read-only GET /api/page/<domain>/artifact; NO publish/rollback invoked)
+  Mechanism: QW Pages seals every publish as an immutable Artifact version (object key frozen at Seal; the
+  same artifact object cannot be overwritten); the online route is switched by a single Publish call
+  POST /api/page/clupxd6g.qwenwork.page/publish {"version":"Vn"} against an already-sealed older version, so
+  a one-command republish restores that version without rebuilding. Source side: append-only main history
+  (reachable via `git bundle --all`) plus `page_repo.py restore --commit-oid … --expected-head-oid …`.
+  Ledger currently exposes 10 immutable sealed versions V30..V39; current online = V39 (page state deployed,
+  has_online_artifact true, runtime_contract broker). Latest three (version, source_commit_oid):
+    V39 060d225bd6bb8963d93247ce66a98006db4005de (2026-11-20T18:04+08:00, online)
+    V38 e076db65c65fee201db8baf21e4618eda04fba00 (2026-11-20T14:07+08:00)
+    V37 c777a2b81c45eb41b77abcd75c74e5e53455a48b (2026-11-20T14:06+08:00)
+  Cross-check: ledger max = V39 (no phantom newer version); these OIDs (and V36 9b828eae…) all resolve in the
+  live repo as commit objects and are ancestors of HEAD 04209201.
+  ASSERTION: AVAILABLE — rolling back to V38 or V37 = one republish of that sealed version. NO ACTION taken.
+
+[5] DEV-11 VERDICT
+  WO-08 VERIFIED. WO-07 backup outputs confirmed (tar + bundle + sha256 + delivered Drive links, not delivery-blocked);
+  tranche STEP-0 prerequisite gate (a/b/c/d) recorded PASS and quoted; authoritative bundle+tar regenerated for HEAD
+  04209201, hash-manifested, secret-clean (2 regex hits both proven benign doc false-positives); isolated restoration
+  reproduced an identical HEAD and a byte-identical tracked tree; the restored tree alone turned green on
+  node --check + guardrails preflight + npm ci + production build + full 43/43 test suite outside the live repo;
+  rollback to a prior immutable version confirmed available via sealed-Artifact republish (none performed).
+  Process note (honest): a concurrent verification run advanced HEAD mid-drill by an evidence-log-only checkpoint;
+  this run re-opened and re-verified everything at the new authoritative HEAD rather than reporting against a stale snapshot.
+  Secrets: none read, printed, committed, or bundled by this run. No scheduled task or automation was created,
+  updated, triggered, paused, or deleted. NO PUBLISH — online version stays V39.
+================================================================
