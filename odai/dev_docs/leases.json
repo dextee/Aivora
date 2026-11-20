@@ -33,6 +33,27 @@
     "revoked_reason": "cross-audit drill: revoked-lease denial test",
     "revoked_at": "2026-11-20T13:20:30Z"
   },
+  "UI-01B": {
+    "issued_at": "2026-11-20T17:30:18Z",
+    "expires_at": "2026-11-20T18:30:18Z",
+    "minutes": 60,
+    "paths": [
+      "src/",
+      "tests/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 5
+    },
+    "revoked": true,
+    "revoked_reason": "UI-01B SHIPPED (staged, NO publish; files: src/RoleGate.tsx NEW, src/TalkView.tsx, src/styles.css, tests/objectives.test.mjs; no server changes; AGENTS.md not updated — outside lease; suite 118/118)",
+    "revoked_at": "2026-11-20T17:40:01Z"
+  },
   "WO-09A": {
     "issued_at": "2026-11-20T12:20:44Z",
     "expires_at": "2026-11-20T13:50:44Z",
@@ -139,8 +160,12 @@
     ],
     "budget": 12,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "WO-111E SHIPPED",
+    "revoked_at": "2026-11-20T17:24:24Z"
   },
   "WO-112": {
     "issued_at": "2026-11-20T15:50:57Z",

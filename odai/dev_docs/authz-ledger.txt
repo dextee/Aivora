@@ -59,3 +59,8 @@
 2026-11-20T17:21:39Z|REVOKE|WO-111D|reason=WO-111D SHIPPED (owner token authorisation 2026-11-21; no publish)
 2026-11-20T17:24:24Z|REVOKE|WO-111D|reason=cycle complete; companion run gets own lease
 2026-11-20T17:24:24Z|ISSUE|WO-111E|ops=check,commit|paths=tools/,tests/,.githooks/,odai/dev_docs/|minutes=30|budget=12|single_use=0|expires_at=2026-11-20T17:54:24Z
+2026-11-20T17:24:24Z|HOOK_ALLOW|WO-111E|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+tests/policy_registry.test.mjs
+2026-11-20T17:24:24Z|REVOKE|WO-111E|reason=WO-111E SHIPPED
+2026-11-20T17:30:18Z|ISSUE|UI-01B|ops=check,commit|paths=src/,tests/|minutes=60|budget=12|single_use=0|expires_at=2026-11-20T18:30:18Z
+2026-11-20T17:39:54Z|HOOK_ALLOW|UI-01B|src/RoleGate.tsx+src/TalkView.tsx+src/styles.css+tests/objectives.test.mjs
+2026-11-20T17:40:01Z|REVOKE|UI-01B|reason=UI-01B SHIPPED (staged, NO publish; files: src/RoleGate.tsx NEW, src/TalkView.tsx, src/styles.css, tests/objectives.test.mjs; no server changes; AGENTS.md not updated — outside lease; suite 118/118)
