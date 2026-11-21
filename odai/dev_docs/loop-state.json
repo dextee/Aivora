@@ -58,10 +58,10 @@
   },
   {
    "id": "WO-113",
-   "status": "IN_PROGRESS:batches1-7_done_28_modules",
+   "status": "IN_PROGRESS:batches1-7_shipped_28_modules",
    "paths": "server/odai,tests",
    "deps": [],
-   "spec": "28/52 deterministic modules shipped (b7: SK-004 owner-figure budgets, SK-006 consent-gated draft CRM, SK-008 estimate-labelled cashflow, SK-057 Wan video spec adapter-never-invoked); next t3 head: SK-014,029,034,044; suite 148/148"
+   "spec": "28/52 deterministic modules shipped (b7: SK-004 owner-figure budgets, SK-006 consent-gated draft CRM, SK-008 estimate-labelled cashflow, SK-057 Wan video spec adapter-never-invoked); next t3 head: SK-014,029,034,044; suite 148/148 @68d45f2; hashes b4=44390e6 b5=0f55f8e b6=7511caf b7=68d45f2"
   },
   {
    "id": "E2E-10J",

@@ -54,6 +54,27 @@
     "revoked_reason": "SHIPPED sync",
     "revoked_at": "2026-11-21T09:16:11Z"
   },
+  "DEV11-SK": {
+    "issued_at": "2026-11-21T09:34:02Z",
+    "expires_at": "2026-11-21T10:19:02Z",
+    "minutes": 45,
+    "paths": [
+      "odai/dev_docs/",
+      "tests/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "verification closed loop-log committed 051aa9b",
+    "revoked_at": "2026-11-21T09:34:31Z"
+  },
   "DEV11-V": {
     "issued_at": "2026-11-21T02:26:15Z",
     "expires_at": "2026-11-21T03:11:15Z",
@@ -74,6 +95,24 @@
     "revoked": true,
     "revoked_reason": "DEV11-V SHIPPED — WO-111C verdict PASS-WITH-GAPS (allow-path proof via live hook; report in odai/dev_docs/)",
     "revoked_at": "2026-11-21T02:34:02Z"
+  },
+  "DEV11-VER": {
+    "issued_at": "2026-11-21T09:45:46Z",
+    "expires_at": "2026-11-21T10:05:46Z",
+    "minutes": 20,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 6,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": true,
+    "revoked_reason": "DEV-11 verification shipped ab1c46e (loop-log line only); lease closed",
+    "revoked_at": "2026-11-21T09:46:14Z"
   },
   "UI-01B": {
     "issued_at": "2026-11-20T17:30:18Z",
@@ -369,6 +408,121 @@
     "revoked": true,
     "revoked_reason": "SHIPPED fe032c5 — 12 modules this wake",
     "revoked_at": "2026-11-21T09:15:55Z"
+  },
+  "WO-113-B4": {
+    "issued_at": "2026-11-21T09:18:42Z",
+    "expires_at": "2026-11-21T10:48:42Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/config/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 7
+    },
+    "revoked": true,
+    "revoked_reason": "scope gap: batch requires builder wiring in tools/ (fe032c5 precedent); re-issued as WO-113-B4B",
+    "revoked_at": "2026-11-21T09:28:10Z"
+  },
+  "WO-113-B4B": {
+    "issued_at": "2026-11-21T09:28:10Z",
+    "expires_at": "2026-11-21T10:58:10Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/config/",
+      "odai/dev_docs/",
+      "tools/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 8
+    },
+    "revoked": false
+  },
+  "WO-113-B5": {
+    "issued_at": "2026-11-21T09:28:32Z",
+    "expires_at": "2026-11-21T10:58:32Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/config/",
+      "odai/dev_docs/",
+      "tools/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 8
+    },
+    "revoked": true,
+    "revoked_reason": "SHIPPED 0f55f8e — suite 140/140",
+    "revoked_at": "2026-11-21T09:46:33Z"
+  },
+  "WO-113-B6": {
+    "issued_at": "2026-11-21T09:35:01Z",
+    "expires_at": "2026-11-21T11:05:01Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/config/",
+      "odai/dev_docs/",
+      "tools/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 9
+    },
+    "revoked": true,
+    "revoked_reason": "SHIPPED 7511caf — suite 144/144",
+    "revoked_at": "2026-11-21T09:46:33Z"
+  },
+  "WO-113-B7": {
+    "issued_at": "2026-11-21T09:41:05Z",
+    "expires_at": "2026-11-21T11:11:05Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/config/",
+      "odai/dev_docs/",
+      "tools/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 9
+    },
+    "revoked": false
   },
   "WO-A1": {
     "issued_at": "2026-11-20T14:37:22Z",

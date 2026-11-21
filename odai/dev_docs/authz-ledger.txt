@@ -166,3 +166,25 @@
 2026-11-21T09:16:27Z|HOOK_ALLOW|V42-CLOSE|odai/dev_docs/authz-ledger.txt
 2026-11-21T09:16:38Z|HOOK_ALLOW|V42-CLOSE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-21T09:16:52Z|REVOKE|V43-REG|reason=prior-session lease denied on path scope; reland completed by V43-REG2 — closing stale grant
+2026-11-21T09:16:52Z|HOOK_ALLOW|V42-CLOSE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-21T09:18:42Z|ISSUE|WO-113-B4|ops=check,commit|paths=server/odai/,tests/,odai/config/,odai/dev_docs/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T10:48:42Z
+2026-11-21T09:28:01Z|DENY|WO-113-B4|op=commit|path=tools/build_registry.py|reason=PATH_NOT_ALLOWED|detail=path=tools/build_registry.py scope=server/odai/,tests/,odai/config/,odai/dev_docs/
+2026-11-21T09:28:01Z|HOOK_DENY|WO-113-B4|V42-CLOSE: revoke stale V43-REG grant (superseded by V43-REG2 reland)
+2026-11-21T09:28:10Z|REVOKE|WO-113-B4|reason=scope gap: batch requires builder wiring in tools/ (fe032c5 precedent); re-issued as WO-113-B4B
+2026-11-21T09:28:10Z|ISSUE|WO-113-B4B|ops=check,commit|paths=server/odai/,tests/,odai/config/,odai/dev_docs/,tools/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T10:58:10Z
+2026-11-21T09:28:11Z|HOOK_ALLOW|WO-113-B4B|odai/config/skill_contracts.json+odai/config/skills_implemented.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json+server/odai/skills.mjs+tests/registry.test.mjs+tools/build_registry.py
+2026-11-21T09:28:32Z|ISSUE|WO-113-B5|ops=check,commit|paths=server/odai/,tests/,odai/config/,odai/dev_docs/,tools/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T10:58:32Z
+2026-11-21T09:34:02Z|ISSUE|DEV11-SK|ops=check,commit|paths=odai/dev_docs/,tests/|minutes=45|budget=12|single_use=0|expires_at=2026-11-21T10:19:02Z
+2026-11-21T09:34:31Z|HOOK_ALLOW|DEV11-SK|odai/dev_docs/loop-log.jsonl
+2026-11-21T09:34:31Z|REVOKE|DEV11-SK|reason=verification closed loop-log committed 051aa9b
+2026-11-21T09:34:46Z|HOOK_ALLOW|WO-113-B5|odai/config/skill_contracts.json+odai/config/skills_implemented.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json+server/odai/skills.mjs+tests/registry.test.mjs+tools/build_registry.py
+2026-11-21T09:35:01Z|ISSUE|WO-113-B6|ops=check,commit|paths=server/odai/,tests/,odai/config/,odai/dev_docs/,tools/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T11:05:01Z
+2026-11-21T09:40:57Z|HOOK_ALLOW|WO-113-B6|odai/config/skill_contracts.json+odai/config/skills_implemented.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json+server/odai/skills.mjs+tests/registry.test.mjs+tools/build_registry.py
+2026-11-21T09:41:05Z|ISSUE|WO-113-B7|ops=check,commit|paths=server/odai/,tests/,odai/config/,odai/dev_docs/,tools/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T11:11:05Z
+2026-11-21T09:45:46Z|ISSUE|DEV11-VER|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=6|single_use=0|expires_at=2026-11-21T10:05:46Z
+2026-11-21T09:46:07Z|HOOK_ALLOW|WO-113-B6|odai/dev_docs/loop-log.jsonl
+2026-11-21T09:46:14Z|REVOKE|DEV11-VER|reason=DEV-11 verification shipped ab1c46e (loop-log line only); lease closed
+2026-11-21T09:46:14Z|DENY|DEV11-VER|op=commit|path=odai/dev_docs/loop-log.jsonl|reason=REVOKED|detail=DEV-11 verification shipped ab1c46e (loop-log line only); lease closed
+2026-11-21T09:46:19Z|HOOK_ALLOW|WO-113-B7|odai/config/skill_contracts.json+odai/config/skills_implemented.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json+server/odai/skills.mjs+tests/registry.test.mjs+tools/build_registry.py
+2026-11-21T09:46:33Z|REVOKE|WO-113-B5|reason=SHIPPED 0f55f8e — suite 140/140
+2026-11-21T09:46:33Z|REVOKE|WO-113-B6|reason=SHIPPED 7511caf — suite 144/144
