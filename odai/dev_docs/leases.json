@@ -301,6 +301,22 @@
     "revoked_reason": "UI-01 SHIPPED (staged, NO publish; files: src/TalkView.tsx expandable chips + typed-objective path, src/IntentChips.tsx NEW chip/plan-card module, src/styles.css UI-01 light block + intentlist removed",
     "revoked_at": "2026-11-20T14:35:58Z"
   },
+  "WO-V42PREP": {
+    "issued_at": "2026-11-21T06:19:33Z",
+    "expires_at": "2026-11-21T06:39:33Z",
+    "minutes": 20,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "ZZZ-V4-BYP": {
     "issued_at": "2026-11-21T02:29:56Z",
     "expires_at": "2026-11-21T02:34:56Z",

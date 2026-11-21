@@ -109,3 +109,5 @@
 2026-11-21T02:30:14Z|REVOKE|ZZZ-V4-BYP|reason=bypass audit fixture
 2026-11-21T02:33:46Z|HOOK_ALLOW|DEV11-V|odai/dev_docs/dev11-verification-wo111c.md
 2026-11-21T02:34:02Z|REVOKE|DEV11-V|reason=DEV11-V SHIPPED — WO-111C verdict PASS-WITH-GAPS (allow-path proof via live hook; report in odai/dev_docs/)
+2026-11-21T02:34:02Z|HOOK_ALLOW|DEV11-V|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-21T06:19:33Z|ISSUE|WO-V42PREP|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=12|single_use=0|expires_at=2026-11-21T06:39:33Z
