@@ -169,8 +169,12 @@
     ],
     "budget": 12,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "loop close for this wake complete",
+    "revoked_at": "2026-11-21T11:11:37Z"
   },
   "LOOP-CLOSE2": {
     "issued_at": "2026-11-21T09:47:40Z",
@@ -231,6 +235,22 @@
     "revoked": true,
     "revoked_reason": "end-of-wake",
     "revoked_at": "2026-11-21T09:48:06Z"
+  },
+  "LOOP-VER-B4": {
+    "issued_at": "2026-11-21T11:12:02Z",
+    "expires_at": "2026-11-21T11:32:02Z",
+    "minutes": 20,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
   },
   "UI-01B": {
     "issued_at": "2026-11-20T17:30:18Z",
