@@ -156,6 +156,22 @@
     "revoked_reason": "close complete",
     "revoked_at": "2026-11-21T09:47:21Z"
   },
+  "LOOP-CLOSE-B8": {
+    "issued_at": "2026-11-21T11:11:36Z",
+    "expires_at": "2026-11-21T11:31:36Z",
+    "minutes": 20,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "LOOP-CLOSE2": {
     "issued_at": "2026-11-21T09:47:40Z",
     "expires_at": "2026-11-21T09:57:40Z",
@@ -647,8 +663,12 @@
     ],
     "budget": 12,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 7
+    },
+    "revoked": true,
+    "revoked_reason": "SHIPPED b83f050; suite 153/153",
+    "revoked_at": "2026-11-21T11:11:36Z"
   },
   "WO-A1": {
     "issued_at": "2026-11-20T14:37:22Z",

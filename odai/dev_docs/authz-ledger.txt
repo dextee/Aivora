@@ -211,3 +211,6 @@
 2026-11-21T10:45:50Z|HOOK_ALLOW|DEV11-VER2|odai/dev_docs/loop-log.jsonl
 2026-11-21T10:45:50Z|REVOKE|DEV11-VER2|reason=verification shipped; loop-log line committed; lease closed
 2026-11-21T10:55:27Z|ISSUE|WO-113-B8|ops=check,commit|paths=server/odai/,tests/,odai/config/,odai/dev_docs/,tools/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T12:25:27Z
+2026-11-21T11:11:18Z|HOOK_ALLOW|WO-113-B8|odai/config/skill_contracts.json+odai/config/skills_implemented.json+odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json+server/odai/skills.mjs+tests/registry.test.mjs+tools/build_registry.py
+2026-11-21T11:11:36Z|REVOKE|WO-113-B8|reason=SHIPPED b83f050; suite 153/153
+2026-11-21T11:11:36Z|ISSUE|LOOP-CLOSE-B8|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=12|single_use=0|expires_at=2026-11-21T11:31:36Z
