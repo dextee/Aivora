@@ -1589,6 +1589,191 @@ export function skill_brand_setup_specialist(input = {}) {
   };
 }
 
+/* ---- inventory-validator (SK-028) — stock/SKU validation over SUPPLIED verified records
+ * with stale-data controls. Supplier source is connector-bound (Supabase/supplier TBD):
+ * nothing is fetched and stock is NEVER written here; unknown quantities stay UNKNOWN.
+ * out: typed_artifact{inventory_validation}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_inventory_validate(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const records = Array.isArray(vdi.sku_records) && vdi.sku_records.length ? vdi.sku_records : null;
+  if (!records) return { status: "REJECTED", reason: "sku_records[] required — stock counts are never invented or fetched", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["records_absent"], cost_actual: 0, approval_requests: [] };
+  const checkedOn = String(vdi.checked_on || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(checkedOn)) return { status: "REJECTED", reason: "checked_on (YYYY-MM-DD) required — staleness cannot be evaluated without an as-of date", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["as_of_absent"], cost_actual: 0, approval_requests: [] };
+  const maxAge = Number.isFinite(Number(vdi.max_age_days)) ? Number(vdi.max_age_days) : 7;
+  const tenant = get(String(input.tenant_id));
+  const catalogSkus = new Set((((tenant && tenant.products) || [])).map((p) => String(p.sku || p.id)));
+  const rows = records.map((raw, i) => {
+    const r = raw && typeof raw === "object" ? raw : {};
+    const sku = String(r.sku || "SKU-" + (i + 1));
+    const problems = [];
+    const qty = r.qty;
+    if (qty === undefined || qty === null || qty === "") problems.push("STOCK_UNKNOWN_never_assumed");
+    else if (!Number.isInteger(Number(qty)) || Number(qty) < 0) problems.push("DATA_ERROR_negative_or_noninteger_qty");
+    const upd = String(r.updated_at || "");
+    let ageDays = null;
+    if (!upd) problems.push("NO_UPDATED_AT_staleness_uncheckable");
+    else {
+      const t1 = Date.parse(upd), t0 = Date.parse(checkedOn);
+      if (!Number.isFinite(t1) || !Number.isFinite(t0)) problems.push("DATA_ERROR_unparseable_date");
+      else { ageDays = Math.floor((t0 - t1) / 86400000); if (ageDays > maxAge) problems.push("STALE_" + ageDays + "d_gt_" + maxAge + "d"); }
+    }
+    if (catalogSkus.size && !catalogSkus.has(sku)) problems.push("NOT_IN_TENANT_CATALOG");
+    const q = Number(qty);
+    if (Number.isInteger(q) && q >= 0 && r.reorder_point !== undefined && q <= Number(r.reorder_point)) problems.push("AT_OR_BELOW_REORDER_POINT");
+    const stale = problems.some((p) => p.startsWith("STALE") || p === "NO_UPDATED_AT_staleness_uncheckable");
+    const state = problems.includes("DATA_ERROR_negative_or_noninteger_qty") || problems.includes("DATA_ERROR_unparseable_date") ? "DATA_ERROR"
+      : stale ? "UNRELIABLE_stale_source" : problems.includes("STOCK_UNKNOWN_never_assumed") ? "UNKNOWN"
+      : q === 0 ? "OUT_OF_STOCK" : "IN_STOCK_VERIFIED_AS_SUPPLIED";
+    return { sku, qty: Number.isInteger(q) && q >= 0 ? q : null, age_days: ageDays, state, problems, source_ref: r.source_ref ? String(r.source_ref) : null };
+  });
+  const bad = rows.filter((x) => x.state !== "IN_STOCK_VERIFIED_AS_SUPPLIED");
+  const invId = stableId("INVCHK", [String(input.tenant_id), String(input.objective_id), checkedOn, rows.map((x) => x.sku + ":" + x.state).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "VALIDATION_OF_SUPPLIED_RECORDS", connector_note: "supplier/inventory system connector is TBD/BLOCKED class — no sync executed, stock never written by this module", inventory_validation: { validation_id: invId, checked_on: checkedOn, max_age_days: maxAge, skus: rows.length, reliable: rows.length - bad.length, needing_attention: bad.map((x) => ({ sku: x.sku, state: x.state, problems: x.problems })), rows } },
+    evidence_refs: [invId].concat(rows.slice(0, 20).map((x) => x.source_ref).filter(Boolean), (input.source_refs || []).map(String)),
+    uncertainty_flags: ["stock_figures_are_supplied_claims_not_physical_counts", "stale_records_cannot_confirm_current_availability"],
+    cost_actual: 0,
+    approval_requests: bad.length ? [{ scope: "inventory_correction_or_supplier_sync", auto: false, requires: "owner review — corrections confirm a real count; supplier sync needs a BLOCKED-class connector authorization; customer-facing availability never auto-updated" }] : [],
+  };
+}
+
+/* ---- optimization-agent (SK-032) — KPI gap analysis + CONSTRAINED experiment proposals.
+ * Boundary (sheet-04): propose improvements; NO direct spend. Experiments are drafts with
+ * declared guardrails; any funded path must first pass SEC-05 budget reservations and the
+ * approval gateway. Figures come only from supplied KPI records — nothing benchmarked online.
+ * out: typed_artifact{kpi_analysis, experiment_proposals}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_optimization_advise(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const kpis = Array.isArray(vdi.kpis) && vdi.kpis.length ? vdi.kpis : null;
+  if (!kpis) return { status: "REJECTED", reason: "kpis[] required — metrics are measured from supplied records, never invented", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["kpis_absent"], cost_actual: 0, approval_requests: [] };
+  const analysis = kpis.map((raw, i) => {
+    const k = raw && typeof raw === "object" ? raw : {};
+    const name = String(k.name || "KPI-" + (i + 1));
+    const cur = Number(k.current), tgt = Number(k.target);
+    const dir = k.direction === "down" ? "down" : "up";
+    if (!Number.isFinite(cur)) return { name, state: "UNMEASURABLE", note: "current value absent — no analysis is fabricated" };
+    if (!Number.isFinite(tgt)) return { name, current: cur, state: "NO_TARGET", note: "declare a target to measure a gap — targets are never guessed" };
+    const gap = dir === "up" ? tgt - cur : cur - tgt;
+    const pct = tgt !== 0 ? Math.round(Math.abs(gap) / Math.abs(dir === "up" ? tgt : cur) * 1000) / 10 : null;
+    const state = gap <= 0 ? "ACHIEVED" : (pct !== null && pct <= 10 ? "NEAR_TARGET" : "OFF_TRACK");
+    return { name, current: cur, target: tgt, direction: dir, gap: Math.round(gap * 100) / 100, gap_pct: pct, state };
+  });
+  const proposals = analysis.filter((a) => a.state === "OFF_TRACK" || a.state === "NEAR_TARGET").slice(0, 5).map((a, i) => ({
+    experiment_id: "EXP-" + (i + 1), targets_kpi: a.name,
+    draft_design: "A/B the top traffic entry for '" + a.name + "' with ONE changed variable; compare over a fixed declared window",
+    constraints: { variables_changed_max: 1, spend_per_experiment_myr: vdi.experiment_budget_cap_myr !== undefined ? Number(vdi.experiment_budget_cap_myr) : "UNSET_owner_to_declare", guardrail_kpi: vdi.guardrail_kpi ? String(vdi.guardrail_kpi) : "margin_must_not_degrade" },
+    funding: "NO direct spend — funded experiments require SEC-05 budget reservation + owner approval first",
+    status: "PROPOSED_DRAFT",
+  }));
+  const optId = stableId("OPTA", [String(input.tenant_id), String(input.objective_id), analysis.map((a) => a.name + ":" + a.state).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "ADVISORY_NO_SPEND", kpi_analysis: { analysis_id: optId, evaluated: analysis.length, off_track: analysis.filter((a) => a.state === "OFF_TRACK").length, achieved: analysis.filter((a) => a.state === "ACHIEVED").length, rows: analysis }, experiment_proposals: proposals, external_benchmarks: "NONE cited — no network; comparisons use only supplied tenant records" },
+    evidence_refs: [optId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["kpi_values_are_supplied_not_instrumented", "experiment_outcomes_cannot_be_predicted"],
+    cost_actual: 0,
+    approval_requests: proposals.length ? [{ scope: "run_experiment", auto: false, requires: "owner approval + declared budget cap (SEC-05 reservation path for any spend); this module proposes only" }] : [],
+  };
+}
+
+/* ---- recovery-audit-agent (SK-037) — incident containment/rollback PLANNING with
+ * immutable-audit guarantees. The single durable audit/recovery authority: it reads and
+ * references the append-only ledger, never a parallel store, and never mutates or deletes
+ * evidence. Rollback to an UNVERIFIED target is blocked, not guessed. Nothing executes.
+ * out: typed_artifact{recovery_plan, audit_chain_checks}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_recovery_audit(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const incident = vdi.incident && typeof vdi.incident === "object" ? vdi.incident : null;
+  if (!incident || !String(incident.incident_id || "").trim()) return { status: "REJECTED", reason: "incident{incident_id,...} required — incidents are reported by the owner/monitor, never invented", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["incident_absent"], cost_actual: 0, approval_requests: [] };
+  const timeline = Array.isArray(vdi.timeline) ? vdi.timeline : [];
+  const chainIssues = [];
+  let prevTs = null;
+  timeline.forEach((ev, i) => {
+    const ts = String((ev || {}).ts || "");
+    if (!ts) chainIssues.push({ index: i, issue: "EVIDENCE_GAP_missing_ts" });
+    else if (prevTs && Date.parse(ts) < Date.parse(prevTs)) chainIssues.push({ index: i, issue: "OUT_OF_ORDER_EVIDENCE" });
+    if (ts) prevTs = ts;
+    if (!(ev || {}).evidence_ref) chainIssues.push({ index: i, issue: "EVIDENCE_GAP_no_ref" });
+  });
+  const targets = Array.isArray(vdi.rollback_targets) ? vdi.rollback_targets : [];
+  const rollback = targets.map((t) => ({ ref: String((t || {}).ref || "(unlabelled)"), allowed: (t || {}).verified === true, verdict: (t || {}).verified === true ? "ROLLBACK_CANDIDATE_verified" : "ROLLBACK_BLOCKED_unverified_target" }));
+  const contained = String(incident.containment_state || "reported");
+  const plan = [
+    "1. PRESERVE evidence as-is — the WO-104 money ledger is append-only and audit lines are immutable; nothing is edited or deleted during recovery",
+    "2. CONFIRM blast radius from the supplied timeline (" + timeline.length + " events, " + chainIssues.length + " chain issues)",
+    "3. ROLLBACK only to a verified target: " + (rollback.some((r) => r.allowed) ? rollback.filter((r) => r.allowed).map((r) => r.ref).join(", ") : "NONE verified — rollback stays blocked"),
+    "4. CLOSE the incident only with owner sign-off (verdict RECOVERED is never self-declared)",
+  ];
+  const recId = stableId("RECOV", [String(input.tenant_id), String(incident.incident_id), String(contained), rollback.map((r) => r.verdict).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "PLANNING_ONLY_nothing_executed", authority_note: "SK-037 is the single durable audit/recovery authority — no parallel audit store; evidence integrity inherited from append-only ledger (WO-104)", recovery_plan: { plan_id: recId, incident_id: String(incident.incident_id), severity: String(incident.severity || "unspecified"), containment_state: contained, steps: plan, rollback_targets: rollback, evidence_chain_issues: chainIssues, timeline_events: timeline.length } },
+    evidence_refs: [recId].concat(timeline.slice(0, 25).map((e) => String((e || {}).evidence_ref || "")).filter(Boolean), (input.source_refs || []).map(String)),
+    uncertainty_flags: ["timeline_is_supplied_not_reconstructed_from_live_system", "root_cause_not_asserted_without_evidence"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "execute_rollback_or_close_incident", auto: false, requires: "owner approves each step; this module plans and checks the chain — execution stays with the owner-run pipeline" }],
+  };
+}
+
+/* ---- refund-case-agent (SK-038) — approval-bound refund/dispute CASE ASSEMBLY.
+ * Payment provider is connector-bound (TBD/BLOCKED owner-token class): this module NEVER
+ * issues refunds or writes money events. It evaluates supplied cases against the supplied
+ * policy (window, non-refundable list), routes disputes, and asks one plain-language
+ * question per case when essential records are missing. Links to SK-034 reconciliation.
+ * out: typed_artifact{refund_cases}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_refund_case(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const cases = Array.isArray(vdi.cases) && vdi.cases.length ? vdi.cases : null;
+  if (!cases) return { status: "REJECTED", reason: "cases[] required — refund cases come from real orders, never invented", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["cases_absent"], cost_actual: 0, approval_requests: [] };
+  const policy = vdi.refund_policy && typeof vdi.refund_policy === "object" ? vdi.refund_policy : null;
+  if (!policy || !Number.isFinite(Number(policy.window_days))) return { status: "REJECTED", reason: "refund_policy{window_days} required — eligibility is measured against YOUR declared policy, not an assumed one", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["policy_absent"], cost_actual: 0, approval_requests: [] };
+  const asOf = String(vdi.checked_on || policy.as_of || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(asOf)) return { status: "REJECTED", reason: "checked_on (YYYY-MM-DD) required to evaluate the window", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["as_of_absent"], cost_actual: 0, approval_requests: [] };
+  const nonRef = (Array.isArray(policy.non_refundable) ? policy.non_refundable : []).map(String);
+  const evaluated = cases.map((raw, i) => {
+    const c = raw && typeof raw === "object" ? raw : {};
+    const id = String(c.case_id || "RC-" + (i + 1));
+    const amt = Number(c.amount_myr);
+    const problems = [];
+    const questions = [];
+    if (!String(c.order_ref || "").trim()) { problems.push("NO_ORDER_REF"); questions.push("Which order does this refund request belong to?"); }
+    if (!Number.isFinite(amt) || amt <= 0) { problems.push("AMOUNT_MISSING_or_nonpositive"); questions.push("What amount is being refunded?"); }
+    let inWindow = null;
+    const bought = String(c.purchased_on || ""), asked = String(c.requested_on || "");
+    if (!bought || !asked) { problems.push("DATES_INCOMPLETE"); questions.push("When was the order placed and when was the refund requested?"); }
+    else {
+      const age = Math.floor((Date.parse(asked) - Date.parse(bought)) / 86400000);
+      if (!Number.isFinite(age)) { problems.push("DATES_UNPARSEABLE"); }
+      else inWindow = age <= Number(policy.window_days);
+      if (inWindow === false) problems.push("OUTSIDE_POLICY_WINDOW_" + policy.window_days + "d");
+    }
+    if (c.reason && nonRef.includes(String(c.reason))) problems.push("NON_REFUNDABLE_PER_POLICY:" + String(c.reason));
+    const amountVsCap = Number.isFinite(Number(policy.max_auto_none)) ? null : null; // refunds are never auto regardless of amount
+    const state = c.dispute === true ? "DISPUTE_WORKFLOW" : problems.length ? "HOLD_needs_owner" : "APPROVE_PENDING_owner_decision";
+    return { case_id: id, order_ref: c.order_ref ? String(c.order_ref) : null, amount_myr: Number.isFinite(amt) ? Math.round(amt * 100) / 100 : null, in_window: inWindow, state, problems, plain_language_question: questions[0] || null, dispute: c.dispute === true, execution: "REFUND_NEVER_ISSUED_HERE — approved cases become money events only via owner-run path (SK-034 reconciliation confirms settlement)" };
+  });
+  const pend = evaluated.filter((e) => e.state === "APPROVE_PENDING_owner_decision");
+  const holds = evaluated.filter((e) => e.state !== "APPROVE_PENDING_owner_decision");
+  const refId = stableId("REFUND", [String(input.tenant_id), String(input.objective_id), evaluated.map((e) => e.case_id + ":" + e.state).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "CASE_ASSEMBLY_ONLY", connector_class: "payment provider TBD/BLOCKED — zero refund API calls", refund_cases: { batch_id: refId, policy_window_days: Number(policy.window_days), as_of: asOf, evaluated: evaluated.length, pending_owner_approval: pend.length, on_hold: holds.length, rows: evaluated } },
+    evidence_refs: [refId].concat(evaluated.slice(0, 25).map((e) => e.order_ref).filter(Boolean), (input.source_refs || []).map(String)),
+    uncertainty_flags: ["case_facts_are_supplied_not_provider_verified", "policy_application_advisory_until_owner_approves"],
+    cost_actual: 0,
+    approval_requests: evaluated.length ? [{ scope: "approve_refunds", auto: false, requires: holds.length + " held case(s) need records/policy reconciliation; " + pend.length + " pending case(s) need explicit owner approval per case before any money moves — customer contact about outcomes also gated (SK-014 consent, SK-006 drafts)" }] : [],
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
@@ -1610,6 +1795,8 @@ export const P0_SKILL_FUNCTIONS = {
   "payment-reconciler": skill_payment_reconcile, "site-qa-tester": skill_site_qa,
   "threat-monitor": skill_threat_monitor, "identity-agent": skill_identity_agent,
   "content-planner": skill_content_planner, "brand-setup-specialist": skill_brand_setup_specialist,
+  "inventory-validator": skill_inventory_validate, "optimization-agent": skill_optimization_advise,
+  "recovery-audit-agent": skill_recovery_audit, "refund-case-agent": skill_refund_case,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be

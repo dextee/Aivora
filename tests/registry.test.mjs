@@ -26,7 +26,7 @@ before(async () => {
 after(() => child?.kill());
 
 import { criterionFromText, matchObjective, planFor, registrySummary, validatePlanEdges } from "../server/odai/registry.mjs";
-import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate, skill_budget_plan, skill_crm_followup, skill_cashflow_forecast, skill_wan_video_create, skill_consent_check, skill_localization_specialist, skill_payment_reconcile, skill_site_qa, skill_threat_monitor, skill_identity_agent, skill_content_planner, skill_brand_setup_specialist } from "../server/odai/skills.mjs";
+import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate, skill_budget_plan, skill_crm_followup, skill_cashflow_forecast, skill_wan_video_create, skill_consent_check, skill_localization_specialist, skill_payment_reconcile, skill_site_qa, skill_threat_monitor, skill_identity_agent, skill_content_planner, skill_brand_setup_specialist, skill_inventory_validate, skill_optimization_advise, skill_recovery_audit, skill_refund_case } from "../server/odai/skills.mjs";
 import { budgetScope } from "../server/odai/reservations.mjs";
 import { get } from "../server/odai/store.mjs";
 import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledger.mjs";
@@ -482,8 +482,12 @@ test("A1: P0 modules honor NEEDS_INPUT/REJECTED error contract + produce declare
     "identity-agent": skill_identity_agent({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T26", source_refs: ["s"], validated_domain_inputs: { role_matrix: { assistant: ["read"] }, sessions: [{ session_id: "S1", role: "assistant", requested_actions: ["read"] }] } }),
     "content-planner": skill_content_planner({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T27", source_refs: ["s"], validated_domain_inputs: { platforms: ["facebook"], weeks: 1, goal: "grow pre-orders" } }),
     "brand-setup-specialist": skill_brand_setup_specialist({ products: [{ name: "Hemp Tea" }], audience: "urban wellness buyers", brand_preferences: { keywords: ["calm"], suffixes: ["ly"] }, tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T28", source_refs: ["s"] }),
+    "inventory-validator": skill_inventory_validate({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T29", source_refs: ["s"], validated_domain_inputs: { checked_on: "2026-11-21", sku_records: [{ sku: "A", qty: 1, updated_at: "2026-11-20" }] } }),
+    "optimization-agent": skill_optimization_advise({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T30", source_refs: ["s"], validated_domain_inputs: { kpis: [{ name: "conversion", current: 1, target: 4 }] } }),
+    "recovery-audit-agent": skill_recovery_audit({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T31", source_refs: ["s"], validated_domain_inputs: { incident: { incident_id: "I1" }, timeline: [] } }),
+    "refund-case-agent": skill_refund_case({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T32", source_refs: ["s"], validated_domain_inputs: { checked_on: "2026-11-21", refund_policy: { window_days: 14 }, cases: [{ case_id: "C1", order_ref: "O1", amount_myr: 5, purchased_on: "2026-11-15", requested_on: "2026-11-20" }] } }),
   });
-  assert.equal(audit.length, 42);
+  assert.equal(audit.length, 46);
   for (const a of audit) assert.equal(a.ok, true, a.family + " " + JSON.stringify(a));
 });
 
@@ -1322,6 +1326,152 @@ test("T2i: real-HTTP — spawned engine serves batch-9 P0 wiring in /api/odai/re
   assert.equal(fam.get("brand-setup-specialist"), "SK-003");
   assert.equal(reg.counts.skills, 59);
   const progress = JSON.parse(readFileSync(new URL("odai/config/skills_implemented.json", root), "utf8"));
-  assert.equal(progress.accounting.implemented, 42);
-  assert.equal(progress.accounting.remaining_buildable, 16);
+  assert.equal(progress.accounting.implemented >= 42, true, "monotonic progress marker (batch-9 floor)");
+  assert.equal(progress.implemented.length, progress.accounting.implemented);
+});
+
+/* ---------------- 11. WO-113 tranche-2 batch 10 — inventory / optimization / recovery-audit / refund ---------------- */
+test("T2j: SK-028 inventory validator — stale-data controls, unknown never assumed, supplier sync BLOCKED, nothing written", () => {
+  assert.equal(skill_inventory_validate({}).status, "NEEDS_INPUT");
+  const noRec = skill_inventory_validate({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { checked_on: "2026-11-21" } });
+  assert.equal(noRec.status, "REJECTED"); assert.match(noRec.reason, /sku_records/);
+  const noAsOf = skill_inventory_validate({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { sku_records: [{ sku: "A" }] } });
+  assert.equal(noAsOf.status, "REJECTED"); assert.match(noAsOf.reason, /checked_on/);
+  const base = { tenant_id: "w113b10a", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["src:stock"], validated_domain_inputs: {
+    checked_on: "2026-11-21", max_age_days: 7, sku_records: [
+      { sku: "OK1", qty: 5, updated_at: "2026-11-20" },
+      { sku: "Z0", qty: 0, updated_at: "2026-11-20" },
+      { sku: "UNK", updated_at: "2026-11-20" },
+      { sku: "OLD", qty: 3, updated_at: "2026-01-01" },
+      { sku: "NEG", qty: -2, updated_at: "2026-11-20" },
+      { sku: "REORDER", qty: 5, updated_at: "2026-11-20", reorder_point: 5 },
+    ] } };
+  const r = skill_inventory_validate(base);
+  assert.equal(r.status, "OK");
+  const iv = r.typed_artifact.inventory_validation;
+  const s = (id) => iv.rows.find((x) => x.sku === id);
+  assert.equal(s("OK1").state, "IN_STOCK_VERIFIED_AS_SUPPLIED");
+  assert.equal(s("Z0").state, "OUT_OF_STOCK");
+  assert.equal(s("UNK").state, "UNKNOWN");
+  assert.ok(s("UNK").problems.includes("STOCK_UNKNOWN_never_assumed"));
+  assert.equal(s("OLD").state, "UNRELIABLE_stale_source");
+  assert.ok(s("OLD").problems.some((x) => x.startsWith("STALE_")));
+  assert.equal(s("NEG").state, "DATA_ERROR");
+  assert.equal(s("REORDER").state, "IN_STOCK_VERIFIED_AS_SUPPLIED");
+  assert.ok(s("REORDER").problems.includes("AT_OR_BELOW_REORDER_POINT"), "reorder signal recorded without inventing a PO");
+  assert.equal(iv.needing_attention.length, 4);
+  assert.match(r.typed_artifact.mode, /VALIDATION_OF_SUPPLIED_RECORDS/);
+  assert.match(r.typed_artifact.connector_note, /BLOCKED/);
+  assert.equal(r.approval_requests.length, 1); assert.equal(r.approval_requests[0].auto, false);
+  assert.equal(iv.validation_id, skill_inventory_validate(base).typed_artifact.inventory_validation.validation_id, "deterministic");
+  assert.equal(r.cost_actual, 0);
+});
+
+test("T2j: SK-032 optimization agent — gaps from declared targets only, one-variable experiments, zero direct spend, SEC-05 path noted", () => {
+  assert.equal(skill_optimization_advise({}).status, "NEEDS_INPUT");
+  const noK = skill_optimization_advise({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noK.status, "REJECTED"); assert.match(noK.reason, /kpis/);
+  const r = skill_optimization_advise({ tenant_id: "w113b10o", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["src:kpi"], validated_domain_inputs: {
+    experiment_budget_cap_myr: 50, guardrail_kpi: "margin",
+    kpis: [
+      { name: "conversion", current: 1, target: 4, direction: "up" },
+      { name: "margin", current: 30, target: 30 },
+      { name: "revenue", current: 9, target: 10, direction: "up" },
+      { name: "traffic", current: "abc", target: 10 },
+      { name: "leads", current: 5 },
+    ] } });
+  assert.equal(r.status, "OK");
+  const a = r.typed_artifact.kpi_analysis;
+  const k = (n) => a.rows.find((x) => x.name === n);
+  assert.equal(k("conversion").state, "OFF_TRACK");
+  assert.equal(k("conversion").gap_pct, 75);
+  assert.equal(k("margin").state, "ACHIEVED");
+  assert.equal(k("revenue").state, "NEAR_TARGET");
+  assert.equal(k("traffic").state, "UNMEASURABLE", "non-numeric current is refused, never coerced");
+  assert.equal(k("leads").state, "NO_TARGET", "targets are never guessed");
+  assert.equal(r.typed_artifact.experiment_proposals.length, 2);
+  const exp = r.typed_artifact.experiment_proposals[0];
+  assert.equal(exp.constraints.variables_changed_max, 1);
+  assert.equal(exp.constraints.spend_per_experiment_myr, 50);
+  assert.match(exp.funding, /SEC-05 budget reservation/);
+  assert.equal(exp.status, "PROPOSED_DRAFT");
+  assert.equal(r.typed_artifact.mode, "ADVISORY_NO_SPEND");
+  assert.match(r.typed_artifact.external_benchmarks, /NONE/);
+  assert.equal(r.approval_requests[0].auto, false);
+  assert.equal(a.off_track, 1);
+});
+
+test("T2j: SK-037 recovery audit — evidence chain gaps/out-of-order flagged, unverified rollback blocked, nothing executed, single authority", () => {
+  assert.equal(skill_recovery_audit({}).status, "NEEDS_INPUT");
+  const noInc = skill_recovery_audit({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noInc.status, "REJECTED"); assert.match(noInc.reason, /incident/);
+  const base = { tenant_id: "w113b10r", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["src:ir"], validated_domain_inputs: {
+    incident: { incident_id: "INC-7", severity: "high", containment_state: "reported" },
+    timeline: [
+      { ts: "2026-11-21T10:00:00Z", action: "spike seen", evidence_ref: "EV-1" },
+      { ts: "2026-11-21T09:00:00Z", action: "earlier event recorded late", evidence_ref: "EV-2" },
+      { ts: "2026-11-21T11:00:00Z", action: "no ref attached" },
+    ],
+    rollback_targets: [{ ref: "release-42", verified: true }, { ref: "release-41" }] } };
+  const r = skill_recovery_audit(base);
+  assert.equal(r.status, "OK");
+  const rp = r.typed_artifact.recovery_plan;
+  assert.equal(rp.rollback_targets[0].allowed, true);
+  assert.equal(rp.rollback_targets[1].verdict, "ROLLBACK_BLOCKED_unverified_target");
+  assert.equal(rp.evidence_chain_issues.length, 2);
+  assert.ok(rp.evidence_chain_issues.some((x) => x.issue === "OUT_OF_ORDER_EVIDENCE"));
+  assert.ok(rp.evidence_chain_issues.some((x) => x.issue === "EVIDENCE_GAP_no_ref"));
+  assert.equal(rp.steps.length, 4);
+  assert.match(rp.steps[0], /append-only/);
+  assert.match(rp.steps[3], /never self-declared/);
+  assert.match(r.typed_artifact.authority_note, /single durable audit\/recovery authority/);
+  assert.equal(r.typed_artifact.mode, "PLANNING_ONLY_nothing_executed");
+  assert.equal(r.approval_requests[0].auto, false);
+  assert.equal(rp.plan_id, skill_recovery_audit(base).typed_artifact.recovery_plan.plan_id);
+});
+
+test("T2j: SK-038 refund case agent — policy-window math, one plain question per gap, dispute routing, refund NEVER issued (connector BLOCKED)", () => {
+  assert.equal(skill_refund_case({}).status, "NEEDS_INPUT");
+  const noPol = skill_refund_case({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { cases: [{ case_id: "C" }] } });
+  assert.equal(noPol.status, "REJECTED"); assert.match(noPol.reason, /refund_policy/);
+  const r = skill_refund_case({ tenant_id: "w113b10f", objective_id: "UC-001", task_id: "UC-001-T04", source_refs: ["src:cs"], validated_domain_inputs: {
+    checked_on: "2026-11-21", refund_policy: { window_days: 14, non_refundable: ["final_sale"] },
+    cases: [
+      { case_id: "C1", order_ref: "O-1", amount_myr: 50, purchased_on: "2026-11-15", requested_on: "2026-11-20" },
+      { case_id: "C2", order_ref: "O-2", amount_myr: 30, purchased_on: "2026-01-01", requested_on: "2026-11-20" },
+      { case_id: "C3", order_ref: "O-3", amount_myr: 20, purchased_on: "2026-11-18", requested_on: "2026-11-19", reason: "final_sale" },
+      { case_id: "C4" },
+      { case_id: "C5", order_ref: "O-5", amount_myr: 10, purchased_on: "2026-11-10", requested_on: "2026-11-20", dispute: true },
+    ] } });
+  assert.equal(r.status, "OK");
+  const rc = r.typed_artifact.refund_cases;
+  const c = (id) => rc.rows.find((x) => x.case_id === id);
+  assert.equal(c("C1").state, "APPROVE_PENDING_owner_decision");
+  assert.equal(c("C1").in_window, true);
+  assert.equal(c("C2").state, "HOLD_needs_owner");
+  assert.ok(c("C2").problems.includes("OUTSIDE_POLICY_WINDOW_14d"));
+  assert.ok(c("C3").problems.includes("NON_REFUNDABLE_PER_POLICY:final_sale"));
+  assert.equal(c("C4").plain_language_question, "Which order does this refund request belong to?", "one plain question, oldest gap first");
+  assert.equal(c("C5").state, "DISPUTE_WORKFLOW");
+  assert.equal(rc.pending_owner_approval, 1);
+  assert.equal(rc.on_hold, 4);
+  assert.equal(r.typed_artifact.mode, "CASE_ASSEMBLY_ONLY");
+  assert.match(r.typed_artifact.connector_class, /zero refund API calls/);
+  assert.match(c("C1").execution, /REFUND_NEVER_ISSUED_HERE/);
+  assert.match(c("C1").execution, /SK-034/);
+  assert.equal(r.approval_requests[0].auto, false);
+});
+
+test("T2j: real-HTTP — spawned engine serves batch-10 P0 wiring in /api/odai/registry", async () => {
+  const reg = await getj("/api/odai/registry");
+  const fam = new Map(reg.p0_skill_modules.map((x) => [x.family, x.skill_id]));
+  assert.equal(fam.get("inventory-validator"), "SK-028");
+  assert.equal(fam.get("optimization-agent"), "SK-032");
+  assert.equal(fam.get("recovery-audit-agent"), "SK-037");
+  assert.equal(fam.get("refund-case-agent"), "SK-038");
+  assert.equal(reg.counts.skills, 59);
+  const progress = JSON.parse(readFileSync(new URL("odai/config/skills_implemented.json", root), "utf8"));
+  assert.equal(progress.accounting.implemented >= 46, true, "monotonic progress marker (batch-10 floor)");
+  assert.equal(progress.implemented.length, progress.accounting.implemented);
+  assert.equal(progress.t3_next4[0], "SK-039", "queue head advances deterministically");
 });

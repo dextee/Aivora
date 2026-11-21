@@ -1,6 +1,6 @@
 {
  "work_order": "WO-113",
- "updated_at": "2026-11-21T11:31:28Z",
+ "updated_at": "2026-11-21T11:40:03Z",
  "implemented": [
   {
    "skill_id": "SK-009",
@@ -253,25 +253,49 @@
    "family": "brand-setup-specialist",
    "function": "skill_brand_setup_specialist",
    "batch": "WO-113-b9"
+  },
+  {
+   "skill_id": "SK-028",
+   "family": "inventory-validator",
+   "function": "skill_inventory_validate",
+   "batch": "WO-113-b10"
+  },
+  {
+   "skill_id": "SK-032",
+   "family": "optimization-agent",
+   "function": "skill_optimization_advise",
+   "batch": "WO-113-b10"
+  },
+  {
+   "skill_id": "SK-037",
+   "family": "recovery-audit-agent",
+   "function": "skill_recovery_audit",
+   "batch": "WO-113-b10"
+  },
+  {
+   "skill_id": "SK-038",
+   "family": "refund-case-agent",
+   "function": "skill_refund_case",
+   "batch": "WO-113-b10"
   }
  ],
  "connector_policy": "MOCK/SPEC_ONLY adapter surface only; LIVE paths BLOCKED owner-token class; SK-058 remains CONTRACT_ONLY",
  "remaining_t1": [],
- "t3_count": 16,
+ "t3_count": 12,
  "t3_next4": [
-  "SK-028",
-  "SK-032",
-  "SK-037",
-  "SK-038"
+  "SK-039",
+  "SK-042",
+  "SK-050",
+  "SK-059"
  ],
  "t3_head_note": "queue authority: skill_queue_remaining.json list order; SK-057 DISCONTINUED (built stub kept for audit trail per b7 record), SK-058 CONTRACT_HOLD",
  "accounting": {
   "target_modules": 58,
-  "implemented": 42,
+  "implemented": 46,
   "contract_hold": 1,
   "contract_hold_ids": [
    "SK-058"
   ],
-  "remaining_buildable": 16
+  "remaining_buildable": 12
  }
 }

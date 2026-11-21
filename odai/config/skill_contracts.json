@@ -32,12 +32,16 @@
     "SK-025",
     "SK-026",
     "SK-027",
+    "SK-028",
     "SK-029",
     "SK-030",
     "SK-031",
+    "SK-032",
     "SK-033",
     "SK-034",
     "SK-035",
+    "SK-037",
+    "SK-038",
     "SK-040",
     "SK-041",
     "SK-044",
@@ -1413,9 +1417,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "inventory-validator",
+        "function": "skill_inventory_validate",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Stock checks",
@@ -1608,9 +1614,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "optimization-agent",
+        "function": "skill_optimization_advise",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "KPI analysis",
@@ -1856,9 +1864,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "recovery-audit-agent",
+        "function": "skill_recovery_audit",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Incident containment",
@@ -1905,9 +1915,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "refund-case-agent",
+        "function": "skill_refund_case",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Refund policy",

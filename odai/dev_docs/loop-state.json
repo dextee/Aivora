@@ -58,10 +58,10 @@
   },
   {
    "id": "WO-113",
-   "status": "IN_PROGRESS:batches1-9_shipped_42_modules_of_58_target(+SK-058 CONTRACT-HOLD)",
+   "status": "IN_PROGRESS:batches1-10_shipped_46_modules_of_58_target(+SK-058 CONTRACT-HOLD)",
    "paths": "server/odai,tests",
    "deps": [],
-   "spec": "42/58 buildable shipped; b9: SK-051 advisory threat monitor (never blocks), SK-027 identity validation (grants nothing, SK-035 enforces), SK-015 draft-only calendar (SK-057 DISCONTINUED recorded, video=SK-001 upload/reuse), SK-003 name ideation (availability NEVER claimed); next t3 head: SK-028,032,037,038; suite 158/158; hashes b7=68d45f2 b8=b83f050 b9=d0d3ed5"
+   "spec": "46/58 buildable shipped; b10: SK-028 stale-data-controlled inventory validation (unknown never assumed, supplier sync BLOCKED), SK-032 KPI gaps + one-variable experiments with zero direct spend (SEC-05 path), SK-037 recovery planning with immutable-chain checks (unverified rollback blocked, nothing executed), SK-038 approval-bound refund cases (one plain question, refund NEVER issued, connector BLOCKED); next head: SK-039,042,050,059; suite 163/163; hashes b8=b83f050 b9=d0d3ed5 b10=(pending)"
   },
   {
    "id": "E2E-10J",
@@ -343,5 +343,5 @@
    "verify": "DEV-11"
   }
  ],
- "updated_at": "2026-11-21T11:37:46Z"
+ "updated_at": "2026-11-21T11:43:09Z"
 }
