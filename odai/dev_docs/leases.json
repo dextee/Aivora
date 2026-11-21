@@ -88,8 +88,12 @@
     ],
     "budget": 12,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "SHIPPED",
+    "revoked_at": "2026-11-21T09:16:09Z"
   },
   "V43-REG": {
     "issued_at": "2026-11-21T08:41:44Z",

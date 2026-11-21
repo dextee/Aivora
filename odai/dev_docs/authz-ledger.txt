@@ -157,3 +157,5 @@
 2026-11-21T09:15:55Z|DENY|WO-113-B3|op=commit|path=odai/dev_docs/loop-log.jsonl|reason=REVOKED|detail=SHIPPED fe032c5 — 12 modules this wake
 2026-11-21T09:15:55Z|HOOK_DENY|WO-113-B3|WO-113-B3: tranche-2 batch 3 — SK-049/002/005/007 (documents-only supplier verdicts, lawful assumption-labelled audiences, constraint-fit model ranking, DRAFT_ONLY campaigns w/ BLOCKED activation) + builder wiring; t1_core_modules drained 10/10 + top-2 t3-queued refs into batch scope; suite 132/132, no publish
 2026-11-21T09:16:08Z|ISSUE|V42-CLOSE|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=12|single_use=0|expires_at=2026-11-21T09:36:08Z
+2026-11-21T09:16:09Z|HOOK_ALLOW|V42-CLOSE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl
+2026-11-21T09:16:09Z|REVOKE|V42-CLOSE|reason=SHIPPED
