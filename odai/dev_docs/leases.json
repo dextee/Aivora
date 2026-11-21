@@ -96,6 +96,24 @@
     "revoked_reason": "verification committed 8461243, no further writes",
     "revoked_at": "2026-11-21T13:29:21Z"
   },
+  "DEV11-SK-B9V": {
+    "issued_at": "2026-11-21T14:09:36Z",
+    "expires_at": "2026-11-21T14:34:36Z",
+    "minutes": 25,
+    "paths": [
+      "odai/dev_docs/loop-log.jsonl",
+      "odai/dev_docs/authz-ledger.txt",
+      "odai/dev_docs/leases.json"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "DEV11-V": {
     "issued_at": "2026-11-21T02:26:15Z",
     "expires_at": "2026-11-21T03:11:15Z",
@@ -459,6 +477,49 @@
     "revoked": true,
     "revoked_reason": "SHIPPED",
     "revoked_at": "2026-11-21T09:16:09Z"
+  },
+  "V43-PREP-RELAY": {
+    "issued_at": "2026-11-21T13:42:41Z",
+    "expires_at": "2026-11-21T14:12:41Z",
+    "minutes": 30,
+    "paths": [
+      "odai/contracts/",
+      "odai/dev_docs/",
+      "server/",
+      "tests/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": true,
+    "revoked_reason": "denied server.mjs out of scope; re-issue corrected",
+    "revoked_at": "2026-11-21T13:44:24Z"
+  },
+  "V43-PREP-RELAY2": {
+    "issued_at": "2026-11-21T13:44:24Z",
+    "expires_at": "2026-11-21T14:14:24Z",
+    "minutes": 30,
+    "paths": [
+      "odai/contracts/",
+      "odai/dev_docs/",
+      "server.mjs",
+      "server/ecom/",
+      "tests/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": true,
+    "revoked_reason": "relay commit dc719bf landed on feature/v43-hashmeta-ecommerce; branch-only, no publish",
+    "revoked_at": "2026-11-21T13:46:20Z"
   },
   "V43-REG": {
     "issued_at": "2026-11-21T08:41:44Z",

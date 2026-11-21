@@ -265,3 +265,12 @@
 2026-11-21T13:27:49Z|ISSUE|DEV11-SK-B8|ops=check,commit|paths=odai/dev_docs/,tests/|minutes=45|budget=12|single_use=0|expires_at=2026-11-21T14:12:49Z
 2026-11-21T13:28:26Z|HOOK_ALLOW|DEV11-SK-B8|odai/dev_docs/loop-log.jsonl
 2026-11-21T13:29:21Z|REVOKE|DEV11-SK-B8|reason=verification committed 8461243, no further writes
+2026-11-21T13:42:34Z|HOOK_ALLOW|DEV11-SK-B8|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-21T13:42:41Z|ISSUE|V43-PREP-RELAY|ops=check,commit|paths=odai/contracts/,odai/dev_docs/,server/,tests/|minutes=30|budget=12|single_use=0|expires_at=2026-11-21T14:12:41Z
+2026-11-21T13:44:24Z|REVOKE|V43-PREP-RELAY|reason=denied server.mjs out of scope; re-issue corrected
+2026-11-21T13:44:24Z|ISSUE|V43-PREP-RELAY2|ops=check,commit|paths=odai/contracts/,odai/dev_docs/,server.mjs,server/ecom/,tests/|minutes=30|budget=12|single_use=0|expires_at=2026-11-21T14:14:24Z
+2026-11-21T13:44:10Z|HOOK_DENY|V43-PREP-RELAY|V43-PREP-01 (local build): versioned ecom marketing API v1 + deterministic MOCK backend + engine-link projection (beat-6 governed drafts) + SIMULATED XSS-escaped preview + scoped suite; ECOM_MOCK fail-closed; Hashmeta/payment/publication gates preserved
+2026-11-21T13:44:11Z|DENY|V43-PREP-RELAY|op=commit|path=server.mjs|reason=PATH_NOT_ALLOWED|detail=relay worktree copy; line reconstructed from captured output (worktree gitdir pruned with worktree remove)
+2026-11-21T13:44:33Z|HOOK_ALLOW|V43-PREP-RELAY2|odai/contracts/ecom_marketing_api_v1.json+odai/dev_docs/v43_prep_notice.json+server.mjs+server/ecom/engine_adapter.mjs+server/ecom/marketing_mock.mjs+tests/ecom_prep_v1.test.mjs
+2026-11-21T13:46:20Z|REVOKE|V43-PREP-RELAY2|reason=relay commit dc719bf landed on feature/v43-hashmeta-ecommerce; branch-only, no publish
+2026-11-21T14:09:36Z|ISSUE|DEV11-SK-B9V|ops=check,commit|paths=odai/dev_docs/loop-log.jsonl,odai/dev_docs/authz-ledger.txt,odai/dev_docs/leases.json|minutes=25|budget=12|single_use=0|expires_at=2026-11-21T14:34:36Z
