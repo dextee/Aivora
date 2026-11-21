@@ -399,7 +399,10 @@ P0_MODULES = {
     "SK-059": {"module": "skill_social_performance_report", "family": "social-performance-reporter", "wo": "WO-113"},    "SK-001": {"module": "skill_asset_manage", "family": "asset-manager", "wo": "WO-113"},
     "SK-010": {"module": "skill_channel_publish", "family": "channel-publisher", "wo": "WO-113"},
     "SK-036": {"module": "skill_promotion_plan", "family": "promotion-planner", "wo": "WO-113"},
-    "SK-043": {"module": "skill_shipping_track", "family": "shipping-tracker", "wo": "WO-113"},
+    "SK-043": {"module": "skill_shipping_track", "family": "shipping-tracker", "wo": "WO-113"},    "SK-045": {"module": "skill_specialist_route", "family": "specialist-router", "wo": "WO-113"},
+    "SK-052": {"module": "skill_translation_agent", "family": "translation-agent", "wo": "WO-113"},
+    "SK-053": {"module": "skill_voice_telephony", "family": "voice-telephony-agent", "wo": "WO-113"},
+    "SK-054": {"module": "skill_voice_ux_guide", "family": "voice-ux-guide", "wo": "WO-113"},
 }
 
 # ---------------------------------------------------------------------------

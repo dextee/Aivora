@@ -58,10 +58,10 @@
   },
   {
    "id": "WO-113",
-   "status": "IN_PROGRESS:batches1-12_shipped_54_modules_of_58_target(+SK-058 CONTRACT-HOLD)",
+   "status": "DRained:58of58_buildable_shipped",
    "paths": "server/odai,tests",
    "deps": [],
-   "spec": "54/58 buildable shipped; b12: SK-001 asset rights/catalog validation (no Drive calls, no transcodes), SK-010 sole publishing gate (every post KEEPING_DRAFT), SK-036 draft price-math promos (floor flags, expiry explicit), SK-043 authorized-feed tracker (LIVE BLOCKED, ETA never invented); next/final head: SK-045,052,053,054; suite 173/173; hashes b10=372a2e2 b11=b33be0c b12=30dcec1"
+   "spec": "QUEUE DRAINED: 58/58 buildable implemented (incl audit-listed b7 SK-057 stub later DISCONTINUED by owner; SK-058 CONTRACT_HOLD never built); b13: SK-045/052/053/054; suite 178/178; b13 hash follows in close commit; per SCOPE-2 next priority = ENGINE-V2 demo trio (EN-3 replan, EN-2 parallel, EN-1 persistence) then tests/demo_judge.test.mjs"
   },
   {
    "id": "E2E-10J",
@@ -341,7 +341,14 @@
    "owners": "DEV-03/05/11",
    "mode_gate": "MOCK/SANDBOX; real payouts NEVER without owner authorization",
    "verify": "DEV-11"
+  },
+  {
+   "id": "ENGINEV2-TRIO",
+   "status": "PENDING",
+   "paths": "server/odai,tests",
+   "deps": [],
+   "spec": "SCOPE-2 ENGINE-V2 demo-critical trio per C3: EN-3 PATCH /api/odai/objectives/:id replan (deterministic diff, gates + spent reservations preserved, unneeded holds released atomically); EN-2 dependency-parallel executor (Promise.all over satisfied-deps frontier, provable DAG order, stress test); EN-1 persistence restart-safe resume via odai db module (replace V33-slot fallback; real restart test). Each = real-HTTP tests + suite green + DEV-11 submission. THEN tests/demo_judge.test.mjs green (owner section 6 flow)."
   }
  ],
- "updated_at": "2026-11-21T11:55:41Z"
+ "updated_at": "2026-11-21T11:59:32Z"
 }

@@ -26,7 +26,7 @@ before(async () => {
 after(() => child?.kill());
 
 import { criterionFromText, matchObjective, planFor, registrySummary, validatePlanEdges } from "../server/odai/registry.mjs";
-import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate, skill_budget_plan, skill_crm_followup, skill_cashflow_forecast, skill_wan_video_create, skill_consent_check, skill_localization_specialist, skill_payment_reconcile, skill_site_qa, skill_threat_monitor, skill_identity_agent, skill_content_planner, skill_brand_setup_specialist, skill_inventory_validate, skill_optimization_advise, skill_recovery_audit, skill_refund_case, skill_registration_advise, skill_shipping_rate, skill_tenant_onboard, skill_social_performance_report, skill_asset_manage, skill_channel_publish, skill_promotion_plan, skill_shipping_track } from "../server/odai/skills.mjs";
+import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate, skill_budget_plan, skill_crm_followup, skill_cashflow_forecast, skill_wan_video_create, skill_consent_check, skill_localization_specialist, skill_payment_reconcile, skill_site_qa, skill_threat_monitor, skill_identity_agent, skill_content_planner, skill_brand_setup_specialist, skill_inventory_validate, skill_optimization_advise, skill_recovery_audit, skill_refund_case, skill_registration_advise, skill_shipping_rate, skill_tenant_onboard, skill_social_performance_report, skill_asset_manage, skill_channel_publish, skill_promotion_plan, skill_shipping_track, skill_specialist_route, skill_translation_agent, skill_voice_telephony, skill_voice_ux_guide } from "../server/odai/skills.mjs";
 import { budgetScope } from "../server/odai/reservations.mjs";
 import { get } from "../server/odai/store.mjs";
 import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledger.mjs";
@@ -494,8 +494,12 @@ test("A1: P0 modules honor NEEDS_INPUT/REJECTED error contract + produce declare
     "channel-publisher": skill_channel_publish({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T35", source_refs: ["s"], validated_domain_inputs: { posts: [{ post_ref: "P1", channel: "facebook", text: "hi", approval_ref: "APR-1", idempotency_key: "IK-1" }] } }),
     "promotion-planner": skill_promotion_plan({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T36", source_refs: ["s"], validated_domain_inputs: { promotion: { type: "pct", value: 10, starts_on: "2026-12-01", ends_on: "2026-12-31", as_of: "2026-11-21" }, verified_base_prices: [{ sku: "A", price_myr: 20 }] } }),
     "shipping-tracker": skill_shipping_track({ carrier_reference: "TR-1", authorized_connector: "MOCK", tracking_feed: [{ carrier_reference: "TR-1", ts: "2026-11-20T08:00:00Z", status: "delivered" }], source_refs: ["s"] }),
+    "specialist-router": skill_specialist_route({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T37", source_refs: ["s"], validated_domain_inputs: { keywords: ["order validation"], registry_excerpt: [{ specialist: "S1", keywords: ["order validation"] }] } }),
+    "translation-agent": skill_translation_agent({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T38", source_refs: ["s"], validated_domain_inputs: { pairs: [{ id: "T1", source: "Nova ships 2 packs.", target: "Nova hantar 2 paket." }] } }),
+    "voice-telephony-agent": skill_voice_telephony({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T39", source_refs: ["s"], validated_domain_inputs: { telephony_provisioned: true, call_flows: [{ name: "F1", destination: "+60123456789", menu_prompts: "press one", terminates_at: "human" }] } }),
+    "voice-ux-guide": skill_voice_ux_guide({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T40", source_refs: ["s"], validated_domain_inputs: { locale: "ms", dialect_confirmed: true, dialogue_facts: [{ text: "Your order ships on Monday." }] } }),
   });
-  assert.equal(audit.length, 54);
+  assert.equal(audit.length, 58);
   for (const a of audit) assert.equal(a.ok, true, a.family + " " + JSON.stringify(a));
 });
 
@@ -1745,4 +1749,116 @@ test("T2l: real-HTTP — spawned engine serves batch-12 P0 wiring in /api/odai/r
   const progress = JSON.parse(readFileSync(new URL("odai/config/skills_implemented.json", root), "utf8"));
   assert.equal(progress.accounting.implemented >= 54, true, "monotonic progress marker (batch-12 floor)");
   assert.equal(progress.implemented.length, progress.accounting.implemented);
+});
+
+/* ---------------- 14. WO-113 tranche-2 batch 13 (queue-drain) — router / translation QA / telephony / voice UX ---------------- */
+test("T2m: SK-045 specialist router — one registry only, keyword-overlap proposals, ties and no-matches escalate, zero assignments", () => {
+  assert.equal(skill_specialist_route({}).status, "NEEDS_INPUT");
+  const noKw = skill_specialist_route({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noKw.status, "REJECTED"); assert.match(noKw.reason, /keywords/);
+  const env = (extra) => ({ tenant_id: "w113b13", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["src:registry"], validated_domain_inputs: { registry_excerpt: [
+    { specialist: "order-validator", keywords: ["order validation", "refund"] },
+    { specialist: "payment-reconciler", keywords: ["refund", "payments"] },
+  ], ...extra } });
+  assert.match(skill_specialist_route(env({ keywords: ["refund"] })).typed_artifact.routing.verdict, /^AMBIGUOUS/);
+  const tie = skill_specialist_route(env({ keywords: ["refund"] }));
+  assert.equal(tie.typed_artifact.routing.verdict, "AMBIGUOUS_owner_chooses");
+  assert.match(tie.approval_requests[0].requires, /tied candidates/);
+  assert.equal(skill_specialist_route(env({ keywords: ["order validation"] })).typed_artifact.routing.verdict, "PROPOSED:order-validator");
+  const none = skill_specialist_route(env({ keywords: ["quantum teleport"] }));
+  assert.equal(none.typed_artifact.routing.verdict, "NO_MATCH_escalate_to_owner");
+  const twoReg = skill_specialist_route(env({ keywords: ["refund"], secondary_registry: [] }));
+  assert.equal(twoReg.status, "REJECTED"); assert.match(twoReg.reason, /ONE registry/);
+  assert.match(twoReg.reason, /shadow catalog|dispatcher mapping/);
+  assert.match(skill_specialist_route(env({ keywords: ["refund"] })).typed_artifact.no_side_effects, /no task was assigned/);
+  assert.equal(skill_specialist_route(env({ keywords: ["refund"] })).cost_actual, 0);
+});
+
+test("T2m: SK-052 translation agent — QA only never translates, entity/numeral/placeholder/locked-term survival, unreviewed passes labelled, incomplete pairs excluded", () => {
+  assert.equal(skill_translation_agent({}).status, "NEEDS_INPUT");
+  const noP = skill_translation_agent({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noP.status, "REJECTED"); assert.match(noP.reason, /pairs/);
+  const r = skill_translation_agent({ tenant_id: "w113b13t", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["src:mt"], validated_domain_inputs: {
+    glossary: [{ term: "Hemp Tea" }],
+    pairs: [
+      { id: "T1", source: "NovaBrew Hemp Tea costs RM29.90 per {qty} pack.", target: "NovaBrew Hemp Tea berharga RM29.90 setiap {qty} pek.", human_reviewed: true },
+      { id: "T2", source: "Visit KLCC by 5pm.", target: "Kunjungi pada 5 petang." },
+      { id: "T3", source: "orphan line", target: "" },
+    ] } });
+  assert.equal(r.status, "OK");
+  const tq = r.typed_artifact.translation_qa;
+  const x = (id) => tq.rows.find((z) => z.item_id === id);
+  assert.equal(x("T1").state, "QA_PASS_reviewed");
+  assert.ok(x("T2").flags.includes("ENTITY_LOST:klcc"));
+  assert.equal(x("T3").state, "INCOMPLETE_PAIR_never_counted");
+  assert.equal(tq.incomplete, 1); assert.equal(tq.flagged, 1);
+  assert.match(r.typed_artifact.mode, /QA_ONLY_no_translation_generated/);
+  assert.match(r.approval_requests[0].requires, /must not ship/);
+  assert.equal(r.evidence_refs.length >= 1, true);
+});
+
+test("T2m: SK-053 voice telephony — blueprint only, E.164 enforced, human-terminating paths required, unprovisioned stays verify-need, zero calls", () => {
+  assert.equal(skill_voice_telephony({}).status, "NEEDS_INPUT");
+  const noF = skill_voice_telephony({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noF.status, "REJECTED"); assert.match(noF.reason, /call_flows/);
+  const flows = [{ name: "F1", destination: "+60123456789", menu_prompts: "press one for orders, two for the owner", terminates_at: "human" },
+                 { name: "F2", destination: "012-345 678", menu_prompts: "x", terminates_at: "ivrr-loop" },
+                 { name: "F3", destination: "+60198887777", terminates_at: "owner" }];
+  const ok = skill_voice_telephony({ tenant_id: "w113b13v", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["src:plan"], validated_domain_inputs: { telephony_provisioned: true, call_flows: flows } });
+  assert.equal(ok.status, "OK");
+  const vp = ok.typed_artifact.routing_plan;
+  assert.equal(vp.valid_blueprints, 1);
+  const f2 = vp.flow_details.find((x) => x.flow === "F2");
+  assert.ok(f2.issues.some((x) => x.startsWith("DESTINATION_not_E164")));
+  assert.ok(f2.issues.includes("PATH_DOES_NOT_TERMINATE_at_human_or_owner"));
+  assert.ok(vp.flow_details.find((x) => x.flow === "F3").issues.includes("NO_MENU_PROMPT_draft_required"));
+  assert.equal(ok.typed_artifact.api_calls, 0);
+  assert.match(ok.typed_artifact.connector_note, /Dialpad optional/);
+  const unbuilt = skill_voice_telephony({ tenant_id: "w113b13v", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["s"], validated_domain_inputs: { call_flows: [flows[0]] } });
+  assert.ok(unbuilt.typed_artifact.routing_plan.provisioning_gaps.some((g) => /TELEPHONY_NOT_PROVISIONED/.test(g)));
+  assert.match(unbuilt.approval_requests[0].requires, /actually needed/);
+});
+
+test("T2m: SK-054 voice UX guide — short accessible turns enforced, one question max, idioms flagged, money to spoken form, dialect VERIFY until confirmed", () => {
+  assert.equal(skill_voice_ux_guide({}).status, "NEEDS_INPUT");
+  const noF = skill_voice_ux_guide({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noF.status, "REJECTED"); assert.match(noF.reason, /dialogue_facts/);
+  const badLoc = skill_voice_ux_guide({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { locale: "english!", dialogue_facts: [{ text: "hi there friend." }] } });
+  assert.equal(badLoc.status, "REJECTED"); assert.match(badLoc.reason, /BCP-47/);
+  const r = skill_voice_ux_guide({ tenant_id: "w113b13u", objective_id: "UC-001", task_id: "UC-001-T04", source_refs: ["src:ux"], validated_domain_inputs: {
+    locale: "ms", dialogue_facts: [
+      { text: "Your order ships on Monday." },
+      { text: "Let's touch base about your order and we will circle back once the warehouse team has finished confirming the full packing list for tomorrow's shipment, okay? Is that fine? Do you want updates?" },
+      { text: "Pay RM29.90 now." },
+    ] } });
+  assert.equal(r.status, "OK");
+  const vs = r.typed_artifact.voice_scripts;
+  assert.equal(vs.rows[0].state, "DRAFT_OK");
+  assert.equal(vs.rows[1].state, "REVISE");
+  assert.ok(vs.rows[1].flags.includes("TURN_TOO_LONG_split_it_under_25_words"));
+  assert.ok(vs.rows[1].flags.includes("MULTI_QUESTION_TURN_one_question_at_a_time"));
+  assert.ok(vs.rows[1].flags.includes("IDIOM_REDUCE_accessibility"));
+  assert.match(vs.rows[2].spoken_form, /ringgit 29 point 90/);
+  assert.equal(vs.dialect_state, "VERIFY_REQUIRED_not_assumed");
+  assert.match(r.approval_requests[0].requires, /confirm the dialect/);
+  assert.match(r.typed_artifact.mode, /SCRIPT_DRAFTS_no_tts_invoked/);
+  const conf = skill_voice_ux_guide({ tenant_id: "w113b13u", objective_id: "UC-001", task_id: "UC-001-T04", source_refs: ["s"], validated_domain_inputs: { locale: "ms", dialect_confirmed: true, dialogue_facts: [{ text: "Terima kasih." }] } });
+  assert.equal(conf.typed_artifact.voice_scripts.dialect_state, "CONFIRMED_by_owner");
+});
+
+test("T2m: real-HTTP — spawned engine serves the FINAL queue-drain wiring; buildable sheet-04 queue is empty", async () => {
+  const reg = await getj("/api/odai/registry");
+  const fam = new Map(reg.p0_skill_modules.map((x) => [x.family, x.skill_id]));
+  assert.equal(fam.get("specialist-router"), "SK-045");
+  assert.equal(fam.get("translation-agent"), "SK-052");
+  assert.equal(fam.get("voice-telephony-agent"), "SK-053");
+  assert.equal(fam.get("voice-ux-guide"), "SK-054");
+  assert.equal(reg.counts.skills, 59);
+  const progress = JSON.parse(readFileSync(new URL("odai/config/skills_implemented.json", root), "utf8"));
+  assert.equal(progress.accounting.implemented, 58);
+  assert.equal(progress.accounting.remaining_buildable, 0);
+  assert.equal(progress.implemented.length, 58);
+  const contractsRaw = JSON.parse(readFileSync(new URL("odai/config/skill_contracts.json", root), "utf8"));
+  assert.equal(contractsRaw.rows.filter((r) => r.implementation && r.implementation.status === "IMPLEMENTED_P0").length, 58);
+  assert.equal(contractsRaw.rows.filter((r) => r.implementation && r.implementation.status === "NOT_IMPLEMENTED").length, 1, "only SK-058 CONTRACT_HOLD row remains unwired");
 });

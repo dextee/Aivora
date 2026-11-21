@@ -1,6 +1,6 @@
 {
  "work_order": "WO-113",
- "updated_at": "2026-11-21T11:52:40Z",
+ "updated_at": "2026-11-21T11:56:58Z",
  "implemented": [
   {
    "skill_id": "SK-009",
@@ -325,25 +325,44 @@
    "family": "shipping-tracker",
    "function": "skill_shipping_track",
    "batch": "WO-113-b12"
+  },
+  {
+   "skill_id": "SK-045",
+   "family": "specialist-router",
+   "function": "skill_specialist_route",
+   "batch": "WO-113-b13"
+  },
+  {
+   "skill_id": "SK-052",
+   "family": "translation-agent",
+   "function": "skill_translation_agent",
+   "batch": "WO-113-b13"
+  },
+  {
+   "skill_id": "SK-053",
+   "family": "voice-telephony-agent",
+   "function": "skill_voice_telephony",
+   "batch": "WO-113-b13"
+  },
+  {
+   "skill_id": "SK-054",
+   "family": "voice-ux-guide",
+   "function": "skill_voice_ux_guide",
+   "batch": "WO-113-b13"
   }
  ],
  "connector_policy": "MOCK/SPEC_ONLY adapter surface only; LIVE paths BLOCKED owner-token class; SK-058 remains CONTRACT_ONLY",
  "remaining_t1": [],
- "t3_count": 4,
- "t3_next4": [
-  "SK-045",
-  "SK-052",
-  "SK-053",
-  "SK-054"
- ],
- "t3_head_note": "queue authority: skill_queue_remaining.json list order; SK-057 DISCONTINUED (built stub kept for audit trail per b7 record), SK-058 CONTRACT_HOLD",
+ "t3_count": 0,
+ "t3_next4": [],
+ "t3_head_note": "QUEUE DRAINED 2026-11-21: all buildable sheet-04 deterministic modules implemented; SK-057 DISCONTINUED stub stands audit-listed from b7; SK-058 CONTRACT_HOLD; any further skill work is demand-pulled by business journeys only",
  "accounting": {
   "target_modules": 58,
-  "implemented": 54,
+  "implemented": 58,
   "contract_hold": 1,
   "contract_hold_ids": [
    "SK-058"
   ],
-  "remaining_buildable": 4
+  "remaining_buildable": 0
  }
 }

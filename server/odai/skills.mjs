@@ -2103,6 +2103,153 @@ export function skill_shipping_track(input = {}) {
   };
 }
 
+/* ---- specialist-router (SK-045) — deterministic capability→specialist ranking over the
+ * ONE registry mapping supplied by the caller (registry rows as exported). Scores keyword
+ * overlap only; ties stay AMBIGUOUS for the owner; assignments are returned as PROPOSALS —
+ * the dispatcher applies them, this module never executes or re-wires the registry.
+ * out: typed_artifact{routing}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_specialist_route(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const cap = Array.isArray(vdi.keywords) && vdi.keywords.length ? vdi.keywords.map((k) => String(k).toLowerCase()) : null;
+  if (!cap) return { status: "REJECTED", reason: "keywords[] required — a capability request is declared, not inferred", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: 0, approval_requests: [] };
+  const registry = Array.isArray(vdi.registry_excerpt) && vdi.registry_excerpt.length ? vdi.registry_excerpt : null;
+  if (!registry) return { status: "REJECTED", reason: "registry_excerpt[] required — routing reads the ONE registry mapping (export it), never a shadow catalog", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["registry_absent"], cost_actual: 0, approval_requests: [] };
+  if (vdi.secondary_registry !== undefined) return { status: "REJECTED", reason: "a second registry source was offered — boundary: ONE registry and dispatcher mapping", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["multi_registry_refused"], cost_actual: 0, approval_requests: [] };
+  const scored = registry.map((row) => {
+    const kw = (Array.isArray((row || {}).keywords) ? row.keywords : []).map((k) => String(k).toLowerCase());
+    const hits = cap.filter((k) => kw.includes(k));
+    return { specialist: String((row || {}).specialist || (row || {}).skill_id || "?"), status: String((row || {}).status || "unknown"), score: hits.length, matched: hits };
+  }).filter((x) => x.score > 0).sort((a, b) => b.score - a.score || String(a.specialist).localeCompare(String(b.specialist)));
+  const top = scored[0] ? scored.filter((x) => x.score === scored[0].score) : [];
+  const verdict = !scored.length ? "NO_MATCH_escalate_to_owner" : top.length > 1 ? "AMBIGUOUS_owner_chooses" : "PROPOSED:" + top[0].specialist;
+  const routeId = stableId("ROUTE", [String(input.tenant_id), String(input.objective_id), cap.join(","), registry.length]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "PROPOSAL_ONLY_dispatcher_applies", routing: { route_id: routeId, capability_keywords: cap, registry_rows_read: registry.length, candidates: scored, verdict, rule: "exact keyword-overlap count, ties never broken by the machine" }, no_side_effects: "no task was assigned, no registry entry touched, no agent activated" },
+    evidence_refs: [routeId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["registry_excerpt_is_a_snapshot_may_lag_live_registry", "keyword_overlap_is_a_heuristic_not_semantics"],
+    cost_actual: 0,
+    approval_requests: verdict.startsWith("AMBIGUOUS") || verdict.startsWith("NO_MATCH") ? [{ scope: "select_specialist", auto: false, requires: top.length > 1 ? "owner picks among tied candidates (scores: " + top.map((t) => t.specialist + "=" + t.score).join(", ") + ")" : "owner names the specialist or registers a mapping — unmatched capabilities are never force-routed" }] : [],
+  };
+}
+
+/* ---- translation-agent (SK-052) — same doctrine as SK-029: multilingual QA + context
+ * preservation over SUPPLIED translations. It does NOT itself produce translations
+ * (provider/LLM-bound; generation would violate the deterministic-module rule): it verifies
+ * named entities, numerals and placeholders survive the pair, glossary compliance and
+ * flags uncertainty for human review. Nothing is invented as 'translated'.
+ * out: typed_artifact{translation_qa}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_translation_agent(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const pairs = Array.isArray(vdi.pairs) && vdi.pairs.length ? vdi.pairs : null;
+  if (!pairs) return { status: "REJECTED", reason: "pairs[]{source,target} required — both sides must exist; translations are never generated here", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["pairs_absent"], cost_actual: 0, approval_requests: [] };
+  const entities = (s) => [...new Set((String(s).match(/\b[A-Z][a-zA-Z0-9'’.-]{2,}\b/g) || []).map((x) => x.toLowerCase()))];
+  const numerals = (s) => (String(s).match(/\d+(?:[.,]\d+)?/g) || []).slice().sort().join("|");
+  const placeholders = (s) => (String(s).match(/\{[a-zA-Z_][a-zA-Z0-9_]*\}/g) || []).slice().sort().join("|");
+  const keepTerms = (Array.isArray(vdi.glossary) ? vdi.glossary : []).map((g) => String((g || {}).term || "")).filter(Boolean);
+  const rows = pairs.map((raw, i) => {
+    const pr = raw && typeof raw === "object" ? raw : {};
+    const src = String(pr.source || ""), tgt = String(pr.target || "");
+    const flags = [];
+    if (!src.trim() || !tgt.trim()) return { item_id: String(pr.id || "T-" + (i + 1)), state: "INCOMPLETE_PAIR_never_counted", flags: ["MISSING_SIDE"] };
+    entities(src).forEach((e) => { if (!new RegExp(e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i").test(tgt)) flags.push("ENTITY_LOST:" + e); });
+    if (numerals(src) !== numerals(tgt)) flags.push("NUMERALS_CHANGED_money_or_counts_DANGER");
+    if (placeholders(src) !== placeholders(tgt)) flags.push("PLACEHOLDER_MISMATCH");
+    keepTerms.forEach((t) => { if (new RegExp("\\b" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(src) && !new RegExp("\\b" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(tgt)) flags.push("LOCKED_TERM_DROPPED:" + t); });
+    return { item_id: String(pr.id || "T-" + (i + 1)), state: flags.length ? "FLAGGED" : (pr.human_reviewed === true ? "QA_PASS_reviewed" : "QA_PASS_machine_checks_only"), flags, human_reviewed: pr.human_reviewed === true };
+  });
+  const incomplete = rows.filter((x) => x.state === "INCOMPLETE_PAIR_never_counted").length;
+  const flagged = rows.filter((x) => x.state === "FLAGGED").length;
+  const unreviewed = rows.filter((x) => x.state === "QA_PASS_machine_checks_only").length;
+  const trId = stableId("TRQA", [String(input.tenant_id), String(input.objective_id), rows.map((x) => x.item_id + ":" + x.state).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "QA_ONLY_no_translation_generated", translation_qa: { qa_id: trId, pairs: rows.length, machine_pass_unreviewed: unreviewed, flagged, incomplete, rows, coherence_note: "context preservation = entities/numerals/placeholders/glossary survive; nuance and register need the human line below" } },
+    evidence_refs: [trId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["machine_checks_cannot_judge_fluency_or_register", "quality_claim_valid_only_after_human_review"],
+    cost_actual: 0,
+    approval_requests: (flagged + unreviewed + incomplete) ? [{ scope: "release_translated_copy", auto: false, requires: "human/owner review — " + flagged + " flagged, " + unreviewed + " machine-clean-but-unreviewed, " + incomplete + " incomplete pairs must not ship" }] : [],
+  };
+}
+
+/* ---- voice-telephony-agent (SK-053) — call-routing BLUEPRINTS, telephony need verify.
+ * Boundary honored: telephony is NOT installed by default; Dialpad is optional and any
+ * LIVE telephony API is owner-token class — zero calls are made. Numbers must be valid
+ * E.164; every menu path must terminate at a human/owner voicemail fallback is capped.
+ * out: typed_artifact{routing_plan}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_voice_telephony(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const flows = Array.isArray(vdi.call_flows) && vdi.call_flows.length ? vdi.call_flows : null;
+  if (!flows) return { status: "REJECTED", reason: "call_flows[] required — routing trees are declared by the owner, never invented", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["flows_absent"], cost_actual: 0, approval_requests: [] };
+  const provisioned = vdi.telephony_provisioned === true;
+  const problems = [];
+  const plan = flows.map((raw, i) => {
+    const f = raw && typeof raw === "object" ? raw : {};
+    const issues = [];
+    const dest = String(f.destination || "");
+    if (dest && !/^\+[1-9]\d{6,14}$/.test(dest.replace(/[\s-]/g, ""))) issues.push("DESTINATION_not_E164:" + (dest || "(empty)"));
+    const menu = String(f.menu_prompts || "");
+    if (!menu.trim()) issues.push("NO_MENU_PROMPT_draft_required");
+    const endsAtHuman = ["human", "owner"].includes(String(f.terminates_at || ""));
+    if (!endsAtHuman) issues.push("PATH_DOES_NOT_TERMINATE_at_human_or_owner");
+    return { flow: String(f.name || "FLOW-" + (i + 1)), destination: dest || null, issues, state: issues.length ? "NOT_READY" : "BLUEPRINT_VALID" };
+  });
+  const bad = plan.filter((x) => x.state === "NOT_READY").length;
+  if (!provisioned) problems.push("TELEPHONY_NOT_PROVISIONED — boundary 'verify telephony need' honored: no line exists yet, blueprint only");
+  const telId = stableId("VOICE9", [String(input.tenant_id), String(input.objective_id), plan.map((x) => x.flow + ":" + x.state).join(","), String(provisioned)]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "BLUEPRINT_ONLY_no_calls_no_provisioning", provider_status: provisioned ? "declared_provisioned_owner" : "NOT_PROVISIONED", api_calls: 0, connector_note: "Dialpad optional; any LIVE telephony API is owner-token BLOCKED class and was NOT invoked or simulated", routing_plan: { blueprint_id: telId, flows: plan.length, flow_details: plan, valid_blueprints: plan.length - bad, blocked_flows: bad, provisioning_gaps: problems, rule: "E.164 destinations + menu prompts + human-terminating paths required; elderly-owner-safe: no infinite menus" } },
+    evidence_refs: [telId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["destination_numbers_are_declared_not_dialed_verified", "provisioning_state_is_owner_assertion"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "provision_or_wire_telephony", auto: false, requires: provisioned ? "owner runs the carrier/connector wiring (LIVE class) using this blueprint; costs hit the budget path (SEC-05) before any paid line is ordered" : "owner decision: is telephony actually needed? blueprint costs RM0 — provisioning is a separate gated step" }],
+  };
+}
+
+/* ---- voice-ux-guide (SK-054) — voice onboarding scripts + accessible-dialogue checks.
+ * Drafts plain-language spoken flows from supplied facts; validates accessibility rules
+ * (short turns, one question at a time, no idioms, money in spoken form) and keeps
+ * dialect claims in VERIFY state until owner-confirmed (boundary: verify dialects).
+ * out: typed_artifact{voice_scripts, accessibility}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_voice_ux_guide(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const facts = Array.isArray(vdi.dialogue_facts) && vdi.dialogue_facts.length ? vdi.dialogue_facts : null;
+  if (!facts) return { status: "REJECTED", reason: "dialogue_facts[] required — spoken content maps to declared facts only, nothing improvised", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["facts_absent"], cost_actual: 0, approval_requests: [] };
+  const locale = String(vdi.locale || "");
+  if (locale && !/^[a-z]{2,3}(-[A-Z][a-z]{3})*(-[A-Z]{2})?$/.test(locale)) return { status: "REJECTED", reason: "locale must be BCP-47-like — dialects are declared, never guessed (boundary: verify dialects)", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["locale_invalid"], cost_actual: 0, approval_requests: [] };
+  const IDIOMS = [/piece of cake/i, /hang in there/i, /ballpark/i, /touch base/i, /low-hanging/i];
+  const toSpokenMoney = (m) => String(m).replace(/RM\s?([\d.,]+)/g, (x) => x.replace("RM", "ringgit ").replace(/\./g, " point "));
+  const script = facts.map((f, i) => {
+    const raw = String((f && f.text) || f || "");
+    const flags = [];
+    if (raw.split(/\s+/).length > 25) flags.push("TURN_TOO_LONG_split_it_under_25_words");
+    if ((raw.match(/\?/g) || []).length > 1) flags.push("MULTI_QUESTION_TURN_one_question_at_a_time");
+    IDIOMS.forEach((re) => { if (re.test(raw)) flags.push("IDIOM_REDUCE_accessibility"); });
+    const spoken = toSpokenMoney(raw);
+    if (/RM\s?\d/.test(raw) && spoken === raw) flags.push("MONEY_needs_spoken_form");
+    return { turn: i + 1, text: raw, spoken_form: spoken, flags, state: flags.length ? "REVISE" : "DRAFT_OK" };
+  });
+  const dialectState = locale ? (vdi.dialect_confirmed === true ? "CONFIRMED_by_owner" : "VERIFY_REQUIRED_not_assumed") : "UNDECLARED_no_locale_given";
+  const guideId = stableId("VOX", [String(input.tenant_id), String(input.objective_id), script.length, dialectState]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "SCRIPT_DRAFTS_no_tts_invoked", voice_scripts: { script_id: guideId, locale: locale || null, dialect_state: dialectState, turns: script.length, revise: script.filter((x) => x.state === "REVISE").length, rows: script }, runtime_note: "speech synthesis/recognition runtime binding is a separate platform path — this module authors and checks text only" },
+    evidence_refs: [guideId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["spoken_naturalness_needs_human_ear", "accessibility_rules_are_heuristics_not_full_WCAG_voice_audit"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "activate_voice_flow", auto: false, requires: (dialectState === "VERIFY_REQUIRED_not_assumed" ? "confirm the dialect with a real speaker; " : "") + "owner read-aloud sign-off before any customer-facing voice path opens" }],
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
@@ -2130,6 +2277,8 @@ export const P0_SKILL_FUNCTIONS = {
   "tenant-onboarding-agent": skill_tenant_onboard, "social-performance-reporter": skill_social_performance_report,
   "asset-manager": skill_asset_manage, "channel-publisher": skill_channel_publish,
   "promotion-planner": skill_promotion_plan, "shipping-tracker": skill_shipping_track,
+  "specialist-router": skill_specialist_route, "translation-agent": skill_translation_agent,
+  "voice-telephony-agent": skill_voice_telephony, "voice-ux-guide": skill_voice_ux_guide,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be
