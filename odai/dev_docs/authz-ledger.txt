@@ -274,3 +274,13 @@
 2026-11-21T13:44:33Z|HOOK_ALLOW|V43-PREP-RELAY2|odai/contracts/ecom_marketing_api_v1.json+odai/dev_docs/v43_prep_notice.json+server.mjs+server/ecom/engine_adapter.mjs+server/ecom/marketing_mock.mjs+tests/ecom_prep_v1.test.mjs
 2026-11-21T13:46:20Z|REVOKE|V43-PREP-RELAY2|reason=relay commit dc719bf landed on feature/v43-hashmeta-ecommerce; branch-only, no publish
 2026-11-21T14:09:36Z|ISSUE|DEV11-SK-B9V|ops=check,commit|paths=odai/dev_docs/loop-log.jsonl,odai/dev_docs/authz-ledger.txt,odai/dev_docs/leases.json|minutes=25|budget=12|single_use=0|expires_at=2026-11-21T14:34:36Z
+2026-11-21T14:10:56Z|HOOK_ALLOW|DEV11-SK-B9V|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl
+2026-11-21T14:10:56Z|REVOKE|DEV11-SK-B9V|reason=verification committed; revoke after commit; no further writes
+2026-11-21T14:23:21Z|ISSUE|DEV11-SK-B10|ops=check,commit|paths=odai/dev_docs/,tests/|minutes=20|budget=12|single_use=0|expires_at=2026-11-21T14:43:21Z
+2026-11-21T14:23:31Z|HOOK_ALLOW|DEV11-SK-B10|odai/dev_docs/loop-log.jsonl
+2026-11-21T14:24:39Z|REVOKE|DEV11-SK-B10|reason=verification shipped 6cb2584; post-commit lease close per convention; no further writes
+2026-11-21T14:52:17Z|ISSUE|DEV11-SK-B11V|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=6|single_use=0|expires_at=2026-11-21T15:12:17Z
+2026-11-21T14:53:23Z|HOOK_ALLOW|DEV11-SK-B11V|odai/dev_docs/loop-log.jsonl
+2026-11-21T14:53:30Z|REVOKE|DEV11-SK-B11V|reason=verification shipped d30d8d3; revoke after commit; no further writes
+2026-11-21T16:13:39Z|ISSUE|ENGINEV2-TRIO|ops=check,commit|paths=server/odai/,tests/,odai/dev_docs/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T17:43:39Z
+2026-11-21T16:20:28Z|ISSUE|ENGINEV2-TRIO|ops=check,commit|paths=server/odai/,tests/,odai/dev_docs/,package.json|minutes=90|budget=80|single_use=0|expires_at=2026-11-21T17:50:28Z

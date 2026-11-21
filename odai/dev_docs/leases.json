@@ -75,6 +75,47 @@
     "revoked_reason": "verification closed loop-log committed 051aa9b",
     "revoked_at": "2026-11-21T09:34:31Z"
   },
+  "DEV11-SK-B10": {
+    "issued_at": "2026-11-21T14:23:21Z",
+    "expires_at": "2026-11-21T14:43:21Z",
+    "minutes": 20,
+    "paths": [
+      "odai/dev_docs/",
+      "tests/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "verification shipped 6cb2584; post-commit lease close per convention; no further writes",
+    "revoked_at": "2026-11-21T14:24:39Z"
+  },
+  "DEV11-SK-B11V": {
+    "issued_at": "2026-11-21T14:52:17Z",
+    "expires_at": "2026-11-21T15:12:17Z",
+    "minutes": 20,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 6,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 2
+    },
+    "revoked": true,
+    "revoked_reason": "verification shipped d30d8d3; revoke after commit; no further writes",
+    "revoked_at": "2026-11-21T14:53:30Z"
+  },
   "DEV11-SK-B8": {
     "issued_at": "2026-11-21T13:27:49Z",
     "expires_at": "2026-11-21T14:12:49Z",
@@ -111,8 +152,12 @@
     ],
     "budget": 12,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "verification committed; revoke after commit; no further writes",
+    "revoked_at": "2026-11-21T14:10:56Z"
   },
   "DEV11-V": {
     "issued_at": "2026-11-21T02:26:15Z",
@@ -216,6 +261,25 @@
     "revoked": true,
     "revoked_reason": "verification shipped 58b4746 (loop-log line only); lease closed",
     "revoked_at": "2026-11-21T12:46:11Z"
+  },
+  "ENGINEV2-TRIO": {
+    "issued_at": "2026-11-21T16:20:28Z",
+    "expires_at": "2026-11-21T17:50:28Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/dev_docs/",
+      "package.json"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 80,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
   },
   "LOOP-CLOSE": {
     "issued_at": "2026-11-21T09:47:21Z",
