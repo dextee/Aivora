@@ -1,0 +1,428 @@
+{
+ "tier": "TIER-0_ENTRY",
+ "generated_at": "2026-11-21T12:33:15Z",
+ "basis": "connectors_matrix(28)+v43_phase0 reusable_components_actual",
+ "policy": "SIMULATED/MOCK until owner credentials; LIVE via owner-token authz + explicit per-connector approval",
+ "contracts": [
+  {
+   "connector_id": "CAT-01",
+   "provider": "Facebook Pages",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-02",
+   "provider": "YouTube",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-03",
+   "provider": "LinkedIn",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-04",
+   "provider": "Instagram",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-05",
+   "provider": "Google Analytics",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-06",
+   "provider": "Google Ads",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-07",
+   "provider": "TikTok Ads",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-08",
+   "provider": "Mailchimp",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-09",
+   "provider": "Gmail",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-10",
+   "provider": "WhatsApp Business",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-11",
+   "provider": "Supabase",
+   "class": "MOCK",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-12",
+   "provider": "Google Drive",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-13",
+   "provider": "Notion",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-14",
+   "provider": "Todoist",
+   "class": "MOCK",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-15",
+   "provider": "Proboost",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-16",
+   "provider": "Fathom",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-17",
+   "provider": "Eventbrite",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-18",
+   "provider": "Wan Image API",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-19",
+   "provider": "Wan Video API",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-20",
+   "provider": "Hashmeta",
+   "class": "PROVIDER_SANDBOX",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CAT-21",
+   "provider": "Payment / supplier / logistics",
+   "class": "BLOCKED",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CON-FB",
+   "provider": "Facebook",
+   "class": "BLOCKED",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CON-YT",
+   "provider": "YouTube",
+   "class": "BLOCKED",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CON-LI",
+   "provider": "LinkedIn",
+   "class": "BLOCKED",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CON-WAN-IMG",
+   "provider": "Wan Image API",
+   "class": "BLOCKED",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CON-WAN-VID",
+   "provider": "Wan Video API",
+   "class": "BLOCKED",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CON-HASH-WEB",
+   "provider": "Hashmeta Website Connector",
+   "class": "BLOCKED",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  },
+  {
+   "connector_id": "CON-HASH-MKT",
+   "provider": "Hashmeta Marketing Connector",
+   "class": "BLOCKED",
+   "auth": "NONE_YET (OAuth/Bearer \u2014 owner credential intake)",
+   "operations": [
+    "catalog.products.list",
+    "order.create",
+    "media.upload_reuse",
+    "payout.status"
+   ],
+   "approval_flow_inherited": true,
+   "output_label": "SIMULATED",
+   "live_allowed": false
+  }
+ ]
+}

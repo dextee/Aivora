@@ -1,0 +1,79 @@
+{
+ "generated_at": "2026-11-21T12:33:15Z",
+ "workflows": [
+  {
+   "id": "coffee-campaign-simulated",
+   "agents": [
+    "AI COMMERCE",
+    "AI CMO"
+   ],
+   "objective_statement": "Sell 40 boxes of HarbourBean cold-brew coffee using our existing media assets in 14 days",
+   "criterion": {
+    "kind": "units_sold",
+    "target_units": 40,
+    "within_days": 14,
+    "via_catalog": "FNYGlobal",
+    "brand": "HarbourBean (seeded demo)"
+   },
+   "data_gaps": [],
+   "task_sequence": [
+    {
+     "step": 1,
+     "skill_id": "SK-007",
+     "family": "campaign-strategist"
+    },
+    {
+     "step": 2,
+     "skill_id": "SK-002",
+     "family": "audience-researcher",
+     "parallel_with": [
+      1
+     ]
+    },
+    {
+     "step": 3,
+     "skill_id": "SK-018",
+     "family": "creative-generator",
+     "media_policy": "reuse existing uploaded assets only"
+    },
+    {
+     "step": 4,
+     "skill_id": "SK-014",
+     "family": "consent-checker"
+    },
+    {
+     "step": 5,
+     "skill_id": "SK-055",
+     "family": "poster-social-creator",
+     "label": "DRAFT_ONLY"
+    },
+    {
+     "step": 6,
+     "skill_id": "SK-046",
+     "family": "spend-controller",
+     "budget": {
+      "cap": "RM300",
+      "mode": "atomic-reservation"
+     }
+    },
+    {
+     "step": 7,
+     "skill_id": "SK-059",
+     "family": "social-performance-reporter",
+     "outcome_kpi": {
+      "metric": "units_sold",
+      "target": 40,
+      "actual": "UNKNOWN_until_evidence"
+     }
+    }
+   ],
+   "gates": [
+    "approve_spend",
+    "approve_publish",
+    "approve_customer_comms"
+   ],
+   "all_output_labels": "SIMULATED",
+   "external_sends": "NEVER automatic"
+  }
+ ]
+}

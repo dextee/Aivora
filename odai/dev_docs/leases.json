@@ -251,8 +251,12 @@
     ],
     "budget": 6,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 2
+    },
+    "revoked": true,
+    "revoked_reason": "loop close for this wake complete",
+    "revoked_at": "2026-11-21T11:59:52Z"
   },
   "LOOP-CLOSE-B8": {
     "issued_at": "2026-11-21T11:11:36Z",
