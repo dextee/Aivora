@@ -284,3 +284,4 @@
 2026-11-21T14:53:30Z|REVOKE|DEV11-SK-B11V|reason=verification shipped d30d8d3; revoke after commit; no further writes
 2026-11-21T16:13:39Z|ISSUE|ENGINEV2-TRIO|ops=check,commit|paths=server/odai/,tests/,odai/dev_docs/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T17:43:39Z
 2026-11-21T16:20:28Z|ISSUE|ENGINEV2-TRIO|ops=check,commit|paths=server/odai/,tests/,odai/dev_docs/,package.json|minutes=90|budget=80|single_use=0|expires_at=2026-11-21T17:50:28Z
+2026-11-21T16:54:35Z|ISSUE|WO-WIN-PORT|ops=check,commit|paths=server/odai/,tests/,odai/dev_docs/|minutes=180|budget=60|single_use=0|expires_at=2026-11-21T19:54:35Z

@@ -46,7 +46,11 @@ async function waitForResponse(url, process, readOutput) {
 }
 
 async function runCommand(command, args, options) {
-  const child = spawn(command, args, {
+  // Cross-platform launch: on Windows, npm is a .cmd shim that node's spawn cannot exec
+  // directly (ENOENT/EINVAL), so route through cmd.exe. POSIX keeps the bare command.
+  const win = process.platform === "win32";
+  const [cmd, cmdArgs] = win ? ["cmd.exe", ["/d", "/s", "/c", command, ...args]] : [command, args];
+  const child = spawn(cmd, cmdArgs, {
     ...options,
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -119,6 +123,7 @@ test("build emits a standalone dynamic QW Page and serves healthy root", async (
     child = spawn(process.execPath, ["server.mjs"], {
       cwd: appRoot,
       env: {
+        AIVORA_MEMORY_MODE: "1",
         HOME: writableRoot,
         HOST: "127.0.0.1",
         NODE_ENV: "production",

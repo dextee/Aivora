@@ -9,7 +9,7 @@
 import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
 import { spawn } from "node:child_process";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -19,7 +19,7 @@ const post = async (u, b) => { const r = await fetch(B + u, { method: "POST", he
 const getj = async (u) => JSON.parse(await (await fetch(B + u)).text());
 let child;
 before(async () => {
-  child = spawn(process.execPath, [new URL("server.mjs", root).pathname], { env: { ...process.env, PORT: "8311", HOST: "127.0.0.1" }, cwd: new URL(".", root).pathname, stdio: "ignore" });
+  child = spawn(process.execPath, [fileURLToPath(new URL("server.mjs", root))], { env: { ...process.env, PORT: "8311", HOST: "127.0.0.1", AIVORA_MEMORY_MODE: "1" }, cwd: fileURLToPath(new URL(".", root)), stdio: "ignore" });
   const dl = Date.now() + 25000;
   for (;;) { try { if ((await fetch(B + "/api/health")).ok) break; } catch { /* boot */ } if (Date.now() > dl) throw new Error("no boot"); await new Promise((r) => setTimeout(r, 300)); }
 });
@@ -34,8 +34,18 @@ import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledge
 const CFG = (n) => JSON.parse(readFileSync(new URL("odai/config/" + n, root), "utf8"));
 
 /* ---------------- 1. builder determinism ---------------- */
-test("A1: build_registry.py re-run reproduces byte-identical registry files (--check)", () => {
-  const out = execFileSync("python3", ["tools/build_registry.py", "--check"], { cwd: new URL(".", root).pathname, encoding: "utf8" });
+/* Cross-platform python resolver: the project ships no python config file, so probe the
+ * usual interpreters (Linux: python3, Windows: python/py). Missing interpreter => skip. */
+function pythonExe() {
+  for (const c of ["python3", "python", "py"]) {
+    try { const r = spawnSync(c, ["--version"], { stdio: "ignore" }); if (!r.error && r.status === 0) return c; } catch { /* try next */ }
+  }
+  return null;
+}
+test("A1: build_registry.py re-run reproduces byte-identical registry files (--check)", (t) => {
+  const py = pythonExe();
+  if (!py) { t.skip("no python interpreter on PATH (python3/python/py) — builder determinism check skipped"); return; }
+  const out = execFileSync(py, ["tools/build_registry.py", "--check"], { cwd: fileURLToPath(new URL(".", root)), encoding: "utf8" });
   assert.match(out, /HASH-STABLE re-run verified/);
 });
 

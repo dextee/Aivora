@@ -9,6 +9,7 @@ import * as wf from "./workflow.mjs";
 import * as db from "./db.mjs";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 /* WO-A1 (WO-110/WO-102): business-plane registry routing. ADDITIVE only — the generic
  * planner below remains the complete fallback path; registry is DATA (odai/config).
  * G1 posture: no second dispatcher/policy evaluator introduced. */
@@ -219,7 +220,7 @@ export async function project(obj) {
    Note: publish artifacts do not ship tools/, so deployed runtimes find no tool and
    treat it as "not run" (no-op) rather than a false G3 failure — a genuine non-zero exit always blocks. */
 function preflightBlock(tenantId, obj) {
-  const roots = [process.cwd(), new URL("../../", import.meta.url).pathname];
+  const roots = [process.cwd(), fileURLToPath(new URL("../../", import.meta.url))];
   const root = roots.find((r) => existsSync(r + "/tools/guardrails_preflight.mjs"));
   if (!root) return null;
   const res = spawnSync(process.execPath, ["tools/guardrails_preflight.mjs"], { cwd: root, encoding: "utf8" });

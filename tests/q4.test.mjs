@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
+import { fileURLToPath } from "node:url";
 
 /* V31 — Qwen4-Max text-brain wiring: parseDelta units + keyless /api/q4/chat behaviour. */
 
@@ -54,9 +55,9 @@ let base = "";
 before(async () => {
   const port = await openPort();
   base = `http://127.0.0.1:${port}`;
-  child = spawn(process.execPath, [new URL("server.mjs", root).pathname], {
-    cwd: new URL(".", root).pathname,
-    env: { PATH: process.env.PATH, HOME: process.env.HOME, HOST: "127.0.0.1", PORT: String(port), NODE_ENV: "production" },
+  child = spawn(process.execPath, [fileURLToPath(new URL("server.mjs", root))], {
+    cwd: fileURLToPath(new URL(".", root)),
+    env: { PATH: process.env.PATH, HOME: process.env.HOME, HOST: "127.0.0.1", PORT: String(port), NODE_ENV: "production", AIVORA_MEMORY_MODE: "1" },
     stdio: "pipe",
   });
   let stderr = "";

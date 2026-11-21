@@ -7,8 +7,9 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const CONFIG_DIR = new URL("../../odai/config/", import.meta.url).pathname;
+const CONFIG_DIR = fileURLToPath(new URL("../../odai/config/", import.meta.url));
 const FILES = ["business_agents.json", "specialist_roles.json", "skill_contracts.json",
   "objectives_registry.json", "task_graph.json", "connectors_matrix.json", "policy_index.json"];
 

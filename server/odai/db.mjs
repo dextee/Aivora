@@ -54,6 +54,11 @@ async function op(name, fn) {
 /* availability probe (cached per process; DB optional — memory store remains the fallback) */
 let avail; 
 export async function dbAvailable() {
+  /* Explicit memory/mock mode (AIVORA_MEMORY_MODE=1): skip the broker availability probe
+   * entirely and treat the in-memory store as authoritative, so view/objective projections
+   * respond promptly with no local broker. Default (unset) preserves the DB-first probe,
+   * leaving broker-backed production behavior unchanged. */
+  if (process.env.AIVORA_MEMORY_MODE === "1") return (avail = false);
   if (avail !== undefined) return avail;
   try { await op("read_products", (s) => s.from("odai_product").select("sku", { count: "exact", head: true }).limit(1)); avail = true; }
   catch (e) { avail = false; if (!(e instanceof DbUnavailable)) console.error("db probe:", e.diagnostic); }

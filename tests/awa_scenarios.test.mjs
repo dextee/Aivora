@@ -32,12 +32,12 @@ import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ENGINE = "http://127.0.0.1:8317";
 const EVIDENCE = path.join(repoRoot, "odai", "dev_docs", "shield-evidence.jsonl");
-const AW = await import(path.join(repoRoot, "server", "odai", "awa_eval.mjs"));
+const AW = await import(pathToFileURL(path.join(repoRoot, "server", "odai", "awa_eval.mjs")).href);
 
 /* ---------------- dependency gate (mirrors house INTAKE-MISSING pattern) ---------------- */
 const DEP_FILES = ["odai/fixtures/awa/rules/policy.json", "odai/fixtures/awa/rules/taxonomy.json",
@@ -52,7 +52,7 @@ let child = null, BOOT_FAIL = false;
 before(async () => {
   if (SKIP) return;
   child = spawn(process.execPath, [path.join(repoRoot, "server.mjs")], {
-    cwd: repoRoot, env: { ...process.env, PORT: "8317", HOST: "127.0.0.1" }, stdio: ["ignore", "pipe", "pipe"],
+    cwd: repoRoot, env: { ...process.env, PORT: "8317", HOST: "127.0.0.1", AIVORA_MEMORY_MODE: "1" }, stdio: ["ignore", "pipe", "pipe"],
   });
   const dl = Date.now() + 15000;
   for (;;) {

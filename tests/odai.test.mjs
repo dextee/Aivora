@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test, { after, before, describe } from "node:test";
 import { readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const root = new URL("../", import.meta.url);
 const R = (p) => readFileSync(new URL(p, root), "utf8");
@@ -66,9 +67,9 @@ describe("odai http workflow", () => {
   before(async () => {
     const port = 8199;
     base = `http://127.0.0.1:${port}`;
-    child = spawn(process.execPath, [new URL("server.mjs", root).pathname], {
-      env: { ...globalThis.process.env, PORT: String(port), HOST: "127.0.0.1" },
-      cwd: new URL(".", root).pathname, stdio: "ignore",
+    child = spawn(process.execPath, [fileURLToPath(new URL("server.mjs", root))], {
+      env: { ...globalThis.process.env, PORT: String(port), HOST: "127.0.0.1", AIVORA_MEMORY_MODE: "1" },
+      cwd: fileURLToPath(new URL(".", root)), stdio: "ignore",
     });
     const deadline = Date.now() + 15000;
     for (;;) {

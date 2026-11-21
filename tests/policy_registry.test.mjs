@@ -87,8 +87,8 @@ let BOOT_FAIL = false;
 let child;
 before(async () => {
   if (HARD_SKIP) return; // graceful: no boot attempted when the plane is absent
-  child = spawn(process.execPath, [new URL("server.mjs", root).pathname], {
-    env: { ...process.env, PORT: "8312", HOST: "127.0.0.1" },
+  child = spawn(process.execPath, [fileURLToPath(new URL("server.mjs", root))], {
+    env: { ...process.env, PORT: "8312", HOST: "127.0.0.1", AIVORA_MEMORY_MODE: "1" },
     cwd: repoRoot, stdio: "ignore",
   });
   const dl = Date.now() + 25000;

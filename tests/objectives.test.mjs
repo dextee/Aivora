@@ -11,7 +11,7 @@ const post = async (u, b) => jsonOf(await fetch(B + u, { method: "POST", headers
 const getj = async (u) => JSON.parse(await (await fetch(B + u)).text());
 const jsonOf = async (r) => ({ status: r.status, body: await r.json() });
 before(async () => {
-  child = spawn(process.execPath, [new URL("server.mjs", root).pathname], { env: { ...process.env, PORT: "8309", HOST: "127.0.0.1" }, cwd: new URL(".", root).pathname, stdio: "ignore" });
+  child = spawn(process.execPath, [fileURLToPath(new URL("server.mjs", root))], { env: { ...process.env, PORT: "8309", HOST: "127.0.0.1", AIVORA_MEMORY_MODE: "1" }, cwd: fileURLToPath(new URL(".", root)), stdio: "ignore" });
   const dl = Date.now() + 20000;
   for (;;) { try { if ((await fetch(B + "/api/health")).ok) break; } catch { /* boot */ } if (Date.now() > dl) throw new Error("no boot"); await new Promise((r) => setTimeout(r, 300)); }
 });
@@ -62,7 +62,7 @@ test("capture objective id", async () => { const { body: o } = await post("/api/
 
 /* WO-02 (DEV-12): technical preflight on dispatch */
 test("preflight tool exits 0 in repo tree", () => {
-  const res = spawnSync(process.execPath, ["tools/guardrails_preflight.mjs"], { cwd: new URL(".", root).pathname, encoding: "utf8" });
+  const res = spawnSync(process.execPath, ["tools/guardrails_preflight.mjs"], { cwd: fileURLToPath(new URL(".", root)), encoding: "utf8" });
   assert.equal(res.error, undefined, JSON.stringify(res.error?.message || ""));
   assert.equal(res.status, 0, "stdout=" + res.stdout + " stderr=" + res.stderr);
 });

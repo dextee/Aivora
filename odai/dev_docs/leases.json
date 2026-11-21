@@ -1230,6 +1230,24 @@
     "revoked_reason": "WO-V42PREP SHIPPED (state sync only, no source changes; no publish)",
     "revoked_at": "2026-11-21T06:19:33Z"
   },
+  "WO-WIN-PORT": {
+    "issued_at": "2026-11-21T16:54:35Z",
+    "expires_at": "2026-11-21T19:54:35Z",
+    "minutes": 180,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 60,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "ZZZ-V4-BYP": {
     "issued_at": "2026-11-21T02:29:56Z",
     "expires_at": "2026-11-21T02:34:56Z",
