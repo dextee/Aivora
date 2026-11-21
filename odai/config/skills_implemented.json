@@ -1,0 +1,76 @@
+{
+ "work_order": "WO-113",
+ "updated_at": "2026-11-21T08:59:01Z",
+ "implemented": [
+  {
+   "skill_id": "SK-009",
+   "family": "catalog-query",
+   "function": "skill_catalog_query",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-021",
+   "family": "evidence-append",
+   "function": "skill_evidence_append",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-024",
+   "family": "ledger-append",
+   "function": "skill_ledger_append",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-035",
+   "family": "gate-check",
+   "function": "skill_gate_check",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-040",
+   "family": "report-compose",
+   "function": "skill_report_compose",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-041",
+   "family": "schedule-scaffold",
+   "function": "skill_schedule_scaffold",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-055",
+   "family": "poster-social-creator",
+   "function": "skill_poster_social_create",
+   "batch": "WO-113-b1"
+  },
+  {
+   "skill_id": "SK-018",
+   "family": "creative-generator",
+   "function": "skill_creative_generate",
+   "batch": "WO-113-b1"
+  },
+  {
+   "skill_id": "SK-030",
+   "family": "margin-analyst",
+   "function": "skill_margin_analyze",
+   "batch": "WO-113-b1"
+  },
+  {
+   "skill_id": "SK-047",
+   "family": "storefront-builder",
+   "function": "skill_storefront_build",
+   "batch": "WO-113-b1"
+  }
+ ],
+ "connector_policy": "MOCK/SPEC_ONLY adapter surface only; LIVE paths BLOCKED owner-token class; SK-058 remains CONTRACT_ONLY",
+ "remaining_t1": [
+  "SK-012",
+  "SK-013",
+  "SK-026",
+  "SK-046",
+  "SK-049",
+  "SK-002"
+ ],
+ "t3_count": 42
+}

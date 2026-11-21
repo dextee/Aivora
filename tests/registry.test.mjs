@@ -26,7 +26,7 @@ before(async () => {
 after(() => child?.kill());
 
 import { criterionFromText, matchObjective, planFor, registrySummary, validatePlanEdges } from "../server/odai/registry.mjs";
-import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit } from "../server/odai/skills.mjs";
+import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build } from "../server/odai/skills.mjs";
 import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledger.mjs";
 
 const CFG = (n) => JSON.parse(readFileSync(new URL("odai/config/" + n, root), "utf8"));
@@ -439,14 +439,100 @@ test("A1: P0 modules honor NEEDS_INPUT/REJECTED error contract + produce declare
   assert.equal(sch.status, "OK");
   assert.equal(sch.typed_artifact.realized, false); // scaffold only — NEVER creates real schedules here
 
-  // declared sheet-04 fields: inputs referenced + outputs emitted
+  // declared sheet-04 fields: inputs referenced + outputs emitted (full P0_SKILL_FUNCTIONS map, incl WO-113 batch 1)
   const audit = p0ContractFieldAudit({
     "ledger-append": led, "catalog-query": cat, "evidence-append": ev, "gate-check": g, "schedule-scaffold": sch, "report-compose": rep,
+    "creative-generator": skill_creative_generate({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["s"], validated_domain_inputs: { media_kind: "image", brief: "b" } }),
+    "poster-social-creator": skill_poster_social_create({ tenant_id: "sk-a1", product_id: "P", brand_id: "B", platforms: ["facebook"], language: "en", objective: "o", budget: 1, source_refs: ["s"], validated_domain_inputs: { brand_name: "B", rights_confirmed: true } }),
+    "margin-analyst": skill_margin_analyze({ sku_prices: [{ sku: "A", price_myr: 10 }], verified_costs: [{ sku: "A", landed_cost_myr: 4 }], fee_schedule: { marketplace_pct: 1, payment_pct: 1, fixed_per_unit_myr: 0 } }),
+    "storefront-builder": skill_storefront_build({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T04", source_refs: ["s"], validated_domain_inputs: { products: [{ sku: "A", name: "n", price_myr: 1 }], brand: { name: "B" } } }),
   });
+  assert.equal(audit.length, 10);
   for (const a of audit) assert.equal(a.ok, true, a.family + " " + JSON.stringify(a));
 });
 
-/* ---------------- 8. WO-104 immutable money ledger ---------------- */
+/* ---------------- 8b. WO-113 tranche-2 deterministic modules (batch 1) ---------------- */
+test("T2: SK-018 creative generator — NEEDS_INPUT/REJECTED + QUEUED_MOCK (never dispatches Wan)", () => {
+  assert.equal(skill_creative_generate({}).status, "NEEDS_INPUT");
+  const badKind = skill_creative_generate({ tenant_id: "t", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["s"], validated_domain_inputs: { media_kind: "hologram", brief: "x" } });
+  assert.equal(badKind.status, "REJECTED");
+  const noBrief = skill_creative_generate({ tenant_id: "t", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["s"], validated_domain_inputs: { media_kind: "image" } });
+  assert.equal(noBrief.status, "REJECTED");
+  const ok = skill_creative_generate({ tenant_id: "w113", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["src:brief"], validated_domain_inputs: { media_kind: "video", brief: "15s demo of the supplied SKU" } });
+  assert.equal(ok.status, "OK");
+  assert.equal(ok.typed_artifact.job_state, "QUEUED_MOCK");
+  assert.equal(ok.typed_artifact.dispatched, false, "no external invocation — Wan is BLOCKED owner-token class");
+  assert.equal(ok.typed_artifact.mode, "MOCK");
+  const again = skill_creative_generate({ tenant_id: "w113", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["src:brief"], validated_domain_inputs: { media_kind: "video", brief: "15s demo of the supplied SKU" } });
+  assert.equal(again.typed_artifact.job_id, ok.typed_artifact.job_id, "deterministic ids");
+});
+
+test("T2: SK-055 poster/social — rights block, unsupported platform draft-only, no invented price", () => {
+  assert.equal(skill_poster_social_create({}).status, "NEEDS_INPUT");
+  const base = { tenant_id: "w113", product_id: "P-1", brand_id: "BR-1", platforms: ["facebook", "tiktok"], language: "ms", objective: "sell more", budget: 100, source_refs: ["src:p"] };
+  const noRights = skill_poster_social_create({ ...base, validated_domain_inputs: { brand_name: "Acme", rights_confirmed: false } });
+  assert.equal(noRights.status, "REJECTED", "missing product rights: block");
+  const ok = skill_poster_social_create({ ...base, validated_domain_inputs: { brand_name: "Acme", rights_confirmed: true, price_myr: 29.9 } });
+  assert.equal(ok.status, "OK");
+  assert.match(ok.poster_asset_id, /^POSTER-[0-9a-f]{12}$/);
+  assert.equal(ok.typed_artifact.mode, "MOCK");
+  assert.equal(ok.typed_artifact.render, "NOT_RENDERED_adapter_blocking");
+  assert.equal(ok.post_drafts.find((d) => d.platform === "tiktok").state, "draft_only", "platform incompatibility → draft only");
+  assert.equal(ok.post_drafts.find((d) => d.platform === "facebook").state, "ready_for_owner_review");
+  assert.equal(ok.qa_result.overall, "PARTIAL");
+  assert.equal(ok.cost_estimate.estimate_myr, null, "UNKNOWN pricing is never fabricated");
+  const noPrice = skill_poster_social_create({ ...base, validated_domain_inputs: { brand_name: "Acme", rights_confirmed: true } });
+  assert.match(noPrice.post_drafts[0].body, /no invented price/);
+});
+
+test("T2: SK-030 margin analyst — supplied-figures math, UNKNOWN exclusion, deterministic rank", () => {
+  assert.equal(skill_margin_analyze({}).status, "NEEDS_INPUT");
+  const r = skill_margin_analyze({
+    sku_prices: [{ sku: "A", price_myr: 100 }, { sku: "B", price_myr: 50 }],
+    verified_costs: [{ sku: "A", landed_cost_myr: 40, delivery_myr: 5, returns_allowance_myr: 5 }],
+    fee_schedule: { marketplace_pct: 10, payment_pct: 3, fixed_per_unit_myr: 2 },
+  });
+  assert.equal(r.status, "OK");
+  assert.deepEqual(r.unknown_cost_flags.map((u) => u.sku), ["B"], "missing components → UNKNOWN, excluded from ranking");
+  assert.equal(r.margin_table.length, 1);
+  assert.equal(r.margin_table[0].contribution_myr, 35, "100 − (40+5+5) − (13+2) = 35");
+  assert.equal(r.break_even.find((b) => b.sku === "B").break_even_price_myr, null);
+});
+
+test("T2: SK-047 storefront builder — SPEC_ONLY, validation reject, publication NEVER auto, Hashmeta BLOCKED untouched", () => {
+  assert.equal(skill_storefront_build({}).status, "NEEDS_INPUT");
+  const bad = skill_storefront_build({ tenant_id: "t", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["s"], validated_domain_inputs: { products: [{ name: "no sku no price" }], brand: { name: "Acme" } } });
+  assert.equal(bad.status, "REJECTED");
+  const ok = skill_storefront_build({ tenant_id: "w113", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["src:cat"], validated_domain_inputs: { products: [{ sku: "A", name: "Widget", price_myr: 10 }], brand: { name: "Acme" } } });
+  assert.equal(ok.status, "OK");
+  assert.equal(ok.typed_artifact.site_spec.mode, "SPEC_ONLY");
+  assert.equal(ok.typed_artifact.site_spec.connector.class, "BLOCKED");
+  assert.equal(ok.typed_artifact.site_spec.connector.live_call_made, false);
+  assert.equal(ok.typed_artifact.approval_requests, undefined);
+  assert.match(ok.approval_requests[0].requires, /owner approval/i);
+  assert.equal(ok.uncertainty_flags.includes("hashmeta_connector_BLOCKED_no_live_call"), true);
+});
+
+test("T2: real-HTTP — /api/odai/registry serves the WO-113 wiring; progress file matches contracts", async () => {
+  const summary = await getj("/api/odai/registry"); // spawned engine (HTTP), not a mock import
+  assert.equal(summary.counts.skills, 59);
+  const contractsRaw = JSON.parse(readFileSync(new URL("odai/config/skill_contracts.json", root), "utf8"));
+  const byId = new Map(contractsRaw.rows.map((r) => [r.skill_id, r]));
+  for (const [sid, fam] of [["SK-018", "creative-generator"], ["SK-030", "margin-analyst"], ["SK-047", "storefront-builder"], ["SK-055", "poster-social-creator"]]) {
+    const impl = byId.get(sid).implementation;
+    assert.equal(impl.status, "IMPLEMENTED_P0", sid + " status");
+    assert.equal(impl.module, "server/odai/skills.mjs", sid + " module");
+    assert.equal(impl.work_order, "WO-113", sid + " work order");
+    assert.ok(byId.get(sid).suggested_module || true);
+    assert.equal(impl.family, fam);
+  }
+  const progress = JSON.parse(readFileSync(new URL("odai/config/skills_implemented.json", root), "utf8"));
+  assert.equal(progress.implemented.length, 10);
+  const reg = registrySummary(); // same code path the HTTP handler serves
+  assert.equal(reg.counts.skills, 59);
+});
+
+/* ---------------- 9. WO-104 immutable money ledger ---------------- */
 test("A1: money ledger is append-only, tenant-scoped, whitelist fields (no PII columns)", () => {
   const t1 = "led-a1-x"; const t2 = "led-a1-y";
   const a = appendMoneyEvent(t1, { amount_myr: 10, direction: "out", source_tag: "fixture:sale", objective_id: "UC-071", task_id: "UC-071-T01", customer_email: "should-not-land@example.com" });

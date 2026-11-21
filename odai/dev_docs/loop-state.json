@@ -58,10 +58,10 @@
   },
   {
    "id": "WO-113",
-   "status": "VERIFY-THEN-PENDING",
+   "status": "IN_PROGRESS:batch1_done",
    "paths": "server/odai,tests",
    "deps": [],
-   "spec": "skill modules tranche 2: locate authoritative contracts source (tools/build_registry.py / registry_intake.json) before queueing specifics"
+   "spec": "skill modules tranche 2: locate authoritative contracts source (tools/build_registry.py / registry_intake.json) before queueing specifics | batch1 WO-113 SK-055/018/030/047 shipped (suite 124/124); remaining t1: SK-012,013,026,046,049,002; t3: 42 modules"
   },
   {
    "id": "E2E-10J",
@@ -342,5 +342,6 @@
    "mode_gate": "MOCK/SANDBOX; real payouts NEVER without owner authorization",
    "verify": "DEV-11"
   }
- ]
+ ],
+ "updated_at": "2026-11-21T09:05:01Z"
 }

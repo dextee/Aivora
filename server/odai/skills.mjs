@@ -9,6 +9,7 @@
  * refused writes -> REJECTED with reason; nothing is ever invented on failure.
  */
 import { get } from "./store.mjs";
+import { createHash } from "node:crypto";
 import { appendMoneyEvent, moneyEvents, moneyTotals } from "./ledger.mjs";
 import { loadSkillContract } from "./registry.mjs";
 /* WO-SEC05: the spend gate now consumes ATOMIC BUDGET RESERVATIONS (SEC-05 remediation).
@@ -226,9 +227,164 @@ export function skill_report_compose(input = {}) {
   };
 }
 
+/* ================= WO-113 tranche 2 — sheet-04 deterministic modules =================
+ * Connector-bound outcomes are NEVER invoked here (no LLM, no network, no live adapter):
+ * the module emits a deterministic prepared spec with an explicit mode label
+ * (MOCK / SPEC_ONLY) so plan evidence can never be mistaken for a real external action.
+ * LIVE connector paths remain BLOCKED owner-token class per connectors_matrix (DEV-02). */
+
+const sense = (x) => Math.round(Number(x) * 100); // RM -> integer sen; all money math in int sen
+const stableId = (prefix, parts) => prefix + "-" + createHash("sha256").update(parts.join("\u0000")).digest("hex").slice(0, 12);
+
+/* ---- creative-generator (SK-018) — prepares Wan image/video/poster job specs.
+ * Contract: typed envelope; dispatch to Wan APIs is connector-blocked, so jobs are
+ * returned prepared (QUEUED_MOCK), never fabricated as generated.
+ * in : tenant_id, objective_id, task_id, validated_domain_inputs{media_kind, brief, source_product?}, source_refs
+ * out: typed_artifact{job...}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_creative_generate(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const mediaKind = String(vdi.media_kind || "").toLowerCase();
+  if (!["image", "video", "poster"].includes(mediaKind)) return { status: "REJECTED", reason: "media_kind must be image|video|poster", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["media_kind_rejected"], cost_actual: 0, approval_requests: [] };
+  const brief = String(vdi.brief || "").trim();
+  if (!brief) return { status: "REJECTED", reason: "creative brief text required — nothing is invented without source facts", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["brief_absent_rejected"], cost_actual: 0, approval_requests: [] };
+  const adapter = mediaKind === "video" ? "wan-video" : "wan-image"; // via approved adapter surface (SK-055 routes poster/social)
+  const refs = (input.source_refs || []).map(String);
+  const jobId = stableId("CJ", [String(input.tenant_id), String(input.objective_id), String(input.task_id), adapter, brief]);
+  return {
+    status: "OK",
+    typed_artifact: {
+      mode: "MOCK", job_id: jobId, adapter, media_kind: mediaKind, job_state: "QUEUED_MOCK", dispatched: false,
+      brief, source_product: vdi.source_product || null,
+      preserve: { job_id: true, generation_cost: "UNKNOWN — adapter never invoked", rights_cleared_source: vdi.rights_ref || null, async_status: "not_started", qc: "pending_owner_qc" },
+      route_note: "poster/social variants -> SK-055; video production -> SK-057 (per contract routing)",
+    },
+    evidence_refs: [jobId, adapter + ":" + mediaKind],
+    uncertainty_flags: ["connector_wan_BLOCKED_owner_token_class", "no_external_invocation_mode_MOCK", "cost_actual_UNKNOWN_uninvoked"],
+    cost_actual: 0, approval_requests: [],
+  };
+}
+
+/* ---- poster-social-creator (SK-055) — branded poster + platform post drafts from PROVIDED facts.
+ * No claims/prices/images invented: unconfirmed rights blocks; unsupported platform -> draft only.
+ * in : product_id, brand_id, platforms[], language, objective, budget, tenant_id, validated_domain_inputs{brand_name, headlines_per_platform?, rights_confirmed, price_myr?}
+ * out: poster_asset_id, post_drafts, platform_variants, qa_result, cost_estimate (+envelope) */
+export function skill_poster_social_create(input = {}) {
+  const missing = req(input, ["tenant_id", "product_id", "brand_id", "platforms", "language", "objective", "budget"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [], poster_asset_id: null, post_drafts: [], platform_variants: [], qa_result: null, cost_estimate: null };
+  const vdi = input.validated_domain_inputs || {};
+  const evidence = (input.source_refs || vdi.source_refs || []).map(String);
+  if (vdi.rights_confirmed !== true) return { status: "REJECTED", reason: "product image/copy rights unconfirmed — poster creation blocked per error_and_recovery", poster_asset_id: null, post_drafts: [], platform_variants: [], qa_result: { overall: "BLOCKED", checks: ["rights_unconfirmed"] }, cost_estimate: null, typed_artifact: null, evidence_refs: evidence, uncertainty_flags: ["rights_block"], cost_actual: 0, approval_requests: [] };
+  const SUPPORTED = { facebook: 400, linkedin: 700, youtube_community: 500 };
+  const brandName = String(vdi.brand_name || input.brand_id);
+  const priceLine = vdi.price_myr === undefined || vdi.price_myr === null ? null : "RM" + Number(vdi.price_myr).toFixed(2);
+  const headline = String(vdi.headline || (brandName + " — " + String(input.objective).slice(0, 60)));
+  const posterAssetId = stableId("POSTER", [String(input.tenant_id), String(input.product_id), String(input.brand_id), headline]);
+  const drafts = []; const variants = []; const checks = [];
+  for (const raw of input.platforms.map((x) => String(x).toLowerCase())) {
+    const limit = SUPPORTED[raw];
+    const body = priceLine ? headline + " | " + priceLine + " | " + "Details: " + String(input.product_id) : headline + " | price not supplied — no invented price";
+    const alt = String(vdi.alt_text || (brandName + " product poster, " + raw + " variant")); // provided or structural, never claims
+    if (limit === undefined) {
+      drafts.push({ platform: raw, state: "draft_only", reason: "platform incompatibility — draft only per contract", headline, body, alt_text: alt, language: String(input.language) });
+      variants.push({ platform: raw, char_limit: null, within_limit: null, channel: "draft_only_unsupported" });
+      checks.push(raw + ":draft_only");
+    } else {
+      const within = body.length <= limit;
+      drafts.push({ platform: raw, state: "ready_for_owner_review", headline, body, alt_text: alt, language: String(input.language) });
+      variants.push({ platform: raw, char_limit: limit, char_used: body.length, within_limit: within, channel: "community_post_spec" });
+      checks.push(raw + (within ? ":within_limit" : ":OVER_LIMIT"));
+    }
+  }
+  const qa = { overall: checks.some((c) => /OVER_LIMIT|draft_only/.test(c)) ? (checks.every((c) => c.includes("draft_only")) ? "DRAFTS_ONLY" : "PARTIAL") : "PASS", checks, provenance_stored: evidence.length > 0 };
+  return {
+    status: "OK",
+    poster_asset_id: posterAssetId,
+    post_drafts: drafts, platform_variants: variants, qa_result: qa,
+    cost_estimate: { basis: "no_verified_adapter_price_card", estimate_myr: null, budget_declared_myr: Number(input.budget), note: "Wan adapter never invoked — pricing UNKNOWN, never fabricated" },
+    typed_artifact: { mode: "MOCK", poster_asset_id: posterAssetId, render: "NOT_RENDERED_adapter_blocking", drafts: drafts.length, variants: variants.length },
+    evidence_refs: [posterAssetId].concat(evidence),
+    uncertainty_flags: ["poster_render_not_executed", "cost_estimate_UNKNOWN_no_price_source"],
+    cost_actual: 0, approval_requests: ["publishing any draft remains owner-gated (external post = BLOCKED)"],
+  };
+}
+
+/* ---- margin-analyst (SK-030) — contribution margin by SKU from supplied figures ONLY.
+ * Missing components -> SKU flagged unknown and EXCLUDED from confident ranking (never guessed).
+ * in : sku_prices[{sku, price_myr}], verified_costs[{sku, landed_cost_myr, delivery_myr?, returns_allowance_myr?}], fee_schedule{marketplace_pct, payment_pct, fixed_per_unit_myr} (or per-sku rows)
+ * out: margin_table, break_even, unknown_cost_flags */
+export function skill_margin_analyze(input = {}) {
+  const missing = req(input, ["sku_prices", "verified_costs", "fee_schedule"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, margin_table: [], break_even: [], unknown_cost_flags: [], note: "no inputs — nothing to compute" };
+  const costs = new Map((input.verified_costs || []).map((c) => [String(c.sku), c]));
+  const fees = Array.isArray(input.fee_schedule) ? new Map(input.fee_schedule.map((f) => [String(f.sku), f])) : null;
+  const global = Array.isArray(input.fee_schedule) ? null : input.fee_schedule;
+  const table = []; const unknown = []; const breakEven = [];
+  for (const sp of input.sku_prices) {
+    const sku = String(sp.sku);
+    const c = costs.get(sku) || {};
+    const f = (fees ? fees.get(sku) : global) || {};
+    const parts = { price: sp.price_myr, landed: c.landed_cost_myr, delivery: c.delivery_myr ?? 0, returns: c.returns_allowance_myr ?? 0, mp_pct: f.marketplace_pct ?? global?.marketplace_pct, pay_pct: f.payment_pct ?? global?.payment_pct, fixed: f.fixed_per_unit_myr ?? global?.fixed_per_unit_myr ?? 0 };
+    const gaps = Object.entries({ price_myr: parts.price, landed_cost_myr: parts.landed, marketplace_pct: parts.mp_pct, payment_pct: parts.pay_pct }).filter(([, v]) => v === undefined || v === null).map(([k]) => k);
+    const beRequired = sense(parts.landed ?? 0) + sense(parts.delivery) + sense(parts.returns) + sense(parts.fixed);
+    breakEven.push({ sku, break_even_price_myr: gaps.length ? null : Number(((beRequired / 100) / (1 - (Number(parts.mp_pct) + Number(parts.pay_pct)) / 100)).toFixed(2)), missing_components: gaps });
+    if (gaps.length) { unknown.push({ sku, missing: gaps, reason: "input_absent_marks_UNKNOWN_excluded_from_ranking" }); continue; }
+    const price = sense(parts.price);
+    const feeSen = Math.round(price * (Number(parts.mp_pct) + Number(parts.pay_pct)) / 100) + sense(parts.fixed);
+    const costSen = sense(parts.landed) + parts.delivery * 100 + parts.returns * 100;
+    const margin = price - feeSen - costSen;
+    table.push({ sku, price_myr: Number((price / 100).toFixed(2)), total_cost_myr: Number((costSen / 100).toFixed(2)), fees_myr: Number((feeSen / 100).toFixed(2)), contribution_myr: Number((margin / 100).toFixed(2)), margin_pct: Number(((margin / price) * 100).toFixed(2)), confidence: "COMPUTED_FROM_SUPPLIED_FIGURES" });
+  }
+  table.sort((a, b) => b.margin_pct - a.margin_pct || a.sku.localeCompare(b.sku)); // deterministic rank
+  return {
+    status: "OK", margin_table: table, break_even: breakEven, unknown_cost_flags: unknown,
+    note: "figures are operator-supplied; unknown components keep the SKU UNKNOWN and off the ranking (contract semantics)",
+  };
+}
+
+/* ---- storefront-builder (SK-047) — portable site SPEC + QA via Hashmeta connector rules.
+ * The Hashmeta Website Connector is BLOCKED (no owner token / <9.0): no live call, no
+ * preview request, publication NEVER automatic — owner approval + release gate required.
+ * in : tenant_id, objective_id, task_id, validated_domain_inputs{products[], brand{name,colors?}, checkout_mode?}, source_refs
+ * out: typed_artifact{site_spec, qa}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_storefront_build(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const products = Array.isArray(vdi.products) ? vdi.products : [];
+  const brand = vdi.brand || {};
+  if (!products.length || !brand.name) return { status: "REJECTED", reason: "site spec needs at least one product row and a brand name — nothing fabricated", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_incomplete_rejected"], cost_actual: 0, approval_requests: [] };
+  const badRows = products.map((p, i) => ({ i, sku: String(p.sku ?? i), why: [!p.sku && "sku", (p.price_myr === undefined || p.price_myr === null) && "price_myr"].filter(Boolean) })).filter((r) => r.why.length);
+  if (badRows.length) return { status: "REJECTED", reason: "product validation failed: " + badRows.map((r) => r.sku + "(" + r.why.join("+") + ")").join(", "), typed_artifact: null, evidence_refs: [], uncertainty_flags: ["product_validation_rejected"], cost_actual: 0, approval_requests: [] };
+  const specId = stableId("SITE", [String(input.tenant_id), String(input.objective_id), brand.name, products.map((p) => p.sku).join(",")]);
+  const siteSpec = {
+    schema_version: 1, mode: "SPEC_ONLY", spec_id: specId,
+    brand: { name: String(brand.name), palette: brand.colors || [], identity_lock: "manufacturer branding preserved; merchant brand additive only (ECOM-13 rule)" },
+    layout: "mobile_first", pages: ["home", "catalog", "product", "cart", "checkout"],
+    products: products.map((p) => ({ sku: String(p.sku), name: p.name ? String(p.name) : null, price_myr: Number(p.price_myr) })),
+    checkout: { mode: String(vdi.checkout_mode || "central_company_account"), card_data_stored: false },
+    connector: { candidate: "Hashmeta Website Connector", class: "BLOCKED", live_call_made: false, staging_preview: "NOT_REQUESTED_blocked_class" },
+  };
+  const qa = {
+    overall: products.every((p) => p.name) ? "PASS_STRUCTURAL" : "INCOMPLETE",
+    checks: ["mobile_first declared", "checkout is central_company_account", "no invented product facts (rows passthrough)", "publication held by owner-approval + connector-readiness gate"],
+  };
+  return {
+    status: "OK",
+    typed_artifact: { site_spec: siteSpec, qa_result: qa },
+    evidence_refs: [specId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["hashmeta_connector_BLOCKED_no_live_call", "spec_only_no_site_created"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "publish_live", auto: false, requires: "explicit owner approval per campaign AND connector 9.0 readiness — NEVER automatic" }],
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
+  "creative-generator": skill_creative_generate, "poster-social-creator": skill_poster_social_create,
+  "margin-analyst": skill_margin_analyze, "storefront-builder": skill_storefront_build,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be

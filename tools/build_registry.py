@@ -347,13 +347,18 @@ POLICY_DISPOSITIONS = {
 
 # WO-103 — first 6 P0 skill modules (family names from the work order; deterministic
 # pure functions living in server/odai/skills.mjs, contracts sourced from sheet-04).
+# WO-113 tranche 2 batch 1 appends the 4 highest-reference t1-core modules.
 P0_MODULES = {
-    "SK-024": {"module": "skill_ledger_append", "family": "ledger-append"},
-    "SK-009": {"module": "skill_catalog_query", "family": "catalog-query"},
-    "SK-021": {"module": "skill_evidence_append", "family": "evidence-append"},
-    "SK-035": {"module": "skill_gate_check", "family": "gate-check"},
-    "SK-041": {"module": "skill_schedule_scaffold", "family": "schedule-scaffold"},
-    "SK-040": {"module": "skill_report_compose", "family": "report-compose"},
+    "SK-024": {"module": "skill_ledger_append", "family": "ledger-append", "wo": "WO-103"},
+    "SK-009": {"module": "skill_catalog_query", "family": "catalog-query", "wo": "WO-103"},
+    "SK-021": {"module": "skill_evidence_append", "family": "evidence-append", "wo": "WO-103"},
+    "SK-035": {"module": "skill_gate_check", "family": "gate-check", "wo": "WO-103"},
+    "SK-041": {"module": "skill_schedule_scaffold", "family": "schedule-scaffold", "wo": "WO-103"},
+    "SK-040": {"module": "skill_report_compose", "family": "report-compose", "wo": "WO-103"},
+    "SK-055": {"module": "skill_poster_social_create", "family": "poster-social-creator", "wo": "WO-113"},
+    "SK-018": {"module": "skill_creative_generate", "family": "creative-generator", "wo": "WO-113"},
+    "SK-030": {"module": "skill_margin_analyze", "family": "margin-analyst", "wo": "WO-113"},
+    "SK-047": {"module": "skill_storefront_build", "family": "storefront-builder", "wo": "WO-113"},
 }
 
 # ---------------------------------------------------------------------------
@@ -496,7 +501,7 @@ def build_skills(d, sha):
         if sid in P0_MODULES:
             row["implementation"] = {"status": "IMPLEMENTED_P0", "module": "server/odai/skills.mjs",
                                      "function": P0_MODULES[sid]["module"], "family": P0_MODULES[sid]["family"],
-                                     "work_order": "WO-103"}
+                                     "work_order": P0_MODULES[sid]["wo"]}
         else:
             row["implementation"] = {"status": "NOT_IMPLEMENTED", "module": None, "function": None}
         if sid == "SK-058":

@@ -138,3 +138,5 @@
 2026-11-21T08:54:22Z|HOOK_ALLOW|V43-REG2|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state-note.json+odai/dev_docs/loop-state.json+odai/dev_docs/v43_phase0_ecom_registry.json
 2026-11-21T08:54:31Z|REVOKE|V43-REG2|reason=SHIPPED d492bec
 2026-11-21T08:54:31Z|CLOSED|V43-REG2|verdict=SHIPPED|commit=d492bec|detail=V43 reland landed; leases+ledger staged
+2026-11-21T08:54:31Z|HOOK_ALLOW|V43-REG2|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-21T09:05:01Z|ISSUE|WO-113|ops=check,commit|paths=server/odai/,tests/,odai/config/skills_implemented.json,odai/config/skill_contracts.json,odai/dev_docs/,tools/build_registry.py|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T10:35:01Z

@@ -252,6 +252,27 @@
     "revoked_reason": "WO-112 SHIPPED (staged, NO publish; files: odai/fixtures/awa 37 fixture files, server/odai/awa_eval.mjs NEW, tests/awa_scenarios.test.mjs NEW 13 tests, package.json test-chain wiring, odai/dev_docs/sh",
     "revoked_at": "2026-11-20T16:07:22Z"
   },
+  "WO-113": {
+    "issued_at": "2026-11-21T09:05:01Z",
+    "expires_at": "2026-11-21T10:35:01Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/config/skills_implemented.json",
+      "odai/config/skill_contracts.json",
+      "odai/dev_docs/",
+      "tools/build_registry.py"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-A1": {
     "issued_at": "2026-11-20T14:37:22Z",
     "expires_at": "2026-11-20T16:37:22Z",
