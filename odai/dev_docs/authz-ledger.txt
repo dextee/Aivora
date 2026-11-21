@@ -254,3 +254,9 @@
 2026-11-21T11:59:51Z|ISSUE|LOOP-CLOSE-B13|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=6|single_use=0|expires_at=2026-11-21T12:19:51Z
 2026-11-21T11:59:51Z|HOOK_ALLOW|LOOP-CLOSE-B13|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json
 2026-11-21T11:59:52Z|REVOKE|LOOP-CLOSE-B13|reason=loop close for this wake complete
+2026-11-21T12:35:02Z|ISSUE|V43-T0|ops=check,commit|paths=odai/config/,odai/dev_docs/,tests/|minutes=45|budget=12|single_use=0|expires_at=2026-11-21T13:20:02Z
+2026-11-21T12:35:03Z|HOOK_ALLOW|V43-T0|odai/config/agent_workflows.json+odai/config/v43_ecom_api_contracts.json+odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/v43-coffee-preview.html+tests/v43_coffee.test.mjs
+2026-11-21T12:35:03Z|REVOKE|V43-T0|reason=V43-T0 SHIPPED (staged; preview=dev-side artifact; no publish — production lock intact)
+2026-11-21T12:45:09Z|ISSUE|DEV11-VER4|ops=check,commit|paths=odai/dev_docs/loop-log.jsonl|minutes=10|budget=6|single_use=0|expires_at=2026-11-21T12:55:09Z
+2026-11-21T12:46:06Z|HOOK_ALLOW|DEV11-VER4|odai/dev_docs/loop-log.jsonl
+2026-11-21T12:46:11Z|REVOKE|DEV11-VER4|reason=verification shipped 58b4746 (loop-log line only); lease closed
