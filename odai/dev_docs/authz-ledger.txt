@@ -199,3 +199,6 @@
 2026-11-21T09:47:40Z|ISSUE|LOOP-CLOSE2|ops=check,commit|paths=odai/dev_docs/|minutes=10|budget=12|single_use=0|expires_at=2026-11-21T09:57:40Z
 2026-11-21T09:47:40Z|HOOK_ALLOW|LOOP-CLOSE2|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-21T09:47:40Z|REVOKE|LOOP-CLOSE2|reason=final
+2026-11-21T09:48:05Z|ISSUE|LOOP-FINAL|ops=check,commit|paths=odai/dev_docs/|minutes=10|budget=12|single_use=0|expires_at=2026-11-21T09:58:05Z
+2026-11-21T09:48:05Z|HOOK_ALLOW|LOOP-FINAL|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-21T09:48:05Z|REVOKE|LOOP-FINAL|reason=done

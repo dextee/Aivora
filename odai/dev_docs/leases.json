@@ -154,6 +154,26 @@
     "revoked_reason": "final",
     "revoked_at": "2026-11-21T09:47:40Z"
   },
+  "LOOP-FINAL": {
+    "issued_at": "2026-11-21T09:48:05Z",
+    "expires_at": "2026-11-21T09:58:05Z",
+    "minutes": 10,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "done",
+    "revoked_at": "2026-11-21T09:48:05Z"
+  },
   "UI-01B": {
     "issued_at": "2026-11-20T17:30:18Z",
     "expires_at": "2026-11-20T18:30:18Z",
