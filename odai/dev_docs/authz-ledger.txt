@@ -164,3 +164,5 @@
 2026-11-21T09:16:11Z|HOOK_ALLOW|CTRL-SYNC2|odai/config/skills_implemented.json+odai/dev_docs/authz-ledger.txt+odai/dev_docs/controller-ruling-v43.txt+odai/dev_docs/leases.json
 2026-11-21T09:16:11Z|REVOKE|CTRL-SYNC2|reason=SHIPPED sync
 2026-11-21T09:16:27Z|HOOK_ALLOW|V42-CLOSE|odai/dev_docs/authz-ledger.txt
+2026-11-21T09:16:38Z|HOOK_ALLOW|V42-CLOSE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-21T09:16:52Z|REVOKE|V43-REG|reason=prior-session lease denied on path scope; reland completed by V43-REG2 — closing stale grant
