@@ -260,3 +260,4 @@
 2026-11-21T12:45:09Z|ISSUE|DEV11-VER4|ops=check,commit|paths=odai/dev_docs/loop-log.jsonl|minutes=10|budget=6|single_use=0|expires_at=2026-11-21T12:55:09Z
 2026-11-21T12:46:06Z|HOOK_ALLOW|DEV11-VER4|odai/dev_docs/loop-log.jsonl
 2026-11-21T12:46:11Z|REVOKE|DEV11-VER4|reason=verification shipped 58b4746 (loop-log line only); lease closed
+2026-11-21T12:46:11Z|HOOK_ALLOW|DEV11-VER4|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
