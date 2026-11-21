@@ -26,7 +26,7 @@ before(async () => {
 after(() => child?.kill());
 
 import { criterionFromText, matchObjective, planFor, registrySummary, validatePlanEdges } from "../server/odai/registry.mjs";
-import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate, skill_budget_plan, skill_crm_followup, skill_cashflow_forecast, skill_wan_video_create, skill_consent_check, skill_localization_specialist, skill_payment_reconcile, skill_site_qa, skill_threat_monitor, skill_identity_agent, skill_content_planner, skill_brand_setup_specialist, skill_inventory_validate, skill_optimization_advise, skill_recovery_audit, skill_refund_case, skill_registration_advise, skill_shipping_rate, skill_tenant_onboard, skill_social_performance_report } from "../server/odai/skills.mjs";
+import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate, skill_budget_plan, skill_crm_followup, skill_cashflow_forecast, skill_wan_video_create, skill_consent_check, skill_localization_specialist, skill_payment_reconcile, skill_site_qa, skill_threat_monitor, skill_identity_agent, skill_content_planner, skill_brand_setup_specialist, skill_inventory_validate, skill_optimization_advise, skill_recovery_audit, skill_refund_case, skill_registration_advise, skill_shipping_rate, skill_tenant_onboard, skill_social_performance_report, skill_asset_manage, skill_channel_publish, skill_promotion_plan, skill_shipping_track } from "../server/odai/skills.mjs";
 import { budgetScope } from "../server/odai/reservations.mjs";
 import { get } from "../server/odai/store.mjs";
 import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledger.mjs";
@@ -490,8 +490,12 @@ test("A1: P0 modules honor NEEDS_INPUT/REJECTED error contract + produce declare
     "shipping-rate-agent": skill_shipping_rate({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T33", source_refs: ["s"], validated_domain_inputs: { as_of: "2026-11-21", rate_table: [{ carrier: "PosLaju", base_myr: 5, per_kg_myr: 2, valid_through: "2026-12-31" }], shipments: [{ ref: "S1", weight_kg: 2 }] } }),
     "tenant-onboarding-agent": skill_tenant_onboard({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T34", source_refs: ["s"], validated_domain_inputs: { onboarding_spec: { company_name: "Acme", market: "MY" }, quotas: { objectives_per_month: 50, storage_mb: 1000 } } }),
     "social-performance-reporter": skill_social_performance_report({ tenant_id: "sk-a1", channel_account_refs: ["fb:1"], post_ids: ["P1"], date_range: { from: "2026-11-01", to: "2026-11-30" }, verified_spend: 100, conversion_events: [{ amount_myr: 50, tracking_evidence_ref: "TRK1" }], source_refs: ["s"] }),
+    "asset-manager": skill_asset_manage({ asset_refs: ["A1"], usage_rights: "owner", target_format: "webp", assets_catalog: [{ ref: "A1", kind: "image", rights: "owner", checksum: "c1", source_declared: "shot by owner" }] }),
+    "channel-publisher": skill_channel_publish({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T35", source_refs: ["s"], validated_domain_inputs: { posts: [{ post_ref: "P1", channel: "facebook", text: "hi", approval_ref: "APR-1", idempotency_key: "IK-1" }] } }),
+    "promotion-planner": skill_promotion_plan({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T36", source_refs: ["s"], validated_domain_inputs: { promotion: { type: "pct", value: 10, starts_on: "2026-12-01", ends_on: "2026-12-31", as_of: "2026-11-21" }, verified_base_prices: [{ sku: "A", price_myr: 20 }] } }),
+    "shipping-tracker": skill_shipping_track({ carrier_reference: "TR-1", authorized_connector: "MOCK", tracking_feed: [{ carrier_reference: "TR-1", ts: "2026-11-20T08:00:00Z", status: "delivered" }], source_refs: ["s"] }),
   });
-  assert.equal(audit.length, 50);
+  assert.equal(audit.length, 54);
   for (const a of audit) assert.equal(a.ok, true, a.family + " " + JSON.stringify(a));
 });
 
@@ -1601,5 +1605,144 @@ test("T2k: real-HTTP — spawned engine serves batch-11 P0 wiring in /api/odai/r
   assert.equal(reg.counts.skills, 59);
   const progress = JSON.parse(readFileSync(new URL("odai/config/skills_implemented.json", root), "utf8"));
   assert.equal(progress.accounting.implemented >= 50, true, "monotonic progress marker (batch-11 floor)");
+  assert.equal(progress.implemented.length, progress.accounting.implemented);
+});
+
+/* ---------------- 13. WO-113 tranche-2 batch 12 — asset manager / channel publisher / promotion / tracker ---------------- */
+test("T2l: SK-001 asset manager — catalog lookup only, unknown rights BLOCKED, checksums required, no Drive calls no transcodes", () => {
+  const ni = skill_asset_manage({});
+  assert.equal(ni.status, "NEEDS_INPUT");
+  assert.deepEqual(ni.missing.sort(), ["asset_refs", "target_format", "usage_rights"]);
+  assert.equal(skill_asset_manage({ asset_refs: ["A"], usage_rights: "owner", target_format: "webp" }).status, "REJECTED", "missing catalog refused instead of fetching");
+  const badRights = skill_asset_manage({ asset_refs: ["A"], usage_rights: "probably-fine", target_format: "webp", assets_catalog: [{ ref: "A", rights: "owner", checksum: "z" }] });
+  assert.equal(badRights.status, "REJECTED"); assert.match(badRights.reason, /rights class/);
+  const r = skill_asset_manage({ tenant_id: "w113b12", asset_refs: ["A1", "A2", "A3", "A9"], usage_rights: "owner", target_format: "webp",
+    assets_catalog: [
+      { ref: "A1", kind: "image", rights: "owner", checksum: "abc123", source_declared: "product shoot 2026-10" },
+      { ref: "A2", kind: "image", checksum: "d41d" },
+      { ref: "A3", kind: "logo", rights: "licensed", checksum: "f00d", license_note: "font bundle 2025" },
+    ] });
+  assert.equal(r.status, "OK");
+  assert.equal(r.approved_assets.length, 2);
+  assert.equal(r.approved_assets[0].transcode, "PLANNED_NOT_EXECUTED (converter not invoked here)");
+  assert.equal(r.blocked_assets.length, 2);
+  assert.ok(r.blocked_assets.some((b) => /RIGHTS_OR_PROVENANCE_UNVERIFIED.*rights record missing/.test(b.reason)), "A2 has no rights record");
+  assert.ok(r.blocked_assets.some((b) => /REF_NOT_IN_SUPPLIED_CATALOG/.test(b.reason)));
+  assert.equal(r.provenance.length, 2);
+  assert.ok(r.evidence_refs.includes("sha256:abc123"));
+  assert.match(r.typed_artifact.mode, /VALIDATION_ONLY_no_drive_calls/);
+  assert.equal(r.approval_requests[0].auto, false);
+  assert.match(r.approval_requests[0].requires, /SK-055\/SK-018/);
+  assert.match(r.typed_artifact.rights_note, /AIVORA-owned/);
+});
+
+test("T2l: SK-010 channel publisher — every post KEEPING_DRAFT, approval+idempotency validated, sole path, success never claimed", () => {
+  assert.equal(skill_channel_publish({}).status, "NEEDS_INPUT");
+  const noP = skill_channel_publish({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noP.status, "REJECTED"); assert.match(noP.reason, /posts/);
+  const base = { tenant_id: "w113b12p", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["src:drafts"], validated_domain_inputs: { posts: [
+    { post_ref: "P1", channel: "facebook", text: "weekend launch", approval_ref: "APR-1", idempotency_key: "IK-1" },
+    { post_ref: "P2", channel: "linkedin", text: "story" },
+    { post_ref: "P3", channel: "twitter", text: "x", approval_ref: "A", idempotency_key: "I" },
+    { post_ref: "P4", channel: "instagram", text: "see pic", approval_ref: "APR-4", idempotency_key: "IK-4" },
+    { post_ref: "P5", channel: "facebook", text: "later", approval_ref: "APR-5", idempotency_key: "IK-5", schedule_at: "tomorrow-ish" },
+  ] } };
+  const r = skill_channel_publish(base);
+  assert.equal(r.status, "OK");
+  const pl = r.typed_artifact.publish_plan;
+  const x = (id) => pl.rows.find((p) => p.post_ref === id);
+  assert.equal(x("P1").state, "KEEPING_DRAFT_no_connector_call");
+  assert.equal(x("P1").remote_id, null);
+  assert.equal(x("P1").gate, "GATE_CLEARED_for_owner_execution");
+  assert.deepEqual(x("P2").problems.sort(), ["MISSING_IDEMPOTENCY_KEY_repeat_risk", "NO_APPROVAL_EVIDENCE_owner_approval_required_first"]);
+  assert.ok(x("P3").problems.includes("CHANNEL_not_permitted"));
+  assert.ok(x("P4").problems.includes("FORMAT_missing_media_ref"));
+  assert.ok(x("P5").problems.includes("SCHEDULE_unparseable_timestamp"));
+  assert.equal(pl.gate_cleared, 1); assert.equal(pl.gate_blocked, 4);
+  assert.match(r.typed_artifact.sole_path_note, /single publishing path/);
+  assert.match(r.typed_artifact.never_claim_success, /remote_id is null because NOTHING was sent/);
+  assert.equal(pl.connector_class_at_execution, "LIVE_owner_token_gated");
+  assert.equal(r.approval_requests[0].auto, false);
+  assert.match(r.approval_requests[0].requires, /never sends/);
+});
+
+test("T2l: SK-036 promotion planner — draft-only price math on verified prices, margin-floor flags, expiry explicit, nothing applied", () => {
+  assert.equal(skill_promotion_plan({}).status, "NEEDS_INPUT");
+  const noPromo = skill_promotion_plan({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noPromo.status, "REJECTED"); assert.match(noPromo.reason, /promotion/);
+  const noPrices = skill_promotion_plan({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { promotion: { type: "pct", value: 10, starts_on: "2026-12-01", ends_on: "2026-12-31" } } });
+  assert.equal(noPrices.status, "REJECTED"); assert.match(noPrices.reason, /verified_base_prices/);
+  const badWin = skill_promotion_plan({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { promotion: { type: "pct", value: 10, starts_on: "2026-12-31", ends_on: "2026-12-01" }, verified_base_prices: [{ sku: "A", price_myr: 1 }] } });
+  assert.equal(badWin.status, "REJECTED"); assert.match(badWin.reason, /expiry terms/);
+  const r = skill_promotion_plan({ tenant_id: "w113b12d", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["src:pricing"], validated_domain_inputs: {
+    promotion: { type: "pct", value: 10, starts_on: "2026-12-01", ends_on: "2026-12-31", as_of: "2026-11-21", margin_floor_myr: 5 },
+    verified_base_prices: [
+      { sku: "TEA", price_myr: 20, cost_myr: 15 },
+      { sku: "CAPS", price_myr: 10 },
+      { sku: "BAD", price_myr: "tbd" },
+    ] } });
+  assert.equal(r.status, "OK");
+  const pd = r.typed_artifact.promotion_draft;
+  assert.equal(pd.liveness, "NOT_STARTED");
+  const l = (id) => pd.lines.find((x) => x.sku === id);
+  assert.equal(l("TEA").promo_price_myr, 18);
+  assert.equal(l("TEA").state, "FLAG_below_margin_floor_owner_review", "18-15=3 < floor 5");
+  assert.equal(l("CAPS").state, "DRAFTED");
+  assert.match(String(l("CAPS").cost_basis), /unverified_no_floor_check_possible/);
+  assert.equal(l("BAD").state, "SKIPPED_base_price_unverified");
+  const wild = skill_promotion_plan({ tenant_id: "w113b12d", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["s"], validated_domain_inputs: { promotion: { type: "pct", value: 95, starts_on: "2026-12-01", ends_on: "2026-12-31" }, verified_base_prices: [{ sku: "A", price_myr: 10 }] } });
+  assert.equal(wild.typed_artifact.promotion_draft.lines[0].state, "REJECTED_pct_out_of_guardrail_1_90");
+  const neg = skill_promotion_plan({ tenant_id: "w113b12d", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["s"], validated_domain_inputs: { promotion: { type: "fixed", value: 25, starts_on: "2026-12-01", ends_on: "2026-12-31" }, verified_base_prices: [{ sku: "A", price_myr: 20 }] } });
+  assert.equal(neg.typed_artifact.promotion_draft.lines[0].state, "REJECTED_price_would_be_nonpositive");
+  assert.ok(pd.terms_and_conditions_draft.some((t) => /quantities are NEVER guaranteed/.test(t)));
+  assert.match(pd.terms_and_conditions_draft[2], /NO \(default safest reading\)/);
+  assert.match(r.approval_requests[0].requires, /SK-030/);
+  assert.match(r.typed_artifact.mode, /DRAFT_price_application_external/);
+});
+
+test("T2l: SK-043 shipping tracker — LIVE class BLOCKED with retry guidance, MOCK feed passthrough sorted, ETA never invented, alerts gate contact", () => {
+  const ni = skill_shipping_track({});
+  assert.equal(ni.status, "NEEDS_INPUT");
+  assert.ok(ni.missing.some((m) => String(m).includes("tracking_feed")), "the ask names what's needed");
+  const live = skill_shipping_track({ carrier_reference: "TR-1", authorized_connector: "LIVE" });
+  assert.equal(live.status, "BLOCKED"); assert.match(live.reason, /owner-token|retry once/);
+  assert.equal(live.approval_requests[0].scope, "live_tracking_access");
+  const junk = skill_shipping_track({ carrier_reference: "TR-1", authorized_connector: "vibes" });
+  assert.equal(junk.status, "REJECTED"); assert.match(junk.reason, /MOCK\/SANDBOX/);
+  const noFeed = skill_shipping_track({ carrier_reference: "TR-1", authorized_connector: "MOCK" });
+  assert.equal(noFeed.status, "REJECTED", "unsupplied feed is never faked");
+  const feed = [
+    { carrier_reference: "TR-1", ts: "2026-11-20T08:00:00Z", status: "Delivered", location: "KL", event_ref: "EV-9", declared_eta: "2026-11-25" },
+    { carrier_reference: "TR-1", ts: "2026-11-19T02:00:00Z", status: "delayed at hub", event_ref: "EV-8" },
+    { carrier_reference: "TR-1", status: "no timestamp" },
+    { carrier_reference: "OTHER", ts: "2026-11-20T09:00:00Z", status: "Delivered" },
+  ];
+  const r = skill_shipping_track({ carrier_reference: "TR-1", authorized_connector: "MOCK", tracking_feed: feed, source_refs: ["src:carrier-export"] });
+  assert.equal(r.status, "OK");
+  assert.equal(r.tracking_events.length, 2, "malformed dropped, other carrier excluded");
+  assert.ok(Date.parse(r.tracking_events[0].ts) < Date.parse(r.tracking_events[1].ts), "sorted forward");
+  assert.equal(r.exception_alerts.length, 1);
+  assert.equal(r.exception_alerts[0].code, "CARRIER_DELAYED AT HUB");
+  assert.match(r.exception_alerts[0].customer_contact, /NEVER automatic/);
+  assert.ok(r.evidence_refs.includes("EV-8") && r.evidence_refs.includes("EV-9"), "carrier event refs cited");
+  assert.equal(r.typed_artifact.declared_eta, "2026-11-25");
+  assert.match(r.typed_artifact.eta_note, /never sets delivery dates/);
+  assert.equal(r.typed_artifact.mode, "FEED_READ_ONLY_MOCK", "mode label per DEV-02 mock-class rule");
+  const unknown = skill_shipping_track({ carrier_reference: "TX-9", authorized_connector: "MOCK", tracking_feed: feed });
+  assert.equal(unknown.tracking_events.length, 0);
+  assert.equal(unknown.exception_alerts[0].code, "NO_EVENTS_IN_AUTHORIZED_FEED");
+  assert.match(unknown.typed_artifact.note, /never rendered as 'lost' or 'delivered'/);
+});
+
+test("T2l: real-HTTP — spawned engine serves batch-12 P0 wiring in /api/odai/registry", async () => {
+  const reg = await getj("/api/odai/registry");
+  const fam = new Map(reg.p0_skill_modules.map((x) => [x.family, x.skill_id]));
+  assert.equal(fam.get("asset-manager"), "SK-001");
+  assert.equal(fam.get("channel-publisher"), "SK-010");
+  assert.equal(fam.get("promotion-planner"), "SK-036");
+  assert.equal(fam.get("shipping-tracker"), "SK-043");
+  assert.equal(reg.counts.skills, 59);
+  const progress = JSON.parse(readFileSync(new URL("odai/config/skills_implemented.json", root), "utf8"));
+  assert.equal(progress.accounting.implemented >= 54, true, "monotonic progress marker (batch-12 floor)");
   assert.equal(progress.implemented.length, progress.accounting.implemented);
 });

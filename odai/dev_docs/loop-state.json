@@ -58,10 +58,10 @@
   },
   {
    "id": "WO-113",
-   "status": "IN_PROGRESS:batches1-11_shipped_50_modules_of_58_target(+SK-058 CONTRACT-HOLD)",
+   "status": "IN_PROGRESS:batches1-12_shipped_54_modules_of_58_target(+SK-058 CONTRACT-HOLD)",
    "paths": "server/odai,tests",
    "deps": [],
-   "spec": "50/58 buildable shipped; b11: SK-039 registration step-framework (no invented links, not legal approval), SK-042 tariff-computation quoting (expired rows excluded, trackers never called), SK-050 onboarding plan drafting (cross-tenant provisioning refused, quotas never defaulted), SK-059 supplied-metrics social report (engagement!=sales, ROI UNKNOWN without evidence, money-first spoken summary); next head: SK-001,010,036,043; suite 168/168; hashes b9=d0d3ed5 b10=372a2e2 b11=b33be0c"
+   "spec": "54/58 buildable shipped; b12: SK-001 asset rights/catalog validation (no Drive calls, no transcodes), SK-010 sole publishing gate (every post KEEPING_DRAFT), SK-036 draft price-math promos (floor flags, expiry explicit), SK-043 authorized-feed tracker (LIVE BLOCKED, ETA never invented); next/final head: SK-045,052,053,054; suite 173/173; hashes b10=372a2e2 b11=b33be0c b12=(pending)"
   },
   {
    "id": "E2E-10J",
@@ -343,5 +343,5 @@
    "verify": "DEV-11"
   }
  ],
- "updated_at": "2026-11-21T11:50:39Z"
+ "updated_at": "2026-11-21T11:55:29Z"
 }

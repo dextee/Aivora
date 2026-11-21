@@ -1946,6 +1946,163 @@ export function skill_social_performance_report(input = {}) {
   };
 }
 
+/* ---- asset-manager (SK-001) — rights/lineage validation over a SUPPLIED asset catalog.
+ * The single media landing path (owner directive: media handled by upload/reuse, NOT by
+ * generation). Google Drive connector class is never called here; checksums/rights are the
+ * owner's declared records — unknown rights are BLOCKED, never assumed. Transcodes are
+ * PLANNED, never executed by this module.
+ * out: approved_assets, provenance, blocked_assets (+ sidecars) */
+export function skill_asset_manage(input = {}) {
+  const missing = req(input, ["asset_refs", "usage_rights", "target_format"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, approved_assets: [], provenance: [], blocked_assets: [], evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const catalog = Array.isArray(input.assets_catalog) ? input.assets_catalog : [];
+  if (!catalog.length) return { status: "REJECTED", reason: "assets_catalog[] required — assets are looked up in the owner-supplied Drive export, never fetched or invented", approved_assets: [], provenance: [], blocked_assets: [] };
+  const declaredRight = String(input.usage_rights);
+  if (!["owner", "licensed", "review"].includes(declaredRight)) return { status: "REJECTED", reason: "usage_rights must be owner|licensed|review — rights class is declared, not guessed", approved_assets: [], provenance: [], blocked_assets: [] };
+  const byRef = new Map(catalog.map((a) => [String((a || {}).ref || ""), a]));
+  const approved = [], blocked = [], provenance = [];
+  (input.asset_refs || []).map(String).forEach((ref) => {
+    const a = byRef.get(ref);
+    if (!a) { blocked.push({ ref, reason: "REF_NOT_IN_SUPPLIED_CATALOG — existence unconfirmed", retry: "export the Drive listing again and resubmit" }); return; }
+    const rights = String(a.rights || "unknown");
+    const checksum = String(a.checksum || "").trim();
+    if (rights === "unknown" || !checksum) { blocked.push({ ref, reason: "RIGHTS_OR_PROVENANCE_UNVERIFIED" + (rights === "unknown" ? " (rights record missing)" : "") + (!checksum ? " (no checksum)" : ""), retry: "owner to attach rights + checksum before use" }); return; }
+    if (declaredRight === "review" && !/reviewed/i.test(String(a.license_note || ""))) { blocked.push({ ref, reason: "LICENSE_NOTE_LACKS_REVIEW_EVIDENCE" }); return; }
+    approved.push({ ref, kind: String(a.kind || "media"), rights: declaredRight === "review" ? "licensed" : rights, target_format: String(input.target_format), transcode: "PLANNED_NOT_EXECUTED (converter not invoked here)", transformations_allowed: a.transformations_allowed !== false });
+    provenance.push({ ref, source_declared: String(a.source_declared || "(undisclosed)"), checksum, license_note: a.license_note ? String(a.license_note) : null });
+  });
+  const asstId = stableId("ASSET", [String(input.tenant_id || "global"), (input.asset_refs || []).map(String).join(","), String(input.target_format), declaredRight]);
+  return {
+    status: "OK",
+    approved_assets: approved,
+    provenance,
+    blocked_assets: blocked,
+    typed_artifact: { mode: "VALIDATION_ONLY_no_drive_calls_no_transcodes", rights_note: "asset rights and tenant metadata remain AIVORA-owned (boundary); this module validates records, it does not acquire or alter them", batch_id: asstId, requested: (input.asset_refs || []).length, approved_count: approved.length, blocked_count: blocked.length },
+    evidence_refs: [asstId].concat(provenance.map((p) => "sha256:" + p.checksum).slice(0, 10), (input.source_refs || []).map(String)),
+    uncertainty_flags: ["rights_and_checksums_are_owner_declared_not_crawled", "file_content_not_inspected_metadata_only"],
+    cost_actual: 0,
+    approval_requests: blocked.length ? [{ scope: "clear_blocked_assets", auto: false, requires: "owner supplies rights records or replaces assets — unverified media never reaches creatives (SK-055/SK-018 consume approved_assets only)" }] : [],
+  };
+}
+
+/* ---- channel-publisher (SK-010) — the SOLE publishing path's validation gate.
+ * Publishing is a prohibited automatic action (owner-only + LIVE connector class,
+ * owner-token gated): every post leaves this module KEEPING_DRAFT with remote_id null.
+ * It validates approval evidence, per-channel format rules, idempotency keys and would
+ * be the only place remote confirmation IDs get recorded — never claiming success.
+ * out: typed_artifact{publish_plan}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_channel_publish(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const posts = Array.isArray(vdi.posts) && vdi.posts.length ? vdi.posts : null;
+  if (!posts) return { status: "REJECTED", reason: "posts[] required — nothing is published that was not drafted (SK-055/SK-015/SK-056 outputs)", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["posts_absent"], cost_actual: 0, approval_requests: [] };
+  const CHANNELS = { facebook: { max_len: 5000, needs: ["text"] }, youtube: { max_len: 5000, needs: ["title"] }, linkedin: { max_len: 3000, needs: ["text"] }, instagram: { max_len: 2200, needs: ["text", "media_ref"] } };
+  const plan = posts.map((raw, i) => {
+    const p = raw && typeof raw === "object" ? raw : {};
+    const ch = String(p.channel || "").toLowerCase();
+    const problems = [];
+    if (!CHANNELS[ch]) problems.push("CHANNEL_not_permitted");
+    else (CHANNELS[ch].needs || []).forEach((nf) => { if (!String(p[nf] || (nf === "media_ref" ? p.media_ref : "") || "").trim()) problems.push("FORMAT_missing_" + nf); });
+    if (CHANNELS[ch] && String(p.text || p.title || "").length > CHANNELS[ch].max_len) problems.push("FORMAT_over_length_limit_" + CHANNELS[ch].max_len);
+    if (!String(p.approval_ref || "").trim()) problems.push("NO_APPROVAL_EVIDENCE_owner_approval_required_first");
+    if (!String(p.idempotency_key || "").trim()) problems.push("MISSING_IDEMPOTENCY_KEY_repeat_risk");
+    const sched = String(p.schedule_at || "");
+    if (sched && Number.isNaN(Date.parse(sched))) problems.push("SCHEDULE_unparseable_timestamp");
+    return { post_ref: String(p.post_ref || "POST-" + (i + 1)), channel: ch || null, gate: problems.length ? "GATE_BLOCKED" : "GATE_CLEARED_for_owner_execution", problems, state: "KEEPING_DRAFT_no_connector_call", remote_id: null };
+  });
+  const cleared = plan.filter((x) => !x.problems.length);
+  const pubId = stableId("PUBGATE", [String(input.tenant_id), String(input.objective_id), plan.map((x) => x.post_ref + ":" + x.state + ":" + x.problems.length).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "GATE_VALIDATION_zero_posts_sent", sole_path_note: "SK-010 is the policy's single publishing path — bypassing it to a provider directly is prohibited; ONE provider per destination", never_claim_success: "remote confirmation IDs are recorded only from real platform responses; here every remote_id is null because NOTHING was sent", publish_plan: { plan_id: pubId, gate_cleared: cleared.length, gate_blocked: plan.length - cleared.length, connector_class_at_execution: "LIVE_owner_token_gated", rows: plan } },
+    evidence_refs: [pubId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["approval_refs_are_asserted_not_checked_against_gateway_records"],
+    cost_actual: 0,
+    approval_requests: cleared.length ? [{ scope: "execute_publish", auto: false, requires: "explicit owner execution against permissioned accounts (or a DEV-02 dispositioned connector session) — this gate validates and holds drafts; it never sends" }] : [],
+  };
+}
+
+/* ---- promotion-planner (SK-036) — discount mechanics DRAFTING with price math on
+ * supplied verified base prices. Boundary: promotional offers draft; price validation
+ * stays separate (SK-030 margins / owner). Nothing is applied to a storefront and no
+ * customer is contacted here. Expiry and floor checks are arithmetic, not opinions.
+ * out: typed_artifact{promotion_draft}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_promotion_plan(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const promo = vdi.promotion && typeof vdi.promotion === "object" ? vdi.promotion : null;
+  if (!promo || !["pct", "fixed", "bnv"].includes(String(promo.type))) return { status: "REJECTED", reason: "promotion{type: pct|fixed|bnv,...} required — mechanics are declared, not assumed", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["promo_absent"], cost_actual: 0, approval_requests: [] };
+  const prices = Array.isArray(vdi.verified_base_prices) && vdi.verified_base_prices.length ? vdi.verified_base_prices : null;
+  if (!prices) return { status: "REJECTED", reason: "verified_base_prices[] required — promo prices derive from YOUR verified price list, never invented figures", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["prices_absent"], cost_actual: 0, approval_requests: [] };
+  const start = String(promo.starts_on || ""), end = String(promo.ends_on || ""), asOf = String(promo.as_of || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end) || start > end) return { status: "REJECTED", reason: "starts_on/ends_on (YYYY-MM-DD, start<=end) required — expiry terms are explicit", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["window_invalid"], cost_actual: 0, approval_requests: [] };
+  const liveness = asOf ? (asOf < start ? "NOT_STARTED" : asOf <= end ? "ACTIVE_WINDOW" : "EXPIRED") : "WINDOW_UNCHECKED_no_as_of";
+  const value = Number(promo.value || 0);
+  const floor = Number.isFinite(Number(promo.margin_floor_myr)) ? Number(promo.margin_floor_myr) : null;
+  const lines = prices.map((raw) => {
+    const b = raw && typeof raw === "object" ? raw : {};
+    const sku = String(b.sku || "?"), base = Number(b.price_myr);
+    if (!Number.isFinite(base) || base <= 0) return { sku, state: "SKIPPED_base_price_unverified", promo_price_myr: null };
+    let promoPrice = null, mechanic = null;
+    if (promo.type === "pct") { if (!(value > 0 && value <= 90)) return { sku, state: "REJECTED_pct_out_of_guardrail_1_90", promo_price_myr: null }; promoPrice = Math.round(base * (1 - value / 100) * 100) / 100; mechanic = value + "% off"; }
+    else if (promo.type === "fixed") { promoPrice = Math.round((base - value) * 100) / 100; mechanic = "RM" + value + " off"; if (promoPrice <= 0) return { sku, state: "REJECTED_price_would_be_nonpositive", promo_price_myr: null }; }
+    else { promoPrice = base; mechanic = String(promo.bnv_note || "buy N get X — free-unit cost separate"); }
+    const belowFloor = floor !== null && Number.isFinite(Number(b.cost_myr)) && (promoPrice - Number(b.cost_myr)) < floor;
+    return { sku, base_price_myr: base, promo_price_myr: promoPrice, mechanic, state: belowFloor ? "FLAG_below_margin_floor_owner_review" : "DRAFTED", cost_basis: Number.isFinite(Number(b.cost_myr)) ? Number(b.cost_myr) : "unverified_no_floor_check_possible" };
+  });
+  const terms = ["Offer terms draft: validity " + start + " to " + end + "; while declared stock lasts — quantities are NEVER guaranteed here", "One redemption per " + String(promo.limit_basis || "customer per order") , "Combined-with-other-offers: " + (promo.stackable === true ? "declared stackable (verify platform rules)" : "NO (default safest reading)"), "Publication and customer contact for promos: SK-010 gate + SK-014 consent + owner approval — nothing broadcast automatically"];
+  const prId = stableId("PROMO", [String(input.tenant_id), String(promo.type), String(value), start, end, lines.map((l) => l.sku + ":" + l.state).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "DRAFT_price_application_external_and_owner_gated", promotion_draft: { draft_id: prId, type: String(promo.type), value, window: { start, end }, liveness, lines, terms_and_conditions_draft: terms, drafted: lines.filter((l) => l.state === "DRAFTED").length, flags_or_rejections: lines.filter((l) => l.state !== "DRAFTED").length } },
+    evidence_refs: [prId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["base_prices_owner_verified_not_re_pulled", "demand_uplift_not_predicted_no_forecast_claims"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "activate_promotion", auto: false, requires: "owner price-validation (SK-030 margins for flagged SKUs) + storefront application + consent-gated announcement — draft only until then" }],
+  };
+}
+
+/* ---- shipping-tracker (SK-043) — carrier milestones from AUTHORIZED SUPPLIED feeds only.
+ * Boundary: verified tracking events; delivery dates are NEVER invented. Live feeds are
+ * logistics-connector TBD/BLOCKED (owner-token class): dispatch there returns BLOCKED with
+ * retry guidance, and an unsupplied feed is never faked as MOCK data.
+ * out: tracking_events, exception_alerts (+ sidecars) */
+export function skill_shipping_track(input = {}) {
+  const missing = req(input, ["carrier_reference", "authorized_connector"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing: missing.includes("authorized_connector") ? missing.concat(["tracking_feed (MOCK/SANDBOX export) or an owner-approved LIVE connector grant"]) : missing, tracking_events: [], exception_alerts: [], evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const connector = String(input.authorized_connector).toUpperCase();
+  if (connector === "LIVE") return { status: "BLOCKED", reason: "live tracking connector is TBD/BLOCKED owner-token class — no endpoint is called or simulated; retry once a permissioned connector session is approved", tracking_events: [], exception_alerts: [], evidence_refs: [(input.source_refs || [])[0] || "src:track"].map(String), uncertainty_flags: ["connector_unavailable"], cost_actual: 0, approval_requests: [{ scope: "live_tracking_access", auto: false, requires: "owner-token connector authorization per DEV-02 disposition" }] };
+  if (connector !== "MOCK" && connector !== "SANDBOX") return { status: "REJECTED", reason: "authorized_connector must be MOCK/SANDBOX (or LIVE→BLOCKED class) — got '" + input.authorized_connector + "'", tracking_events: [], exception_alerts: [] };
+  const ref = String(input.carrier_reference);
+  const feedAll = Array.isArray(input.tracking_feed) ? input.tracking_feed : null;
+  if (!feedAll) return { status: "REJECTED", reason: "tracking_feed[] required — events come from your export; nothing is scraped", tracking_events: [], exception_alerts: [] };
+  const mine = feedAll.filter((e) => String((e || {}).carrier_reference || "") === ref);
+  if (!mine.length) return { status: "OK", tracking_events: [], exception_alerts: [{ code: "NO_EVENTS_IN_AUTHORIZED_FEED", guidance: "one plain question: was this parcel shipped under a different carrier reference?" }], typed_artifact: { mode: "FEED_READ_ONLY", carrier_reference: ref, note: "absence of events reported as absence — never rendered as 'lost' or 'delivered'" }, evidence_refs: [stableId("TRACK", [ref, connector, "0"])].concat((input.source_refs || []).map(String)), uncertainty_flags: ["feed_may_lag_carrier_reality"], cost_actual: 0, approval_requests: [] };
+  const badShape = [];
+  const events = mine.map((raw, i) => {
+    const e = raw && typeof raw === "object" ? raw : {};
+    const ts = String(e.ts || "");
+    if (!ts || Number.isNaN(Date.parse(ts)) || !String(e.status || "").trim()) { badShape.push(i + 1); return null; }
+    const row = { ts, status: String(e.status).toLowerCase(), location: e.location ? String(e.location) : null, raw_ref: e.event_ref ? String(e.event_ref) : null };
+    return row;
+  }).filter(Boolean).sort((a, b) => (Date.parse(a.ts) - Date.parse(b.ts)) || String(a.status).localeCompare(String(b.status)));
+  const exception_alerts = events.filter((ev) => /delay|lost|damaged|returned|customs|exception/.test(ev.status)).map((ev) => ({ code: "CARRIER_" + ev.status.toUpperCase(), at: ev.ts, customer_contact: "NEVER automatic — route via SK-014 consent check + SK-006 draft + owner send", suggested_owner_action: ev.status.includes("lost") ? "open carrier claim + consider SK-038 refund case" : "monitor next scan" }));
+  const eta = mine.map((e) => (e || {}).declared_eta).find((d) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) || null;
+  const trkId = stableId("TRACK", [ref, connector, events.length + "/" + mine.length, exception_alerts.length]);
+  return {
+    status: "OK",
+    tracking_events: events,
+    exception_alerts,
+    typed_artifact: { mode: "FEED_READ_ONLY_" + connector, carrier_reference: ref, events_in_window: events.length, malformed_dropped: badShape.length, declared_eta: eta, eta_note: eta ? "eta is the feed's declaration only — this module never sets delivery dates" : "no declared ETA — stated as unknown", last_event: events.length ? events[events.length - 1] : null },
+    evidence_refs: [trkId].concat(events.map((e) => e.raw_ref).filter(Boolean).slice(0, 10), (input.source_refs || []).map(String)),
+    uncertainty_flags: ["feed_is_an_export_scan_lag_possible", "statuses_carrier_wording_passthrough"],
+    cost_actual: 0,
+    approval_requests: exception_alerts.length ? [{ scope: "customer_notification about exceptions", auto: false, requires: "owner approval after consent validation — exception facts here do not authorize outreach" }] : [],
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
@@ -1971,6 +2128,8 @@ export const P0_SKILL_FUNCTIONS = {
   "recovery-audit-agent": skill_recovery_audit, "refund-case-agent": skill_refund_case,
   "registration-advisor": skill_registration_advise, "shipping-rate-agent": skill_shipping_rate,
   "tenant-onboarding-agent": skill_tenant_onboard, "social-performance-reporter": skill_social_performance_report,
+  "asset-manager": skill_asset_manage, "channel-publisher": skill_channel_publish,
+  "promotion-planner": skill_promotion_plan, "shipping-tracker": skill_shipping_track,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be
