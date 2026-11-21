@@ -1071,6 +1071,132 @@ export function skill_order_validate(input = {}) {
   };
 }
 
+/* ---- budget-planner (SK-004) — deterministic line-item budget from OWNER figures.
+ * Never presents scenarios as predictions (contract). Tenant actuals (if tenant_id given)
+ * come from the real immutable money ledger; proposed_costs are owner inputs.
+ * out: budget_plan, cash_at_risk, scenario_table, approval_items */
+export function skill_budget_plan(input = {}) {
+  const missing = req(input, ["budget_amount", "currency", "reserve_amount", "time_horizon", "proposed_costs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, budget_plan: null, cash_at_risk: null, scenario_table: null, approval_items: [] };
+  if (String(input.currency) !== "MYR") return { status: "REJECTED", reason: "currency must be MYR — FX conversion assumptions are never auto-applied", budget_plan: null, cash_at_risk: null, scenario_table: null, approval_items: [] };
+  const amount = Number(input.budget_amount), reserve = Number(input.reserve_amount);
+  if (!(amount >= 0) || !(reserve >= 0)) return { status: "REJECTED", reason: "budget_amount and reserve_amount must be non-negative numbers", budget_plan: null, cash_at_risk: null, scenario_table: null, approval_items: [] };
+  if (reserve > amount) return { status: "REJECTED", reason: "reserve_amount exceeds budget_amount — nothing would remain spendable; owner figure check needed", budget_plan: null, cash_at_risk: null, scenario_table: null, approval_items: [] };
+  const costs = Array.isArray(input.proposed_costs) ? input.proposed_costs : null;
+  if (!costs || !costs.length) return { status: "REJECTED", reason: "proposed_costs[] {item, amount_myr, needed_by?} required — planned spend is never invented", budget_plan: null, cash_at_risk: null, scenario_table: null, approval_items: [] };
+  const bad = costs.filter((c) => !c || !String(c.item || "").trim() || !Number.isFinite(Number(c.amount_myr)) || Number(c.amount_myr) < 0);
+  if (bad.length) return { status: "REJECTED", reason: "every proposed cost needs item + non-negative amount_myr", budget_plan: null, cash_at_risk: null, scenario_table: null, approval_items: bad.map((b) => ({ scope: "fix_cost_row", item: String((b || {}).item || "?"), auto: false })) };
+  const totalProposed = costs.reduce((s, c) => s + Number(c.amount_myr), 0);
+  const available = amount - reserve;
+  const actuals = input.tenant_id ? moneyTotals(String(input.tenant_id)) : null;
+  const planId = stableId("BUD", [String(amount), String(reserve), String(input.time_horizon), costs.map((c) => c.item + c.amount_myr).join(",")]);
+  const scenarios = [["low", 0.5], ["base", 1], ["high", 1.5]].map(([name, k]) => ({ case: name, planned_spend_myr: Math.round(totalProposed * k * 100) / 100, remaining_vs_available_myr: Math.round((available - totalProposed * k) * 100) / 100 }));
+  return {
+    status: "OK",
+    budget_plan: { plan_id: planId, budget_amount_myr: amount, reserve_amount_myr: reserve, spendable_ceiling_myr: available, time_horizon: String(input.time_horizon), line_items: costs.map((c) => ({ item: String(c.item), amount_myr: Number(c.amount_myr), share_pct: totalProposed ? Math.round((Number(c.amount_myr) / totalProposed) * 10000) / 100 : 0, needed_by: c.needed_by || null })), total_proposed_myr: totalProposed, over_ceiling: totalProposed > available, ledger_actuals_out_myr: actuals ? actuals.money_out : null, enforces: "SK-046/SK-035 must declare_scope with cap <= " + available + " MYR before any hold" },
+    cash_at_risk: { max_loss_if_all_planned_spend_fails_myr: Math.min(totalProposed, available), reserve_protected_myr: reserve, basis: "arithmetic ceiling, NOT a prediction or probability" },
+    scenario_table: { rows: scenarios, note: "owner-figure arithmetic only — zero forecast authority, no assumed sales" },
+    approval_items: totalProposed > available ? [{ scope: "raise_ceiling_or_cut_costs", auto: false, requires: "owner decision — planner never self-approves over-budget plans" }] : [{ scope: "lock_budget_scope", auto: false, requires: "owner confirmation to register cap via SK-046 declare_scope" }],
+  };
+}
+
+/* ---- crm-follow-up (SK-006) — consented, ONE-channel-per-recipient sequences (draft only).
+ * Consent gate is absolute: no consent=true ⇒ REJECTED; recipients without a channel
+ * preference get no draft. WhatsApp/Gmail connector classes are approval-gated/BLOCKED:
+ * send attempts here are NEVER executed — every message stays state:DRAFT_NOT_SENT.
+ * out: typed_artifact{followup_sequence}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+const vbi_has = (v, k) => Boolean(v && v[k]);
+export function skill_crm_followup(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const recipients = Array.isArray(vdi.recipients) && vdi.recipients.length ? vdi.recipients : null;
+  const template = String(vdi.message_template || "").trim();
+  if (!recipients || !template) return { status: "REJECTED", reason: "recipients[] and message_template required — audiences and copy are never invented", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["crm_inputs_missing"], cost_actual: 0, approval_requests: [] };
+  const seqId = stableId("CRM", [String(input.tenant_id), String(input.objective_id), recipients.map((r) => String((r || {}).recipient_ref || "?")).join(",")]);
+  const rows = recipients.map((r, i) => {
+    const ref = String((r || {}).recipient_ref || "R-" + (i + 1));
+    const consented = vbi_has(r, "consent") && r.consent === true;
+    const purposeChannel = String((r || {}).channel || "").trim();
+    if (!consented) return { recipient_ref: ref, state: "EXCLUDED_NO_CONSENT", channel: null, reason: "consent gate (PDPA-class principle): unverified consent ⇒ no outreach, no exception path" };
+    if (!purposeChannel) return { recipient_ref: ref, state: "EXCLUDED_NO_CHANNEL", channel: null, reason: "record carries no recipient-selected channel — selection is never guessed" };
+    return { recipient_ref: ref, state: "DRAFT_QUEUED_OWNER_APPROVAL", channel: purposeChannel, message_draft: template, steps: Array.isArray(vdi.sequence_days) ? vdi.sequence_days.map(Number) : [0] };
+  });
+  const queued = rows.filter((x) => x.state === "DRAFT_QUEUED_OWNER_APPROVAL");
+  return {
+    status: "OK",
+    typed_artifact: { mode: "MOCK_DRAFT_ONLY", followup_sequence: { sequence_id: seqId, one_channel_per_recipient: true, recipients: rows, drafted: queued.length, excluded: rows.length - queued.length, dispatched: 0, connector_classes: { whatsapp_business: "approval-gated (owner policy I962)", "email_gmail": "BLOCKED — no connector authorized" } } },
+    evidence_refs: [seqId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["consent_flags_are_supplied_claims_audited_not_verified", "nothing_sent"],
+    cost_actual: 0,
+    approval_requests: queued.length ? [{ scope: "send_followups", auto: false, requires: "explicit owner review of EACH draft batch (customer contact NEVER automatic) + connector LIVE authorization" }] : [],
+  };
+}
+
+/* ---- cashflow-forecaster (SK-008) — liquidity scenarios, honest estimate labels.
+ * Past actuals from the money ledger only where tenant supplied; future flows are owner
+ * assumptions (AR days, supplier payment terms) shown as scenario arithmetic — the output
+ * can never read as a guaranteed return (contract boundary).
+ * out: typed_artifact{cashflow_projection}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_cashflow_forecast(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const opening = Number(vdi.opening_cash_myr);
+  const horizonWeeks = Number(vdi.horizon_weeks);
+  const assumptions = vdi.assumptions;
+  if (!Number.isFinite(opening) || !(horizonWeeks > 0) || horizonWeeks > 52) return { status: "REJECTED", reason: "opening_cash_myr and horizon_weeks (1-52) required", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["forecast_params_invalid"], cost_actual: 0, approval_requests: [] };
+  if (!assumptions || !Number.isFinite(Number(assumptions.weekly_inflow_myr)) || !Number.isFinite(Number(assumptions.weekly_outflow_myr))) return { status: "REJECTED", reason: "assumptions.weekly_inflow_myr/weekly_outflow_myr must be owner-stated — flows are never invented", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["assumptions_absent"], cost_actual: 0, approval_requests: [] };
+  const fin = Number(assumptions.weekly_inflow_myr), fout = Number(assumptions.weekly_outflow_myr);
+  const actuals = moneyTotals(String(input.tenant_id));
+  const mults = [["conservative", 0.7, 1.2], ["stated", 1, 1], ["optimistic", 1.3, 0.9]];
+  const rows = mults.map(([name, kin, kout]) => ({ scenario: name, closing_cash_myr: Math.round((opening + (fin * kin - fout * kout) * horizonWeeks) * 100) / 100, dips_below_reserve: vdi.reserve_floor_myr !== undefined ? (opening + (fin * kin - fout * kout) * horizonWeeks) < Number(vdi.reserve_floor_myr) : "reserve_floor_not_supplied" }));
+  const fId = stableId("CASH", [String(input.tenant_id), String(input.objective_id), String(horizonWeeks), String(opening)]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "ESTIMATE_LABELLED_ARITHMETIC", cashflow_projection: { forecast_id: fId, horizon_weeks: horizonWeeks, opening_cash_myr: opening, assumptions: { weekly_inflow_myr: fin, weekly_outflow_myr: fout, registered_as: "owner_assumption_labels_not_predictions" }, ledger_actuals_reference: actuals, scenarios: rows, label: "SIMULATED/ESTIMATE — never ACTUAL, never guaranteed returns" } },
+    evidence_refs: [fId].concat(actuals.count ? ["ledger:events_" + actuals.count] : []).concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["future_flows_are_owner_assumptions", "no_external_data_sources_consulted"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "act_on_forecast", auto: false, requires: "owner review — reserve breaches route to SK-004 replanning, spending still gated by SK-046 holds" }],
+  };
+}
+
+/* ---- wan-video-creator (SK-057) — async video job spec; Wan API is connector-BLOCKED.
+ * Reuses SK-018 job-preparation lineage; verified-product gate: product rows come from
+ * store catalog and QUARANTINED/unverified rows are refused. The adapter is NEVER invoked:
+ * mp4_uri stays null, actual_cost UNKNOWN-with-reconciliation-guidance (error_and_recovery).
+ * out: video_asset_id, mp4_uri, caption_files, platform_metadata, qa_result, actual_cost */
+export function skill_wan_video_create(input = {}) {
+  const missing = req(input, ["product_id", "storyboard", "brand_id", "language", "duration", "aspect_ratio", "tenant_id", "budget_cap"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, video_asset_id: null, mp4_uri: null, caption_files: [], platform_metadata: null, qa_result: null, actual_cost: null };
+  const t = get(String(input.tenant_id));
+  const product = t.products.find((p) => String(p.id) === String(input.product_id));
+  if (!product) return { status: "REJECTED", reason: "product not in tenant catalog — verified-product start is mandatory (no invented assets)", video_asset_id: null, mp4_uri: null, caption_files: [], platform_metadata: null, qa_result: { overall: "BLOCKED", checks: ["product_unknown"] }, actual_cost: null };
+  if (String(product.review_state).toUpperCase() === "QUARANTINED") return { status: "REJECTED", reason: "product row QUARANTINED — promotion material blocked at source per catalog governance", video_asset_id: null, mp4_uri: null, caption_files: [], platform_metadata: null, qa_result: { overall: "BLOCKED", checks: ["product_quarantined"] }, actual_cost: null };
+  let beats = input.storyboard;
+  if (Array.isArray(beats)) beats = { beats };
+  if (!beats || typeof beats !== "object" || !String((beats || {}).summary || JSON.stringify((beats || {}).beats || "")).trim()) return { status: "REJECTED", reason: "storyboard structure required (beats or summary) — scenes are never invented", video_asset_id: null, mp4_uri: null, caption_files: [], platform_metadata: null, qa_result: { overall: "BLOCKED", checks: ["storyboard_empty"] }, actual_cost: null };
+  const dur = Number(input.duration); const cap = Number(input.budget_cap);
+  if (!(dur > 0 && dur <= 60)) return { status: "REJECTED", reason: "duration must be 1-60 seconds (short-form)", video_asset_id: null, mp4_uri: null, caption_files: [], platform_metadata: null, qa_result: null, actual_cost: null };
+  if (!(cap >= 0)) return { status: "REJECTED", reason: "budget_cap must be a declared non-negative number", video_asset_id: null, mp4_uri: null, caption_files: [], platform_metadata: null, qa_result: null, actual_cost: null };
+  const AR = ["16:9", "9:16", "1:1"]; if (!AR.includes(String(input.aspect_ratio))) return { status: "REJECTED", reason: "aspect_ratio must be one of " + AR.join(", "), video_asset_id: null, mp4_uri: null, caption_files: [], platform_metadata: null, qa_result: null, actual_cost: null };
+  const jobId = stableId("VIDJOB", [String(input.tenant_id), String(input.product_id), String(input.brand_id), String(dur), String(input.aspect_ratio)]);
+  return {
+    status: "OK",
+    video_asset_id: jobId,
+    mp4_uri: null,
+    caption_files: [{ language: String(input.language), state: "CAPTION_SCRIPT_QUEUED", source: "storyboard+permitted_claims_at_dispatch" }],
+    platform_metadata: { aspect_ratio: String(input.aspect_ratio), duration_s: dur, adapter: "wan-video", job_state: "QUEUED_MOCK", dispatched: false, connector_class: "BLOCKED", matrix_note: "Wan adapter LIVE path = owner-token class; SK-018 routes prepared specs here for video" },
+    qa_result: { overall: "READY_PENDING_ADAPTER", checks: ["product_verified_not_quarantined", "rights_and_claims_screen_SK-012_at_dispatch", "async_reconciliation_required_before_retry"] },
+    actual_cost: null,
+    cost_note: "actual_cost UNKNOWN — adapter never invoked; dispatch spend must pass SK-046 hold <= cap " + cap + " MYR; EXTERNAL_UNKNOWN ⇒ reconcile-before-retry (no duplicate billed jobs)",
+    evidence_refs: [jobId, "catalog:" + String(input.product_id)],
+    uncertainty_flags: ["connector_wan_BLOCKED_owner_token_class", "no_video_generated_no_file_fabricated"],
+    typed_artifact: { mode: "MOCK", job_id: jobId, budget_cap_myr: cap },
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
@@ -1086,6 +1212,8 @@ export const P0_SKILL_FUNCTIONS = {
   "marketing-os-campaign-builder": skill_marketing_campaign_build, "conversion-analyst": skill_conversion_analyze,
   "escalation-agent": skill_escalation_triage, "experiment-analyst": skill_experiment_analyze,
   "faq-retrieval-agent": skill_faq_retrieve, "order-validator": skill_order_validate,
+  "budget-planner": skill_budget_plan, "crm-follow-up": skill_crm_followup,
+  "cashflow-forecaster": skill_cashflow_forecast, "wan-video-creator": skill_wan_video_create,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be

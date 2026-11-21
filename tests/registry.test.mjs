@@ -26,8 +26,9 @@ before(async () => {
 after(() => child?.kill());
 
 import { criterionFromText, matchObjective, planFor, registrySummary, validatePlanEdges } from "../server/odai/registry.mjs";
-import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate } from "../server/odai/skills.mjs";
+import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate, skill_budget_plan, skill_crm_followup, skill_cashflow_forecast, skill_wan_video_create } from "../server/odai/skills.mjs";
 import { budgetScope } from "../server/odai/reservations.mjs";
+import { get } from "../server/odai/store.mjs";
 import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledger.mjs";
 
 const CFG = (n) => JSON.parse(readFileSync(new URL("odai/config/" + n, root), "utf8"));
@@ -469,8 +470,12 @@ test("A1: P0 modules honor NEEDS_INPUT/REJECTED error contract + produce declare
     "experiment-analyst": skill_experiment_analyze({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T16", source_refs: ["s"], validated_domain_inputs: { variant_a: { exposures: 100, conversions: 5, source_ref: "x" }, variant_b: { exposures: 100, conversions: 8, source_ref: "y" }, min_sample_per_arm: 50 } }),
     "faq-retrieval-agent": skill_faq_retrieve({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T17", source_refs: ["s"], validated_domain_inputs: { question: "how do i return an order", owner_approved_kb_ids: ["KB-1"], kb_documents: [{ kb_id: "KB-1", title: "Returns", answer_text: "Returns within 14 days." }] } }),
     "order-validator": skill_order_validate({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T18", source_refs: ["s"], validated_domain_inputs: { lines: [{ sku: "A", qty: 1 }], currency: "MYR", total_myr: 10, idempotency_key: "k-sk-a1-18" } }),
+    "budget-planner": skill_budget_plan({ budget_amount: 1000, currency: "MYR", reserve_amount: 200, time_horizon: "90d", proposed_costs: [{ item: "ads", amount_myr: 100 }] }),
+    "crm-follow-up": skill_crm_followup({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T19", source_refs: ["s"], validated_domain_inputs: { message_template: "hi", recipients: [{ recipient_ref: "r1", consent: true, channel: "whatsapp_business" }] } }),
+    "cashflow-forecaster": skill_cashflow_forecast({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T20", source_refs: ["s"], validated_domain_inputs: { opening_cash_myr: 500, horizon_weeks: 4, assumptions: { weekly_inflow_myr: 100, weekly_outflow_myr: 80 } } }),
+    "wan-video-creator": (() => { const t = get("sk-a1"); if (t.products[0]) { t.products[0].review_state = "APPROVED_FOR_TEST"; } return skill_wan_video_create({ product_id: t.products[0] ? String(t.products[0].id) : "P0", storyboard: { beats: ["open", "close"] }, brand_id: "B1", language: "ms", duration: 15, aspect_ratio: "9:16", tenant_id: "sk-a1", budget_cap: 50 }); })(),
   });
-  assert.equal(audit.length, 30);
+  assert.equal(audit.length, 34);
   for (const a of audit) assert.equal(a.ok, true, a.family + " " + JSON.stringify(a));
 });
 
@@ -914,6 +919,82 @@ test("T2f: SK-033 order validator — schema enforcement, idempotent replay same
   assert.equal(conflict.typed_artifact.validation.result, "DUPLICATE_KEY_CONFLICT_REJECTED");
   assert.equal(conflict.typed_artifact.validation.valid, false);
   assert.ok(first.uncertainty_flags.some((u) => /TEST-labelled/.test(u)));
+});
+
+/* ---------------- 8h. WO-113 tranche-2 batch 7 — budget/crm/cashflow/wan-video ---------------- */
+test("T2g: SK-004 budget planner — owner figures only, reserve>budget refused, MYR mandatory, scenarios arithmetic NOT predictions", () => {
+  assert.equal(skill_budget_plan({}).status, "NEEDS_INPUT");
+  const fx = skill_budget_plan({ budget_amount: 1000, currency: "SGD", reserve_amount: 100, time_horizon: "30d", proposed_costs: [{ item: "x", amount_myr: 1 }] });
+  assert.equal(fx.status, "REJECTED");
+  const inv = skill_budget_plan({ budget_amount: 500, currency: "MYR", reserve_amount: 900, time_horizon: "30d", proposed_costs: [{ item: "x", amount_myr: 1 }] });
+  assert.equal(inv.status, "REJECTED"); assert.match(inv.reason, /reserve_amount exceeds/i);
+  const r = skill_budget_plan({ budget_amount: 1000, currency: "MYR", reserve_amount: 300, time_horizon: "90d", proposed_costs: [{ item: "domain", amount_myr: 60 }, { item: "samples", amount_myr: 400 }, { item: "ads-sandbox", amount_myr: 400 }] });
+  assert.equal(r.status, "OK");
+  assert.equal(r.budget_plan.spendable_ceiling_myr, 700);
+  assert.equal(r.budget_plan.total_proposed_myr, 860);
+  assert.equal(r.budget_plan.over_ceiling, true);
+  assert.equal(r.approval_items[0].scope, "raise_ceiling_or_cut_costs");
+  assert.equal(r.approval_items[0].auto, false);
+  assert.equal(r.cash_at_risk.max_loss_if_all_planned_spend_fails_myr, 700);
+  assert.equal(r.cash_at_risk.reserve_protected_myr, 300);
+  assert.match(r.cash_at_risk.basis, /NOT a prediction/i);
+  assert.equal(r.scenario_table.rows.length, 3);
+  assert.match(r.budget_plan.enforces, /declare_scope/);
+});
+
+test("T2g: SK-006 CRM follow-up — consent gate absolute, one channel per recipient, zero sends, connector classes recorded", () => {
+  assert.equal(skill_crm_followup({}).status, "NEEDS_INPUT");
+  const noT = skill_crm_followup({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { recipients: [{ recipient_ref: "r" }] } });
+  assert.equal(noT.status, "REJECTED");
+  const r = skill_crm_followup({ tenant_id: "w113b7", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["src:crm"], validated_domain_inputs: { message_template: "Hello {name}, your order shipped.", recipients: [
+    { recipient_ref: "R1", consent: true, channel: "whatsapp_business" },
+    { recipient_ref: "R2", consent: false, channel: "whatsapp_business" },
+    { recipient_ref: "R3", consent: true },
+  ] } });
+  assert.equal(r.status, "OK");
+  const seq = r.typed_artifact.followup_sequence;
+  assert.equal(seq.drafted, 1);
+  assert.equal(seq.recipients.find((x) => x.recipient_ref === "R2").state, "EXCLUDED_NO_CONSENT");
+  assert.equal(seq.recipients.find((x) => x.recipient_ref === "R3").state, "EXCLUDED_NO_CHANNEL");
+  assert.equal(seq.dispatched, 0);
+  assert.equal(seq.recipients[0].channel, "whatsapp_business");
+  assert.equal(r.approval_requests[0].auto, false);
+  assert.ok(r.uncertainty_flags.includes("nothing_sent"));
+});
+
+test("T2g: SK-008 cashflow forecaster — ledger actuals reference, owner-assumption scenarios, ESTIMATE label never guaranteed returns", () => {
+  assert.equal(skill_cashflow_forecast({}).status, "NEEDS_INPUT");
+  const noAssum = skill_cashflow_forecast({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { opening_cash_myr: 100, horizon_weeks: 4 } });
+  assert.equal(noAssum.status, "REJECTED");
+  const r = skill_cashflow_forecast({ tenant_id: "w113b7", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["src:plan"], validated_domain_inputs: { opening_cash_myr: 800, horizon_weeks: 8, reserve_floor_myr: 500, assumptions: { weekly_inflow_myr: 300, weekly_outflow_myr: 350 } } });
+  assert.equal(r.status, "OK");
+  const p = r.typed_artifact.cashflow_projection;
+  assert.equal(p.scenarios.length, 3);
+  assert.equal(p.scenarios.find((s) => s.scenario === "stated").closing_cash_myr, 400);
+  assert.match(p.label, /never ACTUAL|never guaranteed/i);
+  assert.ok(r.uncertainty_flags.includes("future_flows_are_owner_assumptions"));
+});
+
+test("T2g: SK-057 Wan video creator — verified-product gate (quarantine refused), adapter never invoked: mp4 null, actual_cost null, reconcile-before-retry", () => {
+  const t = get("w113b7v");
+  assert.ok(t.products.length > 0, "seeded catalog present");
+  const pid = String(t.products[0].id);
+  const q = skill_wan_video_create({ product_id: pid, storyboard: { beats: ["hook", "product", "cta"] }, brand_id: "B1", language: "ms", duration: 15, aspect_ratio: "9:16", tenant_id: "w113b7v", budget_cap: 50 });
+  assert.equal(q.status, "REJECTED"); assert.match(q.reason, /QUARANTINED/i);
+  t.products[0].review_state = "APPROVED_FOR_TEST";
+  const unknown = skill_wan_video_create({ product_id: "NO-SUCH", storyboard: {}, brand_id: "B1", language: "ms", duration: 15, aspect_ratio: "9:16", tenant_id: "w113b7v", budget_cap: 50 });
+  assert.equal(unknown.status, "REJECTED"); assert.match(unknown.reason, /not in tenant catalog/i);
+  const r = skill_wan_video_create({ product_id: pid, storyboard: { beats: ["hook", "product", "cta"] }, brand_id: "B1", language: "ms", duration: 15, aspect_ratio: "4:3", tenant_id: "w113b7v", budget_cap: 50 });
+  assert.equal(r.status, "REJECTED", "bad aspect refused");
+  const ok = skill_wan_video_create({ product_id: pid, storyboard: { beats: ["hook", "product", "cta"] }, brand_id: "B1", language: "ms", duration: 15, aspect_ratio: "9:16", tenant_id: "w113b7v", budget_cap: 50 });
+  assert.equal(ok.status, "OK");
+  assert.equal(ok.mp4_uri, null);
+  assert.equal(ok.actual_cost, null);
+  assert.equal(ok.platform_metadata.dispatched, false);
+  assert.equal(ok.platform_metadata.connector_class, "BLOCKED");
+  assert.match(ok.cost_note, /reconcile-before-retry/);
+  assert.ok(ok.uncertainty_flags.includes("no_video_generated_no_file_fabricated"));
+  t.products[0].review_state = "QUARANTINED";
 });
 
 /* ---------------- 9. WO-104 immutable money ledger ---------------- */

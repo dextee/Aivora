@@ -379,6 +379,10 @@ P0_MODULES = {
     "SK-022": {"module": "skill_experiment_analyze", "family": "experiment-analyst", "wo": "WO-113"},
     "SK-023": {"module": "skill_faq_retrieve", "family": "faq-retrieval-agent", "wo": "WO-113"},
     "SK-033": {"module": "skill_order_validate", "family": "order-validator", "wo": "WO-113"},
+    "SK-004": {"module": "skill_budget_plan", "family": "budget-planner", "wo": "WO-113"},
+    "SK-006": {"module": "skill_crm_followup", "family": "crm-follow-up", "wo": "WO-113"},
+    "SK-008": {"module": "skill_cashflow_forecast", "family": "cashflow-forecaster", "wo": "WO-113"},
+    "SK-057": {"module": "skill_wan_video_create", "family": "wan-video-creator", "wo": "WO-113"},
 }
 
 # ---------------------------------------------------------------------------
