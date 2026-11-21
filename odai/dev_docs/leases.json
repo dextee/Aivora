@@ -33,6 +33,27 @@
     "revoked_reason": "cross-audit drill: revoked-lease denial test",
     "revoked_at": "2026-11-20T13:20:30Z"
   },
+  "DEV11-V": {
+    "issued_at": "2026-11-21T02:26:15Z",
+    "expires_at": "2026-11-21T03:11:15Z",
+    "minutes": 45,
+    "paths": [
+      "odai/dev_docs/",
+      "tests/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 3
+    },
+    "revoked": true,
+    "revoked_reason": "DEV11-V SHIPPED — WO-111C verdict PASS-WITH-GAPS (allow-path proof via live hook; report in odai/dev_docs/)",
+    "revoked_at": "2026-11-21T02:34:02Z"
+  },
   "UI-01B": {
     "issued_at": "2026-11-20T17:30:18Z",
     "expires_at": "2026-11-20T18:30:18Z",
@@ -279,5 +300,74 @@
     "revoked": true,
     "revoked_reason": "UI-01 SHIPPED (staged, NO publish; files: src/TalkView.tsx expandable chips + typed-objective path, src/IntentChips.tsx NEW chip/plan-card module, src/styles.css UI-01 light block + intentlist removed",
     "revoked_at": "2026-11-20T14:35:58Z"
+  },
+  "ZZZ-V4-BYP": {
+    "issued_at": "2026-11-21T02:29:56Z",
+    "expires_at": "2026-11-21T02:34:56Z",
+    "minutes": 5,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": true,
+    "revoked_reason": "bypass audit fixture",
+    "revoked_at": "2026-11-21T02:30:14Z"
+  },
+  "ZZZ-V4-CHK": {
+    "issued_at": "2026-11-21T02:27:44Z",
+    "expires_at": "2026-11-21T03:12:44Z",
+    "minutes": 45,
+    "paths": [
+      "odai/dev_docs/",
+      "tests/"
+    ],
+    "ops": [
+      "check"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
+  "ZZZ-V4-EXP": {
+    "issued_at": "2026-11-21T02:26:29Z",
+    "expires_at": "2026-11-21T02:27:29Z",
+    "minutes": 1,
+    "paths": [
+      "odai/dev_docs/",
+      "tests/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
+  "ZZZ-V4-REV": {
+    "issued_at": "2026-11-21T02:27:44Z",
+    "expires_at": "2026-11-21T03:12:44Z",
+    "minutes": 45,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": true,
+    "revoked_reason": "DEV11-V battery: revoked-case fixture",
+    "revoked_at": "2026-11-21T02:27:44Z"
   }
 }

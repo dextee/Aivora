@@ -68,3 +68,44 @@
 2026-11-20T17:50:15Z|ISSUE|WO-SEC05|ops=check,commit|paths=server/odai/,tests/,odai/dev_docs/|minutes=90|budget=12|single_use=0|expires_at=2026-11-20T19:20:15Z
 2026-11-20T18:08:31Z|HOOK_ALLOW|WO-SEC05|server/odai/ledger.mjs+server/odai/objectives.mjs+server/odai/reservations.mjs+server/odai/skills.mjs+tests/policy_gaps.txt+tests/policy_registry.test.mjs
 2026-11-20T18:08:41Z|REVOKE|WO-SEC05|reason=WO-SEC05 SHIPPED (staged, NO publish; files: server/odai/reservations.mjs NEW, server/odai/{skills,ledger,objectives}.mjs, tests/policy_registry.test.mjs, tests/policy_gaps.txt GREEN-regenerated; AGEN
+2026-11-20T18:08:42Z|HOOK_ALLOW|WO-SEC05|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-21T02:26:15Z|ISSUE|DEV11-V|ops=check,commit|paths=odai/dev_docs/,tests/|minutes=45|budget=12|single_use=0|expires_at=2026-11-21T03:11:15Z
+2026-11-21T02:26:15Z|DENY|DEV11-V|op=commit|path=src/zzz-probe.ts|reason=PATH_NOT_ALLOWED|detail=path=src/zzz-probe.ts scope=odai/dev_docs/,tests/
+2026-11-21T02:26:29Z|ISSUE|ZZZ-V4-EXP|ops=check,commit|paths=odai/dev_docs/,tests/|minutes=1|budget=12|single_use=0|expires_at=2026-11-21T02:27:29Z
+2026-11-21T02:26:29Z|DENY|WO-SEC05|op=commit|path=odai/dev_docs/zzz-v4-probe.txt|reason=REVOKED|detail=WO-SEC05 SHIPPED (staged, NO publish; files: server/odai/reservations.mjs NEW, server/odai/{skills,ledger,objectives}.mjs, tests/policy_registry.test.mjs, tests/policy_gaps.txt GREEN-regenerated; AGEN
+2026-11-21T02:26:29Z|HOOK_DENY|WO-SEC05|WO-SEC05: close lease with SHIPPED ledger line (staged, no publish)
+2026-11-21T02:26:29Z|DENY|ZZZ-V4-REV|op=commit|path=odai/dev_docs/zzz-v4-probe.txt|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+2026-11-21T02:26:29Z|HOOK_DENY|ZZZ-V4-REV|WO-SEC05: close lease with SHIPPED ledger line (staged, no publish)
+2026-11-21T02:26:30Z|DENY|ZZZ-V4-CHK|op=commit|path=odai/dev_docs/zzz-v4-probe.txt|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+2026-11-21T02:26:30Z|HOOK_DENY|ZZZ-V4-CHK|WO-SEC05: close lease with SHIPPED ledger line (staged, no publish)
+2026-11-21T02:26:30Z|DENY|WO-SEC05|op=commit|path=odai/dev_docs/zzz-v4-probe.txt|reason=REVOKED|detail=WO-SEC05 SHIPPED (staged, NO publish; files: server/odai/reservations.mjs NEW, server/odai/{skills,ledger,objectives}.mjs, tests/policy_registry.test.mjs, tests/policy_gaps.txt GREEN-regenerated; AGEN
+2026-11-21T02:26:30Z|HOOK_DENY|WO-SEC05|WO-SEC05: close lease with SHIPPED ledger line (staged, no publish)
+2026-11-21T02:26:30Z|DENY|WO-SEC05|op=commit|path=odai/dev_docs/zzz-v4-probe.txt|reason=REVOKED|detail=WO-SEC05 SHIPPED (staged, NO publish; files: server/odai/reservations.mjs NEW, server/odai/{skills,ledger,objectives}.mjs, tests/policy_registry.test.mjs, tests/policy_gaps.txt GREEN-regenerated; AGEN
+2026-11-21T02:26:30Z|HOOK_DENY|WO-SEC05|WO-SEC05: close lease with SHIPPED ledger line (staged, no publish)
+2026-11-21T02:27:44Z|ISSUE|ZZZ-V4-REV|ops=check,commit|paths=odai/dev_docs/|minutes=45|budget=12|single_use=0|expires_at=2026-11-21T03:12:44Z
+2026-11-21T02:27:44Z|REVOKE|ZZZ-V4-REV|reason=DEV11-V battery: revoked-case fixture
+2026-11-21T02:27:44Z|ISSUE|ZZZ-V4-CHK|ops=check|paths=odai/dev_docs/,tests/|minutes=45|budget=12|single_use=0|expires_at=2026-11-21T03:12:44Z
+2026-11-21T02:27:45Z|HOOK_ALLOW|ZZZ-V4-NONE|
+2026-11-21T02:27:45Z|HOOK_ALLOW|ZZZ-V4-EXP|
+2026-11-21T02:27:45Z|HOOK_ALLOW|ZZZ-V4-REV|
+2026-11-21T02:27:45Z|HOOK_ALLOW|ZZZ-V4-CHK|
+2026-11-21T02:27:46Z|DENY|DEV11-V|op=commit|path=src/zzz_v4_probe.txt|reason=PATH_NOT_ALLOWED|detail=path=src/zzz_v4_probe.txt scope=odai/dev_docs/,tests/
+2026-11-21T02:27:46Z|HOOK_DENY|DEV11-V|ZZZ-V4: probe
+2026-11-21T02:27:46Z|HOOK_ALLOW|UI-01B|
+2026-11-21T02:27:46Z|HOOK_ALLOW|ZZZ-V4|
+2026-11-21T02:29:39Z|DENY|ZZZ-V4-NONE|op=commit|path=odai/dev_docs/zzz-v4-probe.txt|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+2026-11-21T02:29:39Z|HOOK_DENY|ZZZ-V4-NONE|ZZZ-V4: probe
+2026-11-21T02:29:39Z|DENY|ZZZ-V4-EXP|op=commit|path=odai/dev_docs/zzz-v4-probe.txt|reason=EXPIRED|detail=expires_at=2026-11-21T02:27:29Z
+2026-11-21T02:29:39Z|HOOK_DENY|ZZZ-V4-EXP|ZZZ-V4: probe
+2026-11-21T02:29:39Z|DENY|ZZZ-V4-REV|op=commit|path=odai/dev_docs/zzz-v4-probe.txt|reason=REVOKED|detail=DEV11-V battery: revoked-case fixture
+2026-11-21T02:29:39Z|HOOK_DENY|ZZZ-V4-REV|ZZZ-V4: probe
+2026-11-21T02:29:39Z|DENY|ZZZ-V4-CHK|op=commit|path=odai/dev_docs/zzz-v4-probe.txt|reason=OP_NOT_ALLOWED|detail=lease ops=check
+2026-11-21T02:29:39Z|HOOK_DENY|ZZZ-V4-CHK|ZZZ-V4: probe
+2026-11-21T02:29:39Z|DENY|UI-01B|op=commit|path=odai/dev_docs/zzz-v4-probe.txt|reason=REVOKED|detail=UI-01B SHIPPED (staged, NO publish; files: src/RoleGate.tsx NEW, src/TalkView.tsx, src/styles.css, tests/objectives.test.mjs; no server changes; AGENTS.md not updated — outside lease; suite 118/118)
+2026-11-21T02:29:39Z|HOOK_DENY|UI-01B|ZZZ-V4: probe
+2026-11-21T02:29:39Z|DENY|ZZZ-V4|op=commit|path=odai/dev_docs/zzz-v4-probe.txt|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
+2026-11-21T02:29:39Z|HOOK_DENY|ZZZ-V4|ZZZ-V4: probe
+2026-11-21T02:29:56Z|ISSUE|ZZZ-V4-BYP|ops=check,commit|paths=odai/dev_docs/|minutes=5|budget=12|single_use=0|expires_at=2026-11-21T02:34:56Z
+2026-11-21T02:30:14Z|REVOKE|ZZZ-V4-BYP|reason=bypass audit fixture
+2026-11-21T02:33:46Z|HOOK_ALLOW|DEV11-V|odai/dev_docs/dev11-verification-wo111c.md
+2026-11-21T02:34:02Z|REVOKE|DEV11-V|reason=DEV11-V SHIPPED — WO-111C verdict PASS-WITH-GAPS (allow-path proof via live hook; report in odai/dev_docs/)
