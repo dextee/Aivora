@@ -75,6 +75,22 @@
     "revoked_reason": "UI-01B SHIPPED (staged, NO publish; files: src/RoleGate.tsx NEW, src/TalkView.tsx, src/styles.css, tests/objectives.test.mjs; no server changes; AGENTS.md not updated — outside lease; suite 118/118)",
     "revoked_at": "2026-11-20T17:40:01Z"
   },
+  "V42-CLOSE": {
+    "issued_at": "2026-11-21T09:16:08Z",
+    "expires_at": "2026-11-21T09:36:08Z",
+    "minutes": 20,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "V43-REG": {
     "issued_at": "2026-11-21T08:41:44Z",
     "expires_at": "2026-11-21T09:26:44Z",
@@ -320,8 +336,12 @@
     ],
     "budget": 12,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 7
+    },
+    "revoked": true,
+    "revoked_reason": "SHIPPED fe032c5 — 12 modules this wake",
+    "revoked_at": "2026-11-21T09:15:55Z"
   },
   "WO-A1": {
     "issued_at": "2026-11-20T14:37:22Z",

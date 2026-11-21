@@ -3,3 +3,4 @@
 2026-11-21T09:05:13Z|V43-LOOP|id=WO-113|verdict=BATCH1-SHIPPED|commit=87fc7c7|tests=124/124|notes=SK-055,SK-018,SK-030,SK-047 via builder wiring; MOCK/SPEC_ONLY labels; no publish
 2026-11-21T09:11:41Z|V43-LOOP|id=WO-113|verdict=BATCH2-SHIPPED|commit=PENDING|tests=128/128|notes=SK-012,SK-013,SK-026,SK-046 (spend-controller = SEC-05 reservation consumer; gate-check integration asserted); 8/52 t1+t3 done
 {"ts":"2026-11-21T09:12:03Z","actor":"WO-113-B2","event":"CORRECTED HASHES","evidence":{"batch1":"dd3eec3 (pre-amend 87fc7c7 superseded)","batch2":"1cdc735","shipped_this_session":8,"suite":"128/128","leases_revoked":["WO-113","WO-113-B2"]}}
+{"ts":"2026-11-21T09:15:55Z","actor":"WO-113-B3","event":"BATCH3-SHIPPED","evidence":{"modules":"SK-049,002,005,007 (batch3); session total 12","suite":"132/132","typecheck":"ok","preflight":"clear","integrity":"OK","head":"fe032c5","leases_closed":["WO-113-B3"],"next_t3_head":"SK-011,016,019,025"}}

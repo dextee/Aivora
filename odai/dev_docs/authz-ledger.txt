@@ -152,3 +152,8 @@
 2026-11-21T09:12:04Z|DENY|V42-TAIL|op=commit|path=odai/dev_docs/loop-log.jsonl|reason=NO_LEASE|detail=no lease for this WO id in odai/dev_docs/leases.json
 2026-11-21T09:12:04Z|HOOK_DENY|V42-TAIL|WO-113-B2: tranche-2 batch 2 — SK-012/013/026/046 deterministic modules (claims screen, framework-only compliance, SPEC_ONLY funnel, SEC-05 reservation consumer spend-controller) + builder wiring + gate-check integration test; suite 128/128, no publish
 2026-11-21T09:15:38Z|ISSUE|WO-113-B3|ops=check,commit|paths=server/odai/,tests/,odai/config/skills_implemented.json,odai/config/skill_contracts.json,odai/dev_docs/,tools/build_registry.py|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T10:45:38Z
+2026-11-21T09:15:39Z|HOOK_ALLOW|WO-113-B3|odai/config/skill_contracts.json+odai/config/skills_implemented.json+odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json+server/odai/skills.mjs+tests/registry.test.mjs+tools/build_registry.py
+2026-11-21T09:15:55Z|REVOKE|WO-113-B3|reason=SHIPPED fe032c5 — 12 modules this wake
+2026-11-21T09:15:55Z|DENY|WO-113-B3|op=commit|path=odai/dev_docs/loop-log.jsonl|reason=REVOKED|detail=SHIPPED fe032c5 — 12 modules this wake
+2026-11-21T09:15:55Z|HOOK_DENY|WO-113-B3|WO-113-B3: tranche-2 batch 3 — SK-049/002/005/007 (documents-only supplier verdicts, lawful assumption-labelled audiences, constraint-fit model ranking, DRAFT_ONLY campaigns w/ BLOCKED activation) + builder wiring; t1_core_modules drained 10/10 + top-2 t3-queued refs into batch scope; suite 132/132, no publish
+2026-11-21T09:16:08Z|ISSUE|V42-CLOSE|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=12|single_use=0|expires_at=2026-11-21T09:36:08Z
