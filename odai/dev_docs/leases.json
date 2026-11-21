@@ -452,7 +452,9 @@
     "used_by_op": {
       "commit": 8
     },
-    "revoked": false
+    "revoked": true,
+    "revoked_reason": "SHIPPED 44390e6 — wake close; all grantable B4-B7 leases revoked",
+    "revoked_at": "2026-11-21T09:47:03Z"
   },
   "WO-113-B5": {
     "issued_at": "2026-11-21T09:28:32Z",
@@ -520,9 +522,11 @@
     "budget": 12,
     "single_use": false,
     "used_by_op": {
-      "commit": 9
+      "commit": 11
     },
-    "revoked": false
+    "revoked": true,
+    "revoked_reason": "SHIPPED 68d45f2 + close 9f4e3? see git log — wake complete 16 modules",
+    "revoked_at": "2026-11-21T09:46:50Z"
   },
   "WO-A1": {
     "issued_at": "2026-11-20T14:37:22Z",

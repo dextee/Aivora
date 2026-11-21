@@ -188,3 +188,6 @@
 2026-11-21T09:46:19Z|HOOK_ALLOW|WO-113-B7|odai/config/skill_contracts.json+odai/config/skills_implemented.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json+server/odai/skills.mjs+tests/registry.test.mjs+tools/build_registry.py
 2026-11-21T09:46:33Z|REVOKE|WO-113-B5|reason=SHIPPED 0f55f8e — suite 140/140
 2026-11-21T09:46:33Z|REVOKE|WO-113-B6|reason=SHIPPED 7511caf — suite 144/144
+2026-11-21T09:46:50Z|HOOK_ALLOW|WO-113-B7|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json
+2026-11-21T09:46:50Z|REVOKE|WO-113-B7|reason=SHIPPED 68d45f2 + close 9f4e3? see git log — wake complete 16 modules
+2026-11-21T09:47:03Z|REVOKE|WO-113-B4B|reason=SHIPPED 44390e6 — wake close; all grantable B4-B7 leases revoked
