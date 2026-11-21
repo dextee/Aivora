@@ -114,6 +114,44 @@
     "revoked_reason": "DEV-11 verification shipped ab1c46e (loop-log line only); lease closed",
     "revoked_at": "2026-11-21T09:46:14Z"
   },
+  "LOOP-CLOSE": {
+    "issued_at": "2026-11-21T09:47:21Z",
+    "expires_at": "2026-11-21T09:57:21Z",
+    "minutes": 10,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 2
+    },
+    "revoked": true,
+    "revoked_reason": "close complete",
+    "revoked_at": "2026-11-21T09:47:21Z"
+  },
+  "LOOP-CLOSE2": {
+    "issued_at": "2026-11-21T09:47:40Z",
+    "expires_at": "2026-11-21T09:57:40Z",
+    "minutes": 10,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": false
+  },
   "UI-01B": {
     "issued_at": "2026-11-20T17:30:18Z",
     "expires_at": "2026-11-20T18:30:18Z",

@@ -191,3 +191,9 @@
 2026-11-21T09:46:50Z|HOOK_ALLOW|WO-113-B7|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json
 2026-11-21T09:46:50Z|REVOKE|WO-113-B7|reason=SHIPPED 68d45f2 + close 9f4e3? see git log — wake complete 16 modules
 2026-11-21T09:47:03Z|REVOKE|WO-113-B4B|reason=SHIPPED 44390e6 — wake close; all grantable B4-B7 leases revoked
+2026-11-21T09:47:03Z|DENY|WO-113-B7|op=commit|path=odai/dev_docs/loop-log.jsonl|reason=REVOKED|detail=SHIPPED 68d45f2 + close 9f4e3? see git log — wake complete 16 modules
+2026-11-21T09:47:03Z|HOOK_DENY|WO-113-B7|WO-113-B7: loop close — batch 4-7 SHIPPED hashes (44390e6/0f55f8e/7511caf/68d45f2), B5/B6 revoked, state synced, tree clean, no publish
+2026-11-21T09:47:21Z|ISSUE|LOOP-CLOSE|ops=check,commit|paths=odai/dev_docs/|minutes=10|budget=12|single_use=0|expires_at=2026-11-21T09:57:21Z
+2026-11-21T09:47:21Z|HOOK_ALLOW|LOOP-CLOSE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl
+2026-11-21T09:47:21Z|REVOKE|LOOP-CLOSE|reason=close complete
+2026-11-21T09:47:40Z|ISSUE|LOOP-CLOSE2|ops=check,commit|paths=odai/dev_docs/|minutes=10|budget=12|single_use=0|expires_at=2026-11-21T09:57:40Z
