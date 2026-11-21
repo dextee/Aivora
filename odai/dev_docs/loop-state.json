@@ -61,7 +61,7 @@
    "status": "IN_PROGRESS:batches1-10_shipped_46_modules_of_58_target(+SK-058 CONTRACT-HOLD)",
    "paths": "server/odai,tests",
    "deps": [],
-   "spec": "46/58 buildable shipped; b10: SK-028 stale-data-controlled inventory validation (unknown never assumed, supplier sync BLOCKED), SK-032 KPI gaps + one-variable experiments with zero direct spend (SEC-05 path), SK-037 recovery planning with immutable-chain checks (unverified rollback blocked, nothing executed), SK-038 approval-bound refund cases (one plain question, refund NEVER issued, connector BLOCKED); next head: SK-039,042,050,059; suite 163/163; hashes b8=b83f050 b9=d0d3ed5 b10=(pending)"
+   "spec": "46/58 buildable shipped; b10: SK-028 stale-data-controlled inventory validation (unknown never assumed, supplier sync BLOCKED), SK-032 KPI gaps + one-variable experiments with zero direct spend (SEC-05 path), SK-037 recovery planning with immutable-chain checks (unverified rollback blocked, nothing executed), SK-038 approval-bound refund cases (one plain question, refund NEVER issued, connector BLOCKED); next head: SK-039,042,050,059; suite 163/163; hashes b8=b83f050 b9=d0d3ed5 b10=372a2e2"
   },
   {
    "id": "E2E-10J",
@@ -343,5 +343,5 @@
    "verify": "DEV-11"
   }
  ],
- "updated_at": "2026-11-21T11:43:09Z"
+ "updated_at": "2026-11-21T11:43:29Z"
 }

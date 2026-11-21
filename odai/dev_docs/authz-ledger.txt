@@ -223,3 +223,9 @@
 2026-11-21T11:37:26Z|HOOK_ALLOW|WO-113-B9|odai/config/skill_contracts.json+odai/config/skills_implemented.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json+server/odai/skills.mjs+tests/registry.test.mjs+tools/build_registry.py
 2026-11-21T11:37:46Z|REVOKE|WO-113-B9|reason=SHIPPED d0d3ed5; suite 158/158
 2026-11-21T11:37:46Z|ISSUE|LOOP-CLOSE-B9|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=12|single_use=0|expires_at=2026-11-21T11:57:46Z
+2026-11-21T11:37:46Z|HOOK_ALLOW|LOOP-CLOSE-B9|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json
+2026-11-21T11:37:46Z|REVOKE|LOOP-CLOSE-B9|reason=loop close for this wake complete
+2026-11-21T11:38:09Z|ISSUE|WO-113-B10|ops=check,commit|paths=server/odai/,tests/,odai/config/,odai/dev_docs/,tools/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T13:08:09Z
+2026-11-21T11:43:10Z|HOOK_ALLOW|WO-113-B10|odai/config/skill_contracts.json+odai/config/skills_implemented.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json+server/odai/skills.mjs+tests/registry.test.mjs+tools/build_registry.py
+2026-11-21T11:43:29Z|REVOKE|WO-113-B10|reason=SHIPPED 372a2e2; suite 163/163
+2026-11-21T11:43:29Z|ISSUE|LOOP-CLOSE-B10|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=6|single_use=0|expires_at=2026-11-21T12:03:29Z

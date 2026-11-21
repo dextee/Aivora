@@ -156,6 +156,22 @@
     "revoked_reason": "close complete",
     "revoked_at": "2026-11-21T09:47:21Z"
   },
+  "LOOP-CLOSE-B10": {
+    "issued_at": "2026-11-21T11:43:29Z",
+    "expires_at": "2026-11-21T12:03:29Z",
+    "minutes": 20,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 6,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "LOOP-CLOSE-B8": {
     "issued_at": "2026-11-21T11:11:36Z",
     "expires_at": "2026-11-21T11:31:36Z",
@@ -189,8 +205,12 @@
     ],
     "budget": 12,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 2
+    },
+    "revoked": true,
+    "revoked_reason": "loop close for this wake complete",
+    "revoked_at": "2026-11-21T11:37:46Z"
   },
   "LOOP-CLOSE2": {
     "issued_at": "2026-11-21T09:47:40Z",
@@ -516,6 +536,30 @@
     "revoked": true,
     "revoked_reason": "batch1 shipped dd3eec3; next batches take fresh leases",
     "revoked_at": "2026-11-21T09:12:03Z"
+  },
+  "WO-113-B10": {
+    "issued_at": "2026-11-21T11:38:09Z",
+    "expires_at": "2026-11-21T13:08:09Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/config/",
+      "odai/dev_docs/",
+      "tools/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 7
+    },
+    "revoked": true,
+    "revoked_reason": "SHIPPED 372a2e2; suite 163/163",
+    "revoked_at": "2026-11-21T11:43:29Z"
   },
   "WO-113-B2": {
     "issued_at": "2026-11-21T09:11:49Z",
