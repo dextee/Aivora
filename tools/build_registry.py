@@ -393,7 +393,10 @@ P0_MODULES = {
     "SK-003": {"module": "skill_brand_setup_specialist", "family": "brand-setup-specialist", "wo": "WO-113"},    "SK-028": {"module": "skill_inventory_validate", "family": "inventory-validator", "wo": "WO-113"},
     "SK-032": {"module": "skill_optimization_advise", "family": "optimization-agent", "wo": "WO-113"},
     "SK-037": {"module": "skill_recovery_audit", "family": "recovery-audit-agent", "wo": "WO-113"},
-    "SK-038": {"module": "skill_refund_case", "family": "refund-case-agent", "wo": "WO-113"},
+    "SK-038": {"module": "skill_refund_case", "family": "refund-case-agent", "wo": "WO-113"},    "SK-039": {"module": "skill_registration_advise", "family": "registration-advisor", "wo": "WO-113"},
+    "SK-042": {"module": "skill_shipping_rate", "family": "shipping-rate-agent", "wo": "WO-113"},
+    "SK-050": {"module": "skill_tenant_onboard", "family": "tenant-onboarding-agent", "wo": "WO-113"},
+    "SK-059": {"module": "skill_social_performance_report", "family": "social-performance-reporter", "wo": "WO-113"},
 }
 
 # ---------------------------------------------------------------------------

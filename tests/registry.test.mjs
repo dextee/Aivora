@@ -26,7 +26,7 @@ before(async () => {
 after(() => child?.kill());
 
 import { criterionFromText, matchObjective, planFor, registrySummary, validatePlanEdges } from "../server/odai/registry.mjs";
-import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate, skill_budget_plan, skill_crm_followup, skill_cashflow_forecast, skill_wan_video_create, skill_consent_check, skill_localization_specialist, skill_payment_reconcile, skill_site_qa, skill_threat_monitor, skill_identity_agent, skill_content_planner, skill_brand_setup_specialist, skill_inventory_validate, skill_optimization_advise, skill_recovery_audit, skill_refund_case } from "../server/odai/skills.mjs";
+import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate, skill_budget_plan, skill_crm_followup, skill_cashflow_forecast, skill_wan_video_create, skill_consent_check, skill_localization_specialist, skill_payment_reconcile, skill_site_qa, skill_threat_monitor, skill_identity_agent, skill_content_planner, skill_brand_setup_specialist, skill_inventory_validate, skill_optimization_advise, skill_recovery_audit, skill_refund_case, skill_registration_advise, skill_shipping_rate, skill_tenant_onboard, skill_social_performance_report } from "../server/odai/skills.mjs";
 import { budgetScope } from "../server/odai/reservations.mjs";
 import { get } from "../server/odai/store.mjs";
 import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledger.mjs";
@@ -486,8 +486,12 @@ test("A1: P0 modules honor NEEDS_INPUT/REJECTED error contract + produce declare
     "optimization-agent": skill_optimization_advise({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T30", source_refs: ["s"], validated_domain_inputs: { kpis: [{ name: "conversion", current: 1, target: 4 }] } }),
     "recovery-audit-agent": skill_recovery_audit({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T31", source_refs: ["s"], validated_domain_inputs: { incident: { incident_id: "I1" }, timeline: [] } }),
     "refund-case-agent": skill_refund_case({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T32", source_refs: ["s"], validated_domain_inputs: { checked_on: "2026-11-21", refund_policy: { window_days: 14 }, cases: [{ case_id: "C1", order_ref: "O1", amount_myr: 5, purchased_on: "2026-11-15", requested_on: "2026-11-20" }] } }),
+    "registration-advisor": skill_registration_advise({ jurisdiction: "MY", business_activity: "online beverage retail", entity_status: "not yet registered" }),
+    "shipping-rate-agent": skill_shipping_rate({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T33", source_refs: ["s"], validated_domain_inputs: { as_of: "2026-11-21", rate_table: [{ carrier: "PosLaju", base_myr: 5, per_kg_myr: 2, valid_through: "2026-12-31" }], shipments: [{ ref: "S1", weight_kg: 2 }] } }),
+    "tenant-onboarding-agent": skill_tenant_onboard({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T34", source_refs: ["s"], validated_domain_inputs: { onboarding_spec: { company_name: "Acme", market: "MY" }, quotas: { objectives_per_month: 50, storage_mb: 1000 } } }),
+    "social-performance-reporter": skill_social_performance_report({ tenant_id: "sk-a1", channel_account_refs: ["fb:1"], post_ids: ["P1"], date_range: { from: "2026-11-01", to: "2026-11-30" }, verified_spend: 100, conversion_events: [{ amount_myr: 50, tracking_evidence_ref: "TRK1" }], source_refs: ["s"] }),
   });
-  assert.equal(audit.length, 46);
+  assert.equal(audit.length, 50);
   for (const a of audit) assert.equal(a.ok, true, a.family + " " + JSON.stringify(a));
 });
 
@@ -1473,5 +1477,129 @@ test("T2j: real-HTTP — spawned engine serves batch-10 P0 wiring in /api/odai/r
   const progress = JSON.parse(readFileSync(new URL("odai/config/skills_implemented.json", root), "utf8"));
   assert.equal(progress.accounting.implemented >= 46, true, "monotonic progress marker (batch-10 floor)");
   assert.equal(progress.implemented.length, progress.accounting.implemented);
-  assert.equal(progress.t3_next4[0], "SK-039", "queue head advances deterministically");
+});
+
+/* ---------------- 12. WO-113 tranche-2 batch 11 — registration / shipping / onboarding / social reporter ---------------- */
+test("T2k: SK-039 registration advisor — step framework only, no invented links, unsupported jurisdiction refused, not legal approval", () => {
+  const ni = skill_registration_advise({});
+  assert.equal(ni.status, "NEEDS_INPUT");
+  assert.deepEqual(ni.missing.sort(), ["business_activity", "entity_status", "jurisdiction"]);
+  const bad = skill_registration_advise({ jurisdiction: "Moon", business_activity: "x", entity_status: "y" });
+  assert.equal(bad.status, "REJECTED"); assert.match(bad.reason, /improvised/);
+  const r = skill_registration_advise({ jurisdiction: "my", business_activity: "online beverage retail", entity_status: "not yet registered", tenant_id: "w113b11", source_refs: ["src:sop"] });
+  assert.equal(r.status, "OK");
+  assert.equal(r.registration_checklist.length, 5);
+  assert.ok(r.registration_checklist.every((c) => /RESEARCH_FRAMEWORK_ONLY/.test(c.verdict)), "nothing reads as clearance");
+  assert.ok(r.registration_checklist.some((c) => c.authority.includes("SSM")), "MY map names real authorities");
+  assert.ok(r.source_links.every((l) => l.url === null && /not generated/.test(l.url_policy)), "URLs never invented — no network");
+  assert.match(r.typed_artifact.no_submission, /nothing is filed/);
+  assert.equal(r.typed_artifact.not_legal_approval, true);
+  assert.ok(r.outstanding_items.includes("Entity registration"));
+  assert.equal(r.approval_requests[0].auto, false);
+  assert.match(r.approval_requests[0].requires, /not clearance/);
+  assert.equal(r.registration_checklist[0].applicability, "declared_activity='online beverage retail', entity_status='not yet registered'");
+});
+
+test("T2k: SK-042 shipping rate — tariff computation only, expired rows excluded, trackers never called, booking owner-gated", () => {
+  assert.equal(skill_shipping_rate({}).status, "NEEDS_INPUT");
+  const noT = skill_shipping_rate({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noT.status, "REJECTED"); assert.match(noT.reason, /rate_table/);
+  const noA = skill_shipping_rate({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { rate_table: [{ carrier: "X" }] } });
+  assert.equal(noA.status, "REJECTED"); assert.match(noA.reason, /as_of/);
+  const r = skill_shipping_rate({ tenant_id: "w113b11s", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["src:tariff"], validated_domain_inputs: {
+    as_of: "2026-11-21",
+    rate_table: [
+      { carrier: "PosLaju", base_myr: 5, per_kg_myr: 2, valid_through: "2026-12-31" },
+      { carrier: "JNT", flat_myr: 9, valid_through: "2026-11-01" },
+      { carrier: "Ninja", zone: "East", base_myr: 6, per_kg_myr: 3, valid_through: "2026-12-31" },
+    ],
+    shipments: [{ ref: "S1", weight_kg: 2 }, { ref: "S2", weight_kg: 1, zone: "East" }, { ref: "S3", zone: "East" }],
+    status_requests: [{ ref: "TRACK-1" }] } });
+  assert.equal(r.status, "OK");
+  const sq = r.typed_artifact.shipping_quotes;
+  assert.equal(sq.expired_rows, 1, "JNT valid_through before as_of");
+  const s = (id) => sq.shipments.find((x) => x.shipment_ref === id);
+  assert.equal(s("S1").state, "QUOTED_from_supplied_tariff");
+  assert.equal(s("S1").best.total_myr, 9, "5 + 2*2");
+  assert.ok(!s("S1").options.some((o) => o.carrier === "Ninja"), "zone-restricted tariff not offered for unzoned shipment");
+  assert.equal(s("S2").best.total_myr, 7, "PosLaju 5+2*1 beats Ninja 6+3*1=9");
+  assert.equal(s("S3").state, "UNPRICED_missing_weight_or_formula", "no weight -> no invented figure");
+  assert.equal(sq.tracking_checks[0].state, "STATUS_UNAVAILABLE_no_tracker_connector");
+  assert.match(r.typed_artifact.connector_class, /zero live quote or tracking calls/);
+  assert.match(s("S1").note, /not a confirmed carrier booking/);
+  assert.equal(r.approval_requests[0].auto, false);
+  assert.match(r.approval_requests[0].requires, /SEC-05/);
+});
+
+test("T2k: SK-050 tenant onboarding — plan drafting without provisioning, cross-tenant spec refused, unset quotas never defaulted", () => {
+  assert.equal(skill_tenant_onboard({}).status, "NEEDS_INPUT");
+  const noSpec = skill_tenant_onboard({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noSpec.status, "REJECTED"); assert.match(noSpec.reason, /onboarding_spec/);
+  const wrongT = skill_tenant_onboard({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { onboarding_spec: { company_name: "A", market: "MY", target_tenant_id: "victim" } } });
+  assert.equal(wrongT.status, "REJECTED"); assert.match(wrongT.reason, /CROSS_TENANT_PROVISION_DENIED/);
+  const r = skill_tenant_onboard({ tenant_id: "w113b11t", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["src:ops"], validated_domain_inputs: { onboarding_spec: { company_name: "Warung Kak Mai", market: "MY", completed_steps: ["company_identity_confirmed"] } } });
+  assert.equal(r.status, "OK");
+  const op = r.typed_artifact.onboarding_plan;
+  assert.equal(op.steps[0].state, "DONE_declared");
+  assert.equal(op.steps[1].state, "PENDING");
+  const qp = op.steps.find((x) => x.step === "quota_policy_attached");
+  assert.equal(qp.state, "BLOCKED_missing_owner_numbers", "quotas never silently defaulted");
+  assert.equal(op.quotas.objectives_per_month, "UNSET_owner_to_declare");
+  assert.match(op.steps[2].note, /not asserted here/);
+  assert.match(op.steps[4].note, /never requested or stored/);
+  assert.equal(op.pending_or_blocked, 4);
+  assert.equal(r.typed_artifact.mode, "PLAN_DRAFTING_no_provisioning_executed");
+  assert.equal(r.typed_artifact.isolation_checks.same_tenant_enforced, true);
+  assert.equal(r.approval_requests[0].auto, false);
+  const withQuota = skill_tenant_onboard({ tenant_id: "w113b11t", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["s"], validated_domain_inputs: { onboarding_spec: { company_name: "W", market: "MY" }, quotas: { objectives_per_month: 50, storage_mb: 1000 } } });
+  assert.equal(withQuota.typed_artifact.onboarding_plan.steps.find((x) => x.step === "quota_policy_attached").state, "READY");
+  assert.equal(withQuota.typed_artifact.onboarding_plan.quotas.objectives_per_month, 50);
+});
+
+test("T2k: SK-059 social reporter — supplied exports only, row validation, engagement never sales, ROI unknown without complete evidence, money-first spoken summary", () => {
+  assert.equal(skill_social_performance_report({}).status, "NEEDS_INPUT");
+  const noPost = skill_social_performance_report({ tenant_id: "t", channel_account_refs: ["fb:1"], post_ids: [], date_range: { from: "2026-11-01", to: "2026-11-30" }, verified_spend: 10, conversion_events: [] });
+  assert.equal(noPost.status, "NEEDS_INPUT", "empty post_ids[] counts as absent scope — repo-wide req semantics");
+  const badRange = skill_social_performance_report({ tenant_id: "t", channel_account_refs: ["fb:1"], post_ids: ["P1"], date_range: { from: "2026-11-30", to: "2026-11-01" }, verified_spend: 10, conversion_events: [] });
+  assert.equal(badRange.status, "REJECTED"); assert.match(badRange.reason, /date_range/);
+  const base = { tenant_id: "w113b11m", channel_account_refs: ["fb:acct1"], post_ids: ["P1"], date_range: { from: "2026-11-01", to: "2026-11-30" }, verified_spend: 100,
+    conversion_events: [{ amount_myr: 30, tracking_evidence_ref: "TRK-1" }, { amount_myr: 20 }],
+    validated_domain_inputs: { metric_rows: [
+      { channel: "facebook", post_id: "P1", metric: "impressions", value: 100, source: "fb_export_11.csv", definition: "page_impressions_v2", period_from: "2026-11-01", period_to: "2026-11-30" },
+      { channel: "youtube", post_id: "P9", metric: "views", value: 50, source: "yt.csv", definition: "views", period_from: "2026-10-01", period_to: "2026-10-31" },
+      { channel: "tiktok", post_id: "P1", metric: "likes", value: 9, source: "tt.csv", definition: "likes", period_from: "2026-11-01", period_to: "2026-11-30" },
+    ] } };
+  const r = skill_social_performance_report(base);
+  assert.equal(r.status, "OK");
+  assert.equal(r.channel_metrics.length, 1, "only the fully-cited in-scope row counts");
+  assert.equal(r.traffic_summary.impressions, 100);
+  assert.equal(r.verified_conversions.with_tracking_evidence, 1);
+  assert.equal(r.roi_if_supported, null, "one untracked conversion -> ROI stays UNKNOWN");
+  assert.ok(r.typed_artifact.caveats.includes("some_conversion_events_lack_tracking_evidence_ROI_left_UNKNOWN"));
+  assert.ok(r.typed_artifact.caveats.includes("engagement_never_counted_as_sales_impressions_views_clicks_are_separate"));
+  assert.match(r.typed_artifact.spoken_report_money_first, /Money first: cannot confirm profit/);
+  assert.match(r.typed_artifact.spoken_report_money_first, /\(not sales\)/);
+  assert.equal(r.approval_requests[0].auto, false);
+  const complete = skill_social_performance_report({ ...base, conversion_events: [{ amount_myr: 60, tracking_evidence_ref: "TRK-1" }] });
+  assert.equal(complete.roi_if_supported.roas, 0.6, "60/100 tracked revenue over verified spend");
+  assert.equal(complete.roi_if_supported.cpl_myr, 100, "spend/1 lead");
+  assert.match(complete.typed_artifact.spoken_report_money_first, /returning 0\.6x/);
+  const zero = skill_social_performance_report({ ...base, conversion_events: [] });
+  assert.equal(zero.status, "OK", "declared-zero conversions is valid input; missing is not");
+  assert.equal(zero.roi_if_supported, null);
+  assert.ok(zero.source_refs.includes("acct:fb:acct1"));
+  assert.match(zero.typed_artifact.mode, /SUPPLIED_METRICS_ONLY_no_api_fetch/);
+});
+
+test("T2k: real-HTTP — spawned engine serves batch-11 P0 wiring in /api/odai/registry", async () => {
+  const reg = await getj("/api/odai/registry");
+  const fam = new Map(reg.p0_skill_modules.map((x) => [x.family, x.skill_id]));
+  assert.equal(fam.get("registration-advisor"), "SK-039");
+  assert.equal(fam.get("shipping-rate-agent"), "SK-042");
+  assert.equal(fam.get("tenant-onboarding-agent"), "SK-050");
+  assert.equal(fam.get("social-performance-reporter"), "SK-059");
+  assert.equal(reg.counts.skills, 59);
+  const progress = JSON.parse(readFileSync(new URL("odai/config/skills_implemented.json", root), "utf8"));
+  assert.equal(progress.accounting.implemented >= 50, true, "monotonic progress marker (batch-11 floor)");
+  assert.equal(progress.implemented.length, progress.accounting.implemented);
 });

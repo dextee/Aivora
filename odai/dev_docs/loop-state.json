@@ -58,10 +58,10 @@
   },
   {
    "id": "WO-113",
-   "status": "IN_PROGRESS:batches1-10_shipped_46_modules_of_58_target(+SK-058 CONTRACT-HOLD)",
+   "status": "IN_PROGRESS:batches1-11_shipped_50_modules_of_58_target(+SK-058 CONTRACT-HOLD)",
    "paths": "server/odai,tests",
    "deps": [],
-   "spec": "46/58 buildable shipped; b10: SK-028 stale-data-controlled inventory validation (unknown never assumed, supplier sync BLOCKED), SK-032 KPI gaps + one-variable experiments with zero direct spend (SEC-05 path), SK-037 recovery planning with immutable-chain checks (unverified rollback blocked, nothing executed), SK-038 approval-bound refund cases (one plain question, refund NEVER issued, connector BLOCKED); next head: SK-039,042,050,059; suite 163/163; hashes b8=b83f050 b9=d0d3ed5 b10=372a2e2"
+   "spec": "50/58 buildable shipped; b11: SK-039 registration step-framework (no invented links, not legal approval), SK-042 tariff-computation quoting (expired rows excluded, trackers never called), SK-050 onboarding plan drafting (cross-tenant provisioning refused, quotas never defaulted), SK-059 supplied-metrics social report (engagement!=sales, ROI UNKNOWN without evidence, money-first spoken summary); next head: SK-001,010,036,043; suite 168/168; hashes b9=d0d3ed5 b10=372a2e2 b11=(pending)"
   },
   {
    "id": "E2E-10J",
@@ -343,5 +343,5 @@
    "verify": "DEV-11"
   }
  ],
- "updated_at": "2026-11-21T11:43:29Z"
+ "updated_at": "2026-11-21T11:50:14Z"
 }

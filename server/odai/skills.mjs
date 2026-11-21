@@ -1774,6 +1774,178 @@ export function skill_refund_case(input = {}) {
   };
 }
 
+/* ---- registration-advisor (SK-039) — jurisdiction step framework from a static map.
+ * Boundary (sheet-04): registration RESEARCH; NO submission; never legal approval.
+ * No network: official bodies are NAMED, never linked with invented URLs; every item is
+ * explicit about what remains unverified. Unsupported jurisdictions are refused.
+ * out: registration_checklist, source_links, outstanding_items (+ sidecars) */
+export function skill_registration_advise(input = {}) {
+  const missing = req(input, ["jurisdiction", "business_activity", "entity_status"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, registration_checklist: [], source_links: [], outstanding_items: [], evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const j = String(input.jurisdiction).toUpperCase();
+  const KB = {
+    MY: [{ step: "Entity registration", authority: "Suruhanjaya Syarikat Malaysia (SSM)", detail: "sole-prop/company registration for declared activity" },
+         { step: "Income tax file", authority: "LHDN (Inland Revenue Board)", detail: "tax registration tied to entity status" },
+         { step: "Sales & Service Tax (if threshold met)", authority: "Customs (SST)", detail: "check current threshold for declared business_activity" },
+         { step: "Local council/information permit (if applicable)", authority: "PBT local council", detail: "premises/activity dependent" }],
+    SG: [{ step: "Entity registration", authority: "ACRA", detail: "sole-prop/LLC registration for declared activity" },
+         { step: "GST regime check", authority: "IRAS", detail: "income tax + registration thresholds" },
+         { step: "Sector licences (if applicable)", authority: "relevant licensing agency", detail: "activity-dependent" }],
+  };
+  if (!Object.prototype.hasOwnProperty.call(KB, j)) return { status: "REJECTED", reason: "jurisdiction '" + input.jurisdiction + "' has no vetted step map — requirements are never improvised; supported: " + Object.keys(KB).join("/"), registration_checklist: [], source_links: [], outstanding_items: [] };
+  const activity = String(input.business_activity).trim();
+  const entity = String(input.entity_status).trim();
+  const checklist = KB[j].map((row, i) => ({ item_id: "REG-" + (i + 1), ...row, applicability: "declared_activity='" + activity + "', entity_status='" + entity + "'", verdict: "RESEARCH_FRAMEWORK_ONLY — confirm current rules before relying; not legal advice" }));
+  checklist.push({ item_id: "REG-" + (KB[j].length + 1), step: "Marketplace/platform onboarding KYC", authority: "each platform's seller onboarding", detail: "identity + bank + entity documents per platform policy", applicability: "when selling via marketplaces", verdict: "RESEARCH_FRAMEWORK_ONLY" });
+  const sourceLinks = [...new Set(KB[j].map((r) => r.authority))].map((a) => ({ authority: a, url: null, url_policy: "intentionally not generated — no network; owner verifies the official portal directly" }));
+  const outstanding = checklist.map((c) => c.step);
+  const regId = stableId("REGADV", [j, activity, entity, String(input.tenant_id || "global")]);
+  return {
+    status: "OK",
+    registration_checklist: checklist,
+    source_links: sourceLinks,
+    outstanding_items: outstanding,
+    typed_artifact: { mode: "ADVISORY_NO_SUBMISSION", advisory_id: regId, no_submission: "nothing is filed, contacted or paid by this module — filings happen owner-run through official channels", not_legal_approval: true },
+    evidence_refs: [regId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["static_step_map_may_lag_current_regulations", "activity_details_beyond_declared_inputs_unassessed"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "act_on_registration_steps", auto: false, requires: "professional/official confirmation before acting — framework output is a starting point, not clearance" }],
+  };
+}
+
+/* ---- shipping-rate-agent (SK-042) — quoting from SUPPLIER-SUPPLIED tariff tables.
+ * Carrier connector is TBD/BLOCKED: no live quotes, no tracking lookups, nothing invented.
+ * "Current quotes only" boundary: rate rows need valid_through >= as_of or they are EXPIRED.
+ * out: typed_artifact{shipping_quotes}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_shipping_rate(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const rates = Array.isArray(vdi.rate_table) && vdi.rate_table.length ? vdi.rate_table : null;
+  if (!rates) return { status: "REJECTED", reason: "rate_table[] required — carrier rates are never invented and no live quote API is called", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["rates_absent"], cost_actual: 0, approval_requests: [] };
+  const asOf = String(vdi.as_of || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(asOf)) return { status: "REJECTED", reason: "as_of (YYYY-MM-DD) required — validity of a tariff is date-bound", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["as_of_absent"], cost_actual: 0, approval_requests: [] };
+  const shipments = Array.isArray(vdi.shipments) ? vdi.shipments : [];
+  const live = rates.map((r) => ({ ...r, expired: String((r || {}).valid_through || "") < asOf || !(r || {}).valid_through }));
+  const results = shipments.map((s, i) => {
+    const sh = s && typeof s === "object" ? s : {};
+    const kg = Number(sh.weight_kg);
+    const zone = String(sh.zone || "");
+    const candidates = live.filter((r) => !r.expired && (!r.zone || String(r.zone) === zone));
+    const priced = candidates.map((r) => {
+      const base = Number(r.base_myr || 0), perKg = Number(r.per_kg_myr || 0), flat = r.flat_myr !== undefined ? Number(r.flat_myr) : null;
+      const total = flat !== null ? flat : Number.isFinite(kg) ? Math.round((base + perKg * kg) * 100) / 100 : null;
+      return { carrier: String(r.carrier || "?"), total_myr: total, transit_days: r.transit_days !== undefined ? Number(r.transit_days) : null, basis: flat !== null ? "flat" : "base+per_kg" };
+    }).filter((p) => p.total_myr !== null);
+    const best = priced.length ? priced.slice().sort((a, b) => a.total_myr - b.total_myr || String(a.carrier).localeCompare(String(b.carrier)))[0] : null;
+    return { shipment_ref: String(sh.ref || "S-" + (i + 1)), weight_kg: Number.isFinite(kg) ? kg : null, zone: zone || null, state: best ? "QUOTED_from_supplied_tariff" : (candidates.length ? "UNPRICED_missing_weight_or_formula" : "NO_VALID_RATE_expired_or_absent_for_zone"), options: priced, best, note: best ? "label price is a tariff computation, not a confirmed carrier booking" : null };
+  });
+  const tracked = (Array.isArray(vdi.status_requests) ? vdi.status_requests : []).map((t) => ({ ref: String((t || {}).ref || "?"), state: "STATUS_UNAVAILABLE_no_tracker_connector", never_invented: true }));
+  const quoteId = stableId("SHIPQ", [String(input.tenant_id), String(input.objective_id), asOf, results.map((x) => x.shipment_ref + ":" + x.state).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "TARIFF_COMPUTATION_ONLY", connector_class: "logistics connector TBD/BLOCKED — zero live quote or tracking calls", shipping_quotes: { quote_batch_id: quoteId, as_of: asOf, tariff_rows: rates.length, expired_rows: live.filter((r) => r.expired).length, shipments: results, tracking_checks: tracked } },
+    evidence_refs: [quoteId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["tariff_table_currency_unverified_beyond_as_of_date", "fuel_surcharge_and_cod_extras_unless_in_supplied_table"],
+    cost_actual: 0,
+    approval_requests: results.some((x) => x.state === "QUOTED_from_supplied_tariff") ? [{ scope: "book_shipment", auto: false, requires: "owner books with the carrier (or approves a LIVE-class connector session) — quotes here are computations only, and payment path stays SEC-05 gated" }] : [],
+  };
+}
+
+/* ---- tenant-onboarding-agent (SK-050) — onboarding checklist + quota policy DRAFTING.
+ * Boundary: tenant onboarding and isolation. Provisioning is NOT executed here; the spec's
+ * declared tenant id must equal the request's tenant (cross-tenant provisioning DENIED).
+ * out: typed_artifact{onboarding_plan, isolation_checks}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_tenant_onboard(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const spec = vdi.onboarding_spec && typeof vdi.onboarding_spec === "object" ? vdi.onboarding_spec : null;
+  if (!spec || !String(spec.company_name || "").trim() || !String(spec.market || "").trim()) return { status: "REJECTED", reason: "onboarding_spec{company_name,market} required — tenants are never provisioned from partial identity", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["spec_incomplete"], cost_actual: 0, approval_requests: [] };
+  if (spec.target_tenant_id !== undefined && String(spec.target_tenant_id) !== String(input.tenant_id)) return { status: "REJECTED", reason: "CROSS_TENANT_PROVISION_DENIED: spec targets '" + spec.target_tenant_id + "' but request is scoped to '" + input.tenant_id + "'", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["isolation_violation_refused"], cost_actual: 0, approval_requests: [] };
+  const q = vdi.quotas && typeof vdi.quotas === "object" ? vdi.quotas : {};
+  const quota = { objectives_per_month: q.objectives_per_month !== undefined ? Number(q.objectives_per_month) : "UNSET_owner_to_declare", storage_mb: q.storage_mb !== undefined ? Number(q.storage_mb) : "UNSET_owner_to_declare", policy_note: "unset quotas are never silently defaulted" };
+  const stepsGiven = Array.isArray(spec.completed_steps) ? spec.completed_steps.map(String) : [];
+  const plan = [
+    { step: "company_identity_confirmed", state: stepsGiven.includes("company_identity_confirmed") ? "DONE_declared" : "PENDING" },
+    { step: "admin_identity_and_rbac_roles", state: stepsGiven.includes("admin_identity_and_rbac_roles") ? "DONE_declared" : "PENDING", note: "roles validated via SK-027; enforcement via SK-035" },
+    { step: "data_isolation_verified", state: "PENDING", note: "isolation tests (tenant-scoped store) run by the platform at provisioning, evidenced separately — not asserted here" },
+    { step: "quota_policy_attached", state: quota.objectives_per_month === "UNSET_owner_to_declare" || quota.storage_mb === "UNSET_owner_to_declare" ? "BLOCKED_missing_owner_numbers" : "READY" },
+    { step: "connector_credentials_vaulted", state: "PENDING", note: "credentials are owner-provisioned through the connector vault; never requested or stored by this module" },
+  ];
+  const pending = plan.filter((s) => s.state === "PENDING" || s.state.startsWith("BLOCKED")).length;
+  const onbId = stableId("TENONB", [String(input.tenant_id), String(spec.company_name), String(spec.market), plan.map((s) => s.state).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "PLAN_DRAFTING_no_provisioning_executed", onboarding_plan: { plan_id: onbId, tenant_id: String(input.tenant_id), market: String(spec.market), steps: plan, pending_or_blocked: pending, quotas: quota }, isolation_checks: { same_tenant_enforced: true, cross_tenant_spec: "refused at input (see rule)" } },
+    evidence_refs: [onbId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["steps_done_are_owner_declared_not_verified", "market_rules_defer_to_SK-039_framework"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "execute_provisioning", auto: false, requires: "owner/platform runs actual provisioning + isolation evidence once plan items are DONE; this module only assembles the checklist" }],
+  };
+}
+
+/* ---- social-performance-reporter (SK-059) — normalization of PERMITTED SUPPLIED metrics.
+ * Channel metric APIs are connector-bound (LIVE needs owner-token permission): this module
+ * NEVER fetches; it validates supplied metric rows (source + period + definition), keeps
+ * engagement strictly separate from sales, and computes CPL/ROAS ONLY from verified spend
+ * and reliable conversion events — otherwise UNKNOWN. Money-first spoken summary included.
+ * out: channel_metrics, traffic_summary, verified_conversions, roi_if_supported, source_refs */
+export function skill_social_performance_report(input = {}) {
+  const missing = req(input, ["tenant_id", "channel_account_refs", "post_ids", "date_range", "verified_spend", "conversion_events"]);
+  if (Array.isArray(input.conversion_events) && !input.conversion_events.length && missing.includes("conversion_events")) missing.splice(missing.indexOf("conversion_events"), 1); // declared-zero conversions is a valid declaration; absent is not
+  if (missing.length) return { status: "NEEDS_INPUT", missing, channel_metrics: [], traffic_summary: null, verified_conversions: null, roi_if_supported: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [], source_refs: [] };
+  const CH = ["facebook", "youtube", "linkedin"];
+  const accounts = (Array.isArray(input.channel_account_refs) ? input.channel_account_refs : []).map(String);
+  const posts = Array.isArray(input.post_ids) ? input.post_ids.map(String) : [];
+  if (!accounts.length || !posts.length) return { status: "REJECTED", reason: "channel_account_refs[] and post_ids[] must be non-empty — the report period's scope is declared, not guessed", channel_metrics: [], traffic_summary: null, verified_conversions: null, roi_if_supported: null };
+  const dr = input.date_range && typeof input.date_range === "object" ? input.date_range : {};
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dr.from || "")) || !/^\d{4}-\d{2}-\d{2}$/.test(String(dr.to || "")) || String(dr.from) > String(dr.to)) return { status: "REJECTED", reason: "date_range{from,to} as YYYY-MM-DD with from<=to required", channel_metrics: [], traffic_summary: null, verified_conversions: null, roi_if_supported: null };
+  const rows = Array.isArray(input.validated_domain_inputs && input.validated_domain_inputs.metric_rows) ? input.validated_domain_inputs.metric_rows : [];
+  const metrics = rows.map((raw, i) => {
+    const m = raw && typeof raw === "object" ? raw : {};
+    const ch = String(m.channel || "").toLowerCase();
+    const problems = [];
+    if (!CH.includes(ch)) problems.push("CHANNEL_not_permitted");
+    if (!String(m.source || "").trim()) problems.push("NO_SOURCE_citation");
+    if (!String(m.definition || "").trim()) problems.push("NO_METRIC_DEFINITION");
+    if (String(m.period_from || "") !== dr.from || String(m.period_to || "") !== dr.to) problems.push("PERIOD_MISMATCH_range_is_" + dr.from + "_" + dr.to);
+    if (!Number.isFinite(Number(m.value))) problems.push("VALUE_not_numeric");
+    if (!String(m.post_id || "").length || posts.indexOf(String(m.post_id)) === -1) problems.push("POST_ID_outside_declared_scope");
+    return { metric_index: i + 1, channel: ch || null, metric: String(m.metric || "?"), value: Number.isFinite(Number(m.value)) ? Number(m.value) : null, state: problems.length ? "REJECTED_ROW" : "COUNTED", problems };
+  }).filter((m) => m.state === "COUNTED");
+  const rejectedRows = rows.length - metrics.length;
+  const sum = (name) => metrics.filter((m) => String(m.metric).toLowerCase() === name).reduce((a, m) => a + Number(m.value), 0);
+  const eng = { impressions: sum("impressions"), views: sum("views"), clicks: sum("clicks") };
+  const convs = Array.isArray(input.conversion_events) ? input.conversion_events : [];
+  const reliable = convs.filter((c) => c && (c || {}).tracking_evidence_ref);
+  const revenue = reliable.reduce((a, c) => a + Number((c || {}).amount_myr || 0), 0);
+  const spend = Number(input.verified_spend);
+  const roi = Number.isFinite(spend) && spend > 0 && reliable.length === convs.length && convs.length > 0
+    ? { cpl_myr: Math.round(spend / reliable.length * 100) / 100, roas: Math.round((revenue / spend) * 100) / 100, basis: "verified_spend / events_with_tracking_evidence_only" }
+    : null;
+  const caveats = [];
+  if (convs.length > 0 && reliable.length < convs.length) caveats.push("some_conversion_events_lack_tracking_evidence_ROI_left_UNKNOWN");
+  if (!(Number.isFinite(spend) && spend > 0)) caveats.push("verified_spend_missing_or_zero_ROI_left_UNKNOWN");
+  caveats.push("engagement_never_counted_as_sales_impressions_views_clicks_are_separate");
+  if (rejectedRows) caveats.push("rejected_metric_rows_" + rejectedRows);
+  const spoken = "Report for " + dr.from + " to " + dr.to + ". " + (roi ? ("Money first: revenue from tracked conversions is RM" + Math.round(revenue * 100) / 100 + " against RM" + spend + " verified spend, returning " + roi.roas + "x, cost per lead RM" + roi.cpl_myr + ". ") : "Money first: cannot confirm profit — spend or conversion evidence incomplete. ") + "Engagement: " + eng.impressions + " impressions, " + eng.views + " views, " + eng.clicks + " clicks (not sales)." + (caveats.length ? " Gaps: " + caveats.join("; ") + "." : "");
+  const repId = stableId("SPR", [String(input.tenant_id), dr.from, dr.to, accounts.join(","), metrics.length + "/" + rows.length]);
+  return {
+    status: "OK",
+    channel_metrics: metrics,
+    traffic_summary: { ...eng, note: "web-traffic GA figures belong to a separate permitted source; not asserted here" },
+    verified_conversions: { events_total: convs.length, with_tracking_evidence: reliable.length, revenue_myr: Math.round(revenue * 100) / 100, untracked: convs.length - reliable.length },
+    roi_if_supported: roi,
+    typed_artifact: { mode: "SUPPLIED_METRICS_ONLY_no_api_fetch", report_id: repId, period: { from: dr.from, to: dr.to }, channels_in_scope: CH.join("/"), rejected_metric_rows: rejectedRows, spoken_report_money_first: spoken, caveats },
+    source_refs: [repId].concat(accounts.map((a) => "acct:" + a), (input.validated_domain_inputs && input.validated_domain_inputs.source_refs) || (input.source_refs || []).map(String)),
+    evidence_refs: [repId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["metric_rows_are_platform_exports_not_re_pulled", "attribution_only_where_tracking_evidence_supplied"],
+    cost_actual: 0,
+    approval_requests: roi ? [] : [{ scope: "complete_money_reporting", auto: false, requires: "owner to supply verified spend and tracking-evidenced conversions (or approve a permissioned LIVE-class connector pull) — gaps stay UNKNOWN, never estimated" }],
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
@@ -1797,6 +1969,8 @@ export const P0_SKILL_FUNCTIONS = {
   "content-planner": skill_content_planner, "brand-setup-specialist": skill_brand_setup_specialist,
   "inventory-validator": skill_inventory_validate, "optimization-agent": skill_optimization_advise,
   "recovery-audit-agent": skill_recovery_audit, "refund-case-agent": skill_refund_case,
+  "registration-advisor": skill_registration_advise, "shipping-rate-agent": skill_shipping_rate,
+  "tenant-onboarding-agent": skill_tenant_onboard, "social-performance-reporter": skill_social_performance_report,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be

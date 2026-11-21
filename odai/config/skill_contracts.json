@@ -42,17 +42,21 @@
     "SK-035",
     "SK-037",
     "SK-038",
+    "SK-039",
     "SK-040",
     "SK-041",
+    "SK-042",
     "SK-044",
     "SK-046",
     "SK-047",
     "SK-048",
     "SK-049",
+    "SK-050",
     "SK-051",
     "SK-055",
     "SK-056",
-    "SK-057"
+    "SK-057",
+    "SK-059"
   ],
   "registry_version": "business-plane-v2.1-a1",
   "row_count": 59,
@@ -1966,9 +1970,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "registration-advisor",
+        "function": "skill_registration_advise",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Company-registration research",
@@ -2111,9 +2117,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "shipping-rate-agent",
+        "function": "skill_shipping_rate",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Carrier quoting",
@@ -2503,9 +2511,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "tenant-onboarding-agent",
+        "function": "skill_tenant_onboard",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Tenant provisioning",
@@ -2967,9 +2977,11 @@
       "error_and_recovery": "API unavailable or metric missing: mark unknown; never invent sales",
       "execution_steps": "fetch authorized metrics -> normalize -> reconcile -> calculate -> narrate",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "social-performance-reporter",
+        "function": "skill_social_performance_report",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "marketing os",
