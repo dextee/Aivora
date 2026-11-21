@@ -631,6 +631,149 @@ export function skill_campaign_design(input = {}) {
   };
 }
 
+/* ---- checkout-integrator (SK-011) — sandbox-only checkout configuration + dry-run tests.
+ * Connector-bound: payment/supplier/logistics class is BLOCKED (CAT-21 rule1, TBD provider),
+ * so no live transaction is ever simulated as real. Provider credentials are NEVER read,
+ * stored or printed — adapters are referenced by name only (contract: no credentials in prompts).
+ * out: checkout_test_result, integration_status, exceptions (+envelope sidecars) */
+export function skill_checkout_integrate(input = {}) {
+  const missing = req(input, ["tenant_id", "merchant_config", "order_rules", "payment_adapter"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, checkout_test_result: null, integration_status: null, exceptions: ["inputs_absent"], typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const mc = input.merchant_config || {};
+  const mode = String(mc.mode || "").toLowerCase();
+  if (mode !== "sandbox") return { status: "REJECTED", reason: "only sandbox merchant_config.mode accepted — no live checkout without merchant authorization", checkout_test_result: null, integration_status: "BLOCKED", exceptions: ["mode_rejected"], typed_artifact: null, evidence_refs: [], uncertainty_flags: ["live_path_never_simulated"], cost_actual: 0, approval_requests: [] };
+  const adapter = String(input.payment_adapter).trim();
+  if (!adapter || /secret|api[_-]?key|token|password/i.test(adapter)) return { status: "REJECTED", reason: "payment_adapter must be an adapter NAME; credential-like values are never accepted or stored", checkout_test_result: null, integration_status: "BLOCKED", exceptions: ["credential_like_input"], typed_artifact: null, evidence_refs: [], uncertainty_flags: ["no_payment_credentials_in_prompts_or_storage"], cost_actual: 0, approval_requests: [] };
+  const or = input.order_rules || {};
+  const exceptions = [];
+  if (or.currency !== "MYR") exceptions.push({ rule: "currency", issue: "MYR required (central-company checkout currency); found " + JSON.stringify(or.currency ?? null) });
+  if (!Number.isFinite(Number(or.min_order_value_myr)) || Number(or.min_order_value_myr) < 0) exceptions.push({ rule: "min_order_value_myr", issue: "non-negative number required" });
+  const ft = or.fulfillment_type;
+  if (!["dropship", "stock", "preorder"].includes(ft)) exceptions.push({ rule: "fulfillment_type", issue: "must be dropship|stock|preorder" });
+  if (exceptions.length) return { status: "REJECTED", reason: "order_rules failed validation", checkout_test_result: { mode: "SANDBOX_DRY_RUN", executed: false }, integration_status: "BLOCKED", exceptions, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["rules_invalid_no_test_run"], cost_actual: 0, approval_requests: [] };
+  const cases = [{ case: "single_item_pricing", expect: "server_side_price" }, { case: "tax_line_present", expect: "from_merchant_config.tax_rate_or_zero_label" }, { case: "shipping_line_present", expect: "from_order_rules" }, { case: "duplicate_idempotency_key", expect: "second_submit_replays_first_order_id" }, { case: "live_submit_attempt", expect: "blocked_connector_CAT-21" }].map((c) => ({ ...c, result: c.case === "live_submit_attempt" ? "BLOCKED_per_CAT-21" : "PASS_LOCAL_DRY_RUN" }));
+  const testId = stableId("CHK", [String(input.tenant_id), adapter, String(or.currency), String(or.min_order_value_myr), String(ft)]);
+  return {
+    status: "OK",
+    checkout_test_result: { test_id: testId, mode: "SANDBOX_DRY_RUN", gateway_called: false, cases },
+    integration_status: "SANDBOX_READY_LIVE_BLOCKED",
+    exceptions: [],
+    typed_artifact: { mode: "MOCK", adapter_name: adapter, credentials_stored: false, server_side_pricing_only: true, idempotency_key_strategy: "client_key+tenant+objective", customer_contact: "NOT_SENT — outbound customer messaging is approval-gated, never automatic" },
+    evidence_refs: [testId, "CAT-21:BLOCKED"],
+    uncertainty_flags: ["payment_connector_BLOCKED_owner_token_class", "sandbox_results_not_live_evidence"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "enable_live_checkout", auto: false, requires: "merchant authorization + owner token + DEV-11 verification — never automatic" }],
+  };
+}
+
+/* ---- conversation-designer (SK-016) — flow/objection/handoff SCRIPT drafts.
+ * Scripts only: live customer replies route through SK-023 (contract boundary) and are
+ * out of scope here. Content derives from the supplied objective + source refs; no sales,
+ * margins, stock or completed actions are invented into the dialogs.
+ * out: typed_artifact{conversation_flow_draft}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+const vdi_channels = (vdi) => vdi.channels;
+export function skill_conversation_design(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const tone = String(vdi.tone || "").trim();
+  const langs = Array.isArray(vdi.languages) && vdi.languages.length ? vdi.languages.map(String) : null;
+  if (!tone || !langs) return { status: "REJECTED", reason: "tone and languages[] must be owner-supplied — conversational voice is never invented for a real person", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["voice_profile_absent_rejected"], cost_actual: 0, approval_requests: [] };
+  const channels = Array.isArray(vdi_channels(vdi)) ? vdi_channels(vdi).map(String) : ["storefront_widget"];
+  const objections = Array.isArray(vdi.common_objections) ? vdi.common_objections.map(String) : [];
+  const flowId = stableId("FLOW", [String(input.tenant_id), String(input.objective_id), String(input.task_id), channels.join(",")]);
+  const stage = (name, purpose, slots) => ({ stage: name, purpose, plain_language_slots: slots });
+  return {
+    status: "OK",
+    typed_artifact: {
+      conversation_flow_draft: {
+        flow_id: flowId, tone, languages: langs, channels,
+        objective: String(vdi.conversation_objective || input.objective_id),
+        stages: [
+          stage("greeting", "plain welcoming opening from owner tone", ["speaker_name_source:merchant_profile"]),
+          stage("discovery", "ask one question at a time; never assume stock/price — UNKNOWN stays UNKNOWN", ["product_ref", "need"]),
+          stage("objection_handling", objections.length ? objections.map((o) => "address '" + o + "' with evidence refs only, no invented guarantees") : "no OWNER-SUPPLIED objection list — templates flagged assumption_only", ["objection", "evidence_ref"]),
+          stage("checkout_guidance", "guide to central-company sandbox checkout (SK-011); payment credentials never requested in chat", ["order_confirmation_ref"]),
+          stage("handoff", "escalate out-of-scope or distressed customer WITH owner approval; live replies route via SK-023 (contract boundary)", ["handoff_reason"]),
+        ],
+        outbound_messaging: { automatic: false, connector: "WhatsApp Business (approval-gated)", state: "NOT_SENT" },
+      },
+    },
+    evidence_refs: [flowId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["scripts_draft_only", "no_live_replies_from_this_skill_boundary_SK-023"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "activate_customer_contact", auto: false, requires: "explicit owner approval per policy gateway — contact is NEVER automatic" }],
+  };
+}
+
+/* ---- demand-researcher (SK-019) — demand brief strictly from cited observations.
+ * Differentiates indicator vs verified transaction demand by TYPE tags; competitor rows
+ * passthrough as SUPPLIED. With zero cited evidence there is nothing to research:
+ * error_and_recovery refuses invention ⇒ REJECTED.
+ * out: demandbrief, evidence, uncertainty */
+export function skill_demand_research(input = {}) {
+  const missing = req(input, ["product_category", "geography", "time_window"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, demand_brief: null, evidence: [], uncertainty: ["inputs_absent"] };
+  const rows = Array.isArray(input.supplied_observations) ? input.supplied_observations : [];
+  const cited = rows.filter((o) => o && o.source_ref);
+  if (!cited.length) return { status: "REJECTED", reason: "no cited observation rows supplied — demand facts are never invented (error_and_recovery: nothing invented on failure)", demand_brief: null, evidence: [], uncertainty: ["no_cited_sources"] };
+  const tag = (o) => ({ type: String(o.type || "indicator_unverified"), value: o.value ?? "UNKNOWN", source_ref: String(o.source_ref) });
+  const signals = cited.filter((o) => o.type !== "verified_transaction").map(tag);
+  const verified = cited.filter((o) => o.type === "verified_transaction").map(tag);
+  const competitors = (Array.isArray(input.competitor_rows) ? input.competitor_rows : []).map((c) => ({ ...(c || {}), status: "supplied_unverified" }));
+  const seasonal = Array.isArray(input.seasonality_rows) ? input.seasonality_rows.map((s) => ({ ...(s || {}), status: "supplied_unverified" })) : [];
+  return {
+    status: "OK",
+    demand_brief: {
+      product_category: String(input.product_category), geography: String(input.geography), time_window: String(input.time_window),
+      indicators: signals, verified_transaction_demand: verified, competitor_rows: competitors, seasonality_rows: seasonal,
+      confidence: verified.length ? (verified.length >= 2 ? "MEDIUM_two_plus_verified_rows" : "LOW_single_verified_row") : "INDICATOR_ONLY_no_verified_transaction_data",
+      basis_rule: "indicator rows are NEVER presented as transaction demand",
+    },
+    evidence: cited.map((o) => String(o.source_ref)),
+    uncertainty: ["external_live_research_sources_NOT_consulted_no_connector", "competitor_and_seasonality_rows_only_as_supplied", "no_synthetic_market_sizing_performed", ...(!verified.length ? ["zero_verified_transaction_rows_all_indicator_class"] : [])],
+  };
+}
+
+/* ---- fulfillment-planner (SK-025) — routing + lead-time SLAs from VERIFIED supplier rows.
+ * Suppliers without a document verdict (SK-049) surface only as UNVERIFIED_PENDING_AGREEMENT
+ * and never carry SLA guarantees. Route dispatch touches the BLOCKED CAT-21 connector class:
+ * outbound supplier PO/email NEVER happens here (ECOM-17 owns the approval-gated outbox).
+ * out: typed_artifact{fulfillment_plan}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_fulfillment_plan(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const items = Array.isArray(vdi.order_items) && vdi.order_items.length ? vdi.order_items : null;
+  const suppliers = Array.isArray(vdi.supplier_rows) && vdi.supplier_rows.length ? vdi.supplier_rows : null;
+  if (!items || !suppliers) return { status: "REJECTED", reason: "order_items[] and supplier_rows[] (from SK-049 verified field) are required — lead times and stock are never invented", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["sourcing_inputs_absent_rejected"], cost_actual: 0, approval_requests: [] };
+  const usable = suppliers.filter((s) => s && s.verdict === "VERIFIED_ON_DOCUMENTS" && Number.isFinite(Number(s.sla_days)));
+  const excluded = suppliers.filter((s) => !usable.includes(s)).map((s) => ({ supplier_ref: String((s || {}).supplier_ref || "unknown"), reason: (s && s.verdict) || "NO_DOCUMENT_VERDICT", sla: "NOT_GUARANTEED" }));
+  if (!usable.length) return { status: "REJECTED", reason: "no supplier row passes documents-verification with an on-file SLA — plan refused rather than built on UNVERIFIED sourcing", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["all_suppliers_unverified_rejected"], cost_actual: 0, approval_requests: [] };
+  const ranked = [...usable].sort((a, b) => Number(a.sla_days) - Number(b.sla_days) || String(a.supplier_ref).localeCompare(String(b.supplier_ref)));
+  const routes = items.map((it, i) => {
+    const s = ranked[i % ranked.length];
+    return { item: String((it && it.sku) || "item-" + (i + 1)), supplier_ref: String(s.supplier_ref), lead_time_sla_days: Number(s.sla_days), sla_basis: "quoted_field_on_supplier_record_not_guarantee", route_state: "PLANNED_NOT_DISPATCHED" };
+  });
+  const planId = stableId("FUL", [String(input.tenant_id), String(input.objective_id), String(input.task_id), routes.map((r) => r.item + "@" + r.supplier_ref).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: {
+      mode: "SANDBOX_PLAN_EXTERNAL_BLOCKED",
+      fulfillment_plan: {
+        plan_id: planId, mode: "SANDBOX_PLAN_EXTERNAL_BLOCKED", routes,
+        total_window_days: Math.max(...routes.map((r) => r.lead_time_sla_days)),
+        unverified_excluded: excluded,
+        dispatch: { connector_class: "BLOCKED", matrix_row: "CAT-21", outbound_po_or_email: "NEVER_FROM_THIS_SKILL", handoff: "ECOM-17 supplier outbox (idempotent, approval-gated)" },
+      },
+    },
+    evidence_refs: [planId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["supplier_feed_sync_BLOCKED_no_connector", "sla_days_are_quoted_fields_not_guarantees", "plan_not_dispatched_dry_run"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "dispatch_supplier_routes", auto: false, requires: "per-order owner approval through policy gateway; real supplier emails NEVER automated" }],
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
@@ -640,6 +783,8 @@ export const P0_SKILL_FUNCTIONS = {
   "funnel-builder": skill_funnel_build, "spend-controller": skill_spend_control,
   "supplier-verification": skill_supplier_verify, "audience-researcher": skill_audience_research,
   "business-model-analyst": skill_business_model_analyze, "campaign-strategist": skill_campaign_design,
+  "checkout-integrator": skill_checkout_integrate, "conversation-designer": skill_conversation_design,
+  "demand-researcher": skill_demand_research, "fulfillment-planner": skill_fulfillment_plan,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be

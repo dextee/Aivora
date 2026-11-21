@@ -58,10 +58,10 @@
   },
   {
    "id": "WO-113",
-   "status": "IN_PROGRESS:batches1-3_done_12_modules",
+   "status": "IN_PROGRESS:batches1-4_done_16_modules",
    "paths": "server/odai,tests",
    "deps": [],
-   "spec": "12/52 deterministic modules shipped (t1_core drained: 055,018,030,047,012,013,026,046,049,002,005,007); next t3 head: SK-011,016,019,025; suite 132/132 at dd3eec3/1cdc735/+b3"
+   "spec": "16/52 deterministic modules shipped (t1 drained; b4: SK-011 checkout-integrator sandbox+CAT-21 BLOCKED live, SK-016 conversation scripts, SK-019 demand cited-evidence, SK-025 fulfillment verified-only routing); next t3 head: SK-031,048,056,017; suite 136/136 (also repaired controller-schema T2 regression: skills_implemented.json canonical restore)"
   },
   {
    "id": "E2E-10J",
@@ -77,7 +77,7 @@
    "status": "REGISTERED",
    "paths": "server/hashmeta.mjs,odai/contracts/hashmeta_*,tests/ecom_hashmeta*",
    "deps": [],
-   "spec": "Hashmeta discovery \u2014 Provider contracts, capability evidence, adapter disabled by default",
+   "spec": "Hashmeta discovery — Provider contracts, capability evidence, adapter disabled by default",
    "phase": 1,
    "owners": "DEV-06",
    "mode_gate": "MOCK after capability evidence; hashmeta connector stays UNVERIFIED/BLOCKED until ECOM-01 passes DEV-11",
@@ -88,7 +88,7 @@
    "status": "REGISTERED",
    "paths": "server/ecom/tenants.mjs,odai/migrations/003*,tests/ecom_tenants*",
    "deps": [],
-   "spec": "Tenant provisioning \u2014 Authenticated tenant, unique slug, default draft store",
+   "spec": "Tenant provisioning — Authenticated tenant, unique slug, default draft store",
    "phase": 3,
    "owners": "DEV-03/09",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -101,7 +101,7 @@
    "deps": [
     "ECOM-02"
    ],
-   "spec": "Public routing \u2014 Resolve published username and allowlisted public fields",
+   "spec": "Public routing — Resolve published username and allowlisted public fields",
    "phase": 3,
    "owners": "DEV-03",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -112,7 +112,7 @@
    "status": "REGISTERED",
    "paths": "server/ecom/catalog.mjs,odai/migrations/004*,tests/ecom_catalog*",
    "deps": [],
-   "spec": "Catalog schema \u2014 Reuse canonical IDs; validate provenance and permissions",
+   "spec": "Catalog schema — Reuse canonical IDs; validate provenance and permissions",
    "phase": 2,
    "owners": "DEV-05",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -126,7 +126,7 @@
     "ECOM-03",
     "ECOM-13"
    ],
-   "spec": "Store UI \u2014 Responsive branded product pages and cart",
+   "spec": "Store UI — Responsive branded product pages and cart",
    "phase": 3,
    "owners": "DEV-04",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -141,7 +141,7 @@
     "ECOM-14",
     "ECOM-16"
    ],
-   "spec": "Checkout \u2014 Sandbox company checkout; signed webhook",
+   "spec": "Checkout — Sandbox company checkout; signed webhook",
    "phase": 4,
    "owners": "DEV-03/06",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -154,7 +154,7 @@
    "deps": [
     "ECOM-13"
    ],
-   "spec": "Creative generation \u2014 Approved assets; budget reserve and creative preview",
+   "spec": "Creative generation — Approved assets; budget reserve and creative preview",
    "phase": 6,
    "owners": "DEV-02/06",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -167,7 +167,7 @@
    "deps": [
     "ECOM-07"
    ],
-   "spec": "Social publishing \u2014 Authorized connector; receipt or BLOCKED",
+   "spec": "Social publishing — Authorized connector; receipt or BLOCKED",
    "phase": 6,
    "owners": "DEV-06",
    "mode_gate": "BLOCKED until owner approval (social-posting NEVER); T20 must stay green",
@@ -180,7 +180,7 @@
    "deps": [
     "ECOM-03"
    ],
-   "spec": "Analytics \u2014 Tenant-scoped event ingestion, consent",
+   "spec": "Analytics — Tenant-scoped event ingestion, consent",
    "phase": 6,
    "owners": "DEV-05",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -195,7 +195,7 @@
     "ECOM-14",
     "ECOM-18"
    ],
-   "spec": "Reports \u2014 Verified sales and earnings; UNKNOWN missing metrics",
+   "spec": "Reports — Verified sales and earnings; UNKNOWN missing metrics",
    "phase": 6,
    "owners": "DEV-03/07",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -206,7 +206,7 @@
    "status": "REGISTERED",
    "paths": "server/ecom/security.mjs,tools/guardrails_preflight.mjs,tests/ecom_security*",
    "deps": [],
-   "spec": "Security \u2014 Server-side policy and isolation baseline; continuous gate",
+   "spec": "Security — Server-side policy and isolation baseline; continuous gate",
    "phase": 7,
    "owners": "DEV-08/12",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -225,7 +225,7 @@
     "ECOM-19",
     "ECOM-20"
    ],
-   "spec": "Independent acceptance \u2014 Revision-bound test and release verdict",
+   "spec": "Independent acceptance — Revision-bound test and release verdict",
    "phase": 7,
    "owners": "DEV-11/13",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -240,7 +240,7 @@
     "ECOM-04",
     "ECOM-11"
    ],
-   "spec": "Selection and branding \u2014 Select existing products; merchant overrides; draft preview",
+   "spec": "Selection and branding — Select existing products; merchant overrides; draft preview",
    "phase": 2,
    "owners": "DEV-03/04/05",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -255,7 +255,7 @@
     "ECOM-04",
     "ECOM-11"
    ],
-   "spec": "Payment and earnings \u2014 Immutable financial events and price snapshots",
+   "spec": "Payment and earnings — Immutable financial events and price snapshots",
    "phase": 4,
    "owners": "DEV-03/05",
    "mode_gate": "MOCK/SANDBOX only; live payment gated on owner + gateway merchant terms",
@@ -268,7 +268,7 @@
    "deps": [
     "ECOM-04"
    ],
-   "spec": "Supplier management \u2014 Approved direct-ship contracts and SKU mappings",
+   "spec": "Supplier management — Approved direct-ship contracts and SKU mappings",
    "phase": 2,
    "owners": "DEV-03/05",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -281,7 +281,7 @@
    "deps": [
     "ECOM-15"
    ],
-   "spec": "Stock synchronization \u2014 Atomic reservation, expiry and stale-stock hold",
+   "spec": "Stock synchronization — Atomic reservation, expiry and stale-stock hold",
    "phase": 2,
    "owners": "DEV-05/06",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -295,7 +295,7 @@
     "ECOM-06",
     "ECOM-15"
    ],
-   "spec": "Supplier order routing \u2014 Outbox, split orders and idempotent acknowledgment",
+   "spec": "Supplier order routing — Outbox, split orders and idempotent acknowledgment",
    "phase": 5,
    "owners": "DEV-03/06",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -308,7 +308,7 @@
    "deps": [
     "ECOM-17"
    ],
-   "spec": "Shipment tracking \u2014 Tracking and delivery proof; sandbox adapter",
+   "spec": "Shipment tracking — Tracking and delivery proof; sandbox adapter",
    "phase": 5,
    "owners": "DEV-06",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -322,7 +322,7 @@
     "ECOM-06",
     "ECOM-18"
    ],
-   "spec": "Returns and refunds \u2014 Partial refunds and reversals",
+   "spec": "Returns and refunds — Partial refunds and reversals",
    "phase": 5,
    "owners": "DEV-03/05",
    "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
@@ -336,7 +336,7 @@
     "ECOM-14",
     "ECOM-19"
    ],
-   "spec": "Settlements \u2014 Reconciled payable, atomic payout and approval",
+   "spec": "Settlements — Reconciled payable, atomic payout and approval",
    "phase": 5,
    "owners": "DEV-03/05/11",
    "mode_gate": "MOCK/SANDBOX; real payouts NEVER without owner authorization",

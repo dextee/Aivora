@@ -11,11 +11,15 @@
     "SK-005",
     "SK-007",
     "SK-009",
+    "SK-011",
     "SK-012",
     "SK-013",
+    "SK-016",
     "SK-018",
+    "SK-019",
     "SK-021",
     "SK-024",
+    "SK-025",
     "SK-026",
     "SK-030",
     "SK-035",
@@ -521,9 +525,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "checkout-integrator",
+        "function": "skill_checkout_integrate",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Checkout flow",
@@ -766,9 +772,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "conversation-designer",
+        "function": "skill_conversation_design",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Conversation flows",
@@ -916,9 +924,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "demand-researcher",
+        "function": "skill_demand_research",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Demand signals",
@@ -1210,9 +1220,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "fulfillment-planner",
+        "function": "skill_fulfillment_plan",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Dropshipping",

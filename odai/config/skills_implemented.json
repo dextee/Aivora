@@ -1,31 +1,148 @@
 {
- "count": 18,
- "ids": [
-  "SK-024",
-  "SK-009",
-  "SK-021",
-  "SK-035",
-  "SK-041",
-  "SK-040",
-  "SK-055",
-  "SK-018",
-  "SK-030",
-  "SK-047",
-  "SK-012",
-  "SK-013",
-  "SK-026",
-  "SK-046",
-  "SK-049",
-  "SK-002",
-  "SK-005",
-  "SK-007"
- ],
- "updated_by": "CONTROLLER state-sync (batches 1-3 verified from chain); resume-authority for loop worker",
- "updated_at": "2026-11-21T09:16:10.512323Z",
- "basis": {
-  "b1": "dd3eec3",
-  "b2": "1cdc735",
-  "b3": "fe032c5",
-  "suites": "124/128/132 green claimed; controller will re-verify fresh at next full audit"
- }
+  "work_order": "WO-113",
+  "updated_at": "2026-11-21T09:45:00Z",
+  "implemented": [
+    {
+      "skill_id": "SK-009",
+      "family": "catalog-query",
+      "function": "skill_catalog_query",
+      "batch": "WO-103"
+    },
+    {
+      "skill_id": "SK-021",
+      "family": "evidence-append",
+      "function": "skill_evidence_append",
+      "batch": "WO-103"
+    },
+    {
+      "skill_id": "SK-024",
+      "family": "ledger-append",
+      "function": "skill_ledger_append",
+      "batch": "WO-103"
+    },
+    {
+      "skill_id": "SK-035",
+      "family": "gate-check",
+      "function": "skill_gate_check",
+      "batch": "WO-103"
+    },
+    {
+      "skill_id": "SK-040",
+      "family": "report-compose",
+      "function": "skill_report_compose",
+      "batch": "WO-103"
+    },
+    {
+      "skill_id": "SK-041",
+      "family": "schedule-scaffold",
+      "function": "skill_schedule_scaffold",
+      "batch": "WO-103"
+    },
+    {
+      "skill_id": "SK-018",
+      "family": "creative-generator",
+      "function": "skill_creative_generate",
+      "batch": "WO-113-b1"
+    },
+    {
+      "skill_id": "SK-030",
+      "family": "margin-analyst",
+      "function": "skill_margin_analyze",
+      "batch": "WO-113-b1"
+    },
+    {
+      "skill_id": "SK-047",
+      "family": "storefront-builder",
+      "function": "skill_storefront_build",
+      "batch": "WO-113-b1"
+    },
+    {
+      "skill_id": "SK-055",
+      "family": "poster-social-creator",
+      "function": "skill_poster_social_create",
+      "batch": "WO-113-b1"
+    },
+    {
+      "skill_id": "SK-012",
+      "family": "claims-reviewer",
+      "function": "skill_claims_review",
+      "batch": "WO-113-b2"
+    },
+    {
+      "skill_id": "SK-013",
+      "family": "compliance-researcher",
+      "function": "skill_compliance_research",
+      "batch": "WO-113-b2"
+    },
+    {
+      "skill_id": "SK-026",
+      "family": "funnel-builder",
+      "function": "skill_funnel_build",
+      "batch": "WO-113-b2"
+    },
+    {
+      "skill_id": "SK-046",
+      "family": "spend-controller",
+      "function": "skill_spend_control",
+      "batch": "WO-113-b2"
+    },
+    {
+      "skill_id": "SK-002",
+      "family": "audience-researcher",
+      "function": "skill_audience_research",
+      "batch": "WO-113-b3"
+    },
+    {
+      "skill_id": "SK-005",
+      "family": "business-model-analyst",
+      "function": "skill_business_model_analyze",
+      "batch": "WO-113-b3"
+    },
+    {
+      "skill_id": "SK-007",
+      "family": "campaign-strategist",
+      "function": "skill_campaign_design",
+      "batch": "WO-113-b3"
+    },
+    {
+      "skill_id": "SK-049",
+      "family": "supplier-verification",
+      "function": "skill_supplier_verify",
+      "batch": "WO-113-b3"
+    },
+    {
+      "skill_id": "SK-011",
+      "family": "checkout-integrator",
+      "function": "skill_checkout_integrate",
+      "batch": "WO-113-b4"
+    },
+    {
+      "skill_id": "SK-016",
+      "family": "conversation-designer",
+      "function": "skill_conversation_design",
+      "batch": "WO-113-b4"
+    },
+    {
+      "skill_id": "SK-019",
+      "family": "demand-researcher",
+      "function": "skill_demand_research",
+      "batch": "WO-113-b4"
+    },
+    {
+      "skill_id": "SK-025",
+      "family": "fulfillment-planner",
+      "function": "skill_fulfillment_plan",
+      "batch": "WO-113-b4"
+    }
+  ],
+  "connector_policy": "MOCK/SPEC_ONLY adapter surface only; LIVE paths BLOCKED owner-token class; SK-058 remains CONTRACT_ONLY",
+  "remaining_t1": [],
+  "t3_count": 36,
+  "t3_next4": [
+    "SK-031",
+    "SK-048",
+    "SK-056",
+    "SK-017"
+  ],
+  "note_this_commit": "canonical schema restored (controller interim ids-marker reconciled; batches 1-3 entries carried forward from fe032c5 lineage)"
 }
