@@ -1245,8 +1245,12 @@
     ],
     "budget": 60,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 10
+    },
+    "revoked": true,
+    "revoked_reason": "Windows portability fix shipped db4a656; revoke after commit per convention; no further writes",
+    "revoked_at": "2026-11-21T18:08:18Z"
   },
   "ZZZ-V4-BYP": {
     "issued_at": "2026-11-21T02:29:56Z",
