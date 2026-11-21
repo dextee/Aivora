@@ -15,7 +15,7 @@ import { loadSkillContract } from "./registry.mjs";
 /* WO-SEC05: the spend gate now consumes ATOMIC BUDGET RESERVATIONS (SEC-05 remediation).
  * Reservations live in server/odai/reservations.mjs — synchronous single-thread critical
  * section CAS; approve consumes HELD reservations only; held+consumed never exceed the cap. */
-import { budgetScope, consumeHold } from "./reservations.mjs";
+import { budgetScope, consumeHold, registerBudgetScope, reserve, releaseHolds } from "./reservations.mjs";
 
 const req = (input, keys) => keys.filter((k) => input[k] === undefined || input[k] === null || input[k] === "" || (Array.isArray(input[k]) && !input[k].length));
 
@@ -236,6 +236,124 @@ export function skill_report_compose(input = {}) {
 const sense = (x) => Math.round(Number(x) * 100); // RM -> integer sen; all money math in int sen
 const stableId = (prefix, parts) => prefix + "-" + createHash("sha256").update(parts.join("\u0000")).digest("hex").slice(0, 12);
 
+/* ---- claims-reviewer (SK-012) — wellness/advertising claims screen over the SUPPLIED text.
+ * Deterministic prohibited-expression list only; grounding stays with the cited evidence refs.
+ * NEVER asserts a claim is lawful — verdicts are screen-level, legal sign-off is an owner act.
+ * in : envelope; vdi{claims: [{id?, text}], evidence_refs?: [..]}
+ * out: typed_artifact{verdicts}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+const BANNED_CLAIM_TERMS = [
+  ["cure", /\bcure[sd]?\b|\bcuring\b/i], ["miracle", /\bmiracle\b/i],
+  ["clinically proven (bare)", /\bclinically proven\b(?!\s*(—|-|:)?\s*ref\s*\[)/i],
+  ["guaranteed results", /\bguaranteed results?\b/i], ["100% effective", /\b100%\s*effective\b/i],
+  ["no side effects", /\bno side effects\b/i], ["kills (virus/cancer)", /\bkills?\s+(the\s+)?(virus|cancer|tumou?rs?)\b/i],
+  ["doctor recommended (bare)", /\bdoctor recommended\b(?!\s*\()/i],
+];
+export function skill_claims_review(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const claims = Array.isArray(vdi.claims) ? vdi.claims : [];
+  if (!claims.length) return { status: "REJECTED", reason: "claims[] with the exact text under review is required — nothing is reviewed vacuously", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["no_claims_supplied"], cost_actual: 0, approval_requests: [] };
+  const cited = (input.source_refs || []).map(String);
+  const verdicts = claims.map((c, i) => {
+    const text = String(c.text || "");
+    const hits = BANNED_CLAIM_TERMS.filter(([, re]) => re.test(text)).map(([name]) => name);
+    const claimEvidence = Array.isArray(c.evidence) ? c.evidence : [];
+    const grounding = claimEvidence.length ? "claim_cited_refs_semantics_unverified" : cited.length ? "global_refs_only_no_claim_link" : "NO_CITED_EVIDENCE";
+    return { id: String(c.id != null ? c.id : "C" + (i + 1)), screen: hits.length ? "REJECTED" : "PASS_SCREEN", banned_expressions: hits, grounding, escalate_to_owner: hits.length > 0 || grounding !== "claim_cited_refs_semantics_unverified", text_excerpt: text.slice(0, 120) };
+  });
+  const rejected = verdicts.filter((v) => v.screen === "REJECTED").map((v) => v.id);
+  return {
+    status: "OK",
+    typed_artifact: { verdicts, rejected_claim_ids: rejected, screen_basis: "deterministic_banned_expression_list_v1", legal_signoff: "REQUIRED before publication — screen is not legal advice" },
+    evidence_refs: cited, uncertainty_flags: cited.length ? ["semantic_grounding_not_machine_verified"] : ["claims_without_evidence_refs"],
+    cost_actual: 0, approval_requests: rejected.length ? ["owner must approve rewritten copy for: " + rejected.join(",")] : [],
+  };
+}
+
+/* ---- compliance-researcher (SK-013) — regulatory checklist FRAMEWORK, not an opinion.
+ * No research connector is invoked (none cleared); every substantive verdict is UNKNOWN
+ * pending a licensed advisor / official source. Only structure is emitted (anti-fabrication).
+ * in : envelope; vdi{markets?: [], product_category?, questions?: []}
+ * out: typed_artifact{checklist}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_compliance_research(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const markets = (vdi.markets && vdi.markets.length ? vdi.markets : ["MY"]).map(String);
+  const category = String(vdi.product_category || "unspecified");
+  const checklist = [];
+  for (const m of markets) {
+    for (const topic of ["product_registration_licensing", "labeling_language_requirements", "health_claims_permitted_list", "advertising_channel_rules", "refund_consumer_protection"]) {
+      checklist.push({ market: m, category, topic, verdict: "UNKNOWN — no official-source retrieval authorized", next_action: "owner supplies official citation OR licenses advisor review", status: "REQUIRES_INPUT" });
+    }
+  }
+  return {
+    status: "OK",
+    typed_artifact: { checklist, substantive_findings: 0, framework_only: true, note: "zero regulatory facts invented; UNKNOWN is the honest verdict until a cited official source is on file" },
+    evidence_refs: (input.source_refs || []).map(String), uncertainty_flags: ["all_verdicts_UNKNOWN_pending_official_sources"],
+    cost_actual: 0, approval_requests: ["owner must route checklist to licensed compliance advisor"],
+  };
+}
+
+/* ---- funnel-builder (SK-026) — landing/lead/appointment funnel SPEC from supplied steps.
+ * The only builder connector (Hashmeta) is BLOCKED → structure only, live_call_made false.
+ * in : envelope; vdi{funnel_steps: [{stage, purpose}], form_fields?, booking?}
+ * out: typed_artifact{funnel_spec}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_funnel_build(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const steps = Array.isArray(vdi.funnel_steps) ? vdi.funnel_steps : [];
+  if (!steps.length) return { status: "REJECTED", reason: "funnel_steps[] required — no invented funnel architecture", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["steps_absent_rejected"], cost_actual: 0, approval_requests: [] };
+  const specId = stableId("FUN", [String(input.tenant_id), String(input.objective_id), steps.map((s) => String(s.stage)).join(",")]);
+  const stages = steps.map((s, i) => ({ order: i + 1, stage: String(s.stage), purpose: String(s.purpose || ""), voice_first_ui: true, elderly_friendly: "large_targets + readback confirmation per stage (structure flag only)" }));
+  return {
+    status: "OK",
+    typed_artifact: {
+      funnel_spec: { spec_id: specId, mode: "SPEC_ONLY", stages, form_fields: (vdi.form_fields || []).map(String).slice(0, 12), appointment: vdi.booking ? "structure_only_no_external_booking_call" : null, connector: { candidate: "Hashmeta Website Connector", class: "BLOCKED", live_call_made: false } },
+    },
+    evidence_refs: [specId].concat((input.source_refs || []).map(String)), uncertainty_flags: ["hashmeta_connector_BLOCKED_no_build", "spec_only_no_funnel_deployed"],
+    cost_actual: 0, approval_requests: [{ scope: "deploy_funnel", auto: false, requires: "owner approval + connector 9.0 readiness — publication NEVER automatic" }],
+  };
+}
+
+/* ---- spend-controller (SK-046) — gate-check CONSUMER over the SEC-05 reservation engine.
+ * Declares a cap scope, holds budget atomically, releases. Reuses reservations.mjs —
+ * NEVER re-implements cap math, never spends (consumption stays with SK-035 owner gate).
+ * in : envelope; vdi{cap_myr?, action: "declare_scope"|"hold"|"release_holds", amount_myr?, note?}
+ * out: typed_artifact{budget...}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_spend_control(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const action = String(vdi.action || "");
+  const tenant = String(input.tenant_id); const scope = String(input.objective_id);
+  const envelopeOut = (ta, extras = {}) => ({
+    status: "OK", typed_artifact: ta, evidence_refs: (input.source_refs || []).map(String).concat(ta.budget ? ["budget:" + tenant + ":" + scope] : []),
+    uncertainty_flags: extras.uncertainty || [], cost_actual: ta.budget ? ta.budget.consumed_myr : 0, approval_requests: extras.approvals || [], ...extras.extra,
+  });
+  if (action === "declare_scope") {
+    const cap = Number(vdi.cap_myr);
+    if (!(cap > 0)) return { status: "REJECTED", reason: "cap_myr must be a positive number", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["cap_rejected"], cost_actual: 0, approval_requests: [] };
+    const r = registerBudgetScope(tenant, scope, cap, { source: "SK-046:" + input.task_id });
+    if (!r.ok) return { status: "REJECTED", reason: "budget_scope_refused: " + r.reason + " — " + (r.detail || ""), typed_artifact: null, evidence_refs: [], uncertainty_flags: ["cap_lock_conflict_fail_closed"], cost_actual: 0, approval_requests: [] };
+    return envelopeOut({ action, budget: r.budget, newly_registered: !r.existing, holds_full_cap: false, note: "declare only — the objective creation path holds caps; this consumer never double-holds" });
+  }
+  if (action === "hold") {
+    const amount = Number(vdi.amount_myr);
+    if (!(amount > 0)) return { status: "REJECTED", reason: "amount_myr must be a positive number", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["amount_rejected"], cost_actual: 0, approval_requests: [] };
+    const r = reserve(tenant, scope, amount, { source: "SK-046:" + input.task_id, note: vdi.note ? String(vdi.note) : null });
+    if (!r.ok) return { status: "REJECTED", reason: "hold_refused: " + r.reason + " — " + (r.detail || "cap exhausted"), typed_artifact: { budget: r.budget || budgetScope(tenant, scope) }, evidence_refs: [], uncertainty_flags: ["atomic_cap_enforced"], cost_actual: 0, approval_requests: [] };
+    return envelopeOut({ action, reservation_id: r.reservation.reservation_id, amount_myr: amount, state: "held", budget: r.budget });
+  }
+  if (action === "release_holds") {
+    const rel = releaseHolds(tenant, scope, String(vdi.note || "released by spend controller"));
+    if (!rel.ok) return { status: "REJECTED", reason: "release_refused: " + rel.reason, typed_artifact: { budget: rel.budget || budgetScope(tenant, scope) }, evidence_refs: [], uncertainty_flags: [], cost_actual: 0, approval_requests: [] };
+    return envelopeOut({ action, released: rel.released, budget: rel.budget });
+  }
+  return { status: "REJECTED", reason: "action must be declare_scope|hold|release_holds", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["action_rejected"], cost_actual: 0, approval_requests: [] };
+}
 /* ---- creative-generator (SK-018) — prepares Wan image/video/poster job specs.
  * Contract: typed envelope; dispatch to Wan APIs is connector-blocked, so jobs are
  * returned prepared (QUEUED_MOCK), never fabricated as generated.
@@ -385,6 +503,8 @@ export const P0_SKILL_FUNCTIONS = {
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
   "creative-generator": skill_creative_generate, "poster-social-creator": skill_poster_social_create,
   "margin-analyst": skill_margin_analyze, "storefront-builder": skill_storefront_build,
+  "claims-reviewer": skill_claims_review, "compliance-researcher": skill_compliance_research,
+  "funnel-builder": skill_funnel_build, "spend-controller": skill_spend_control,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be

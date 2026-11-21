@@ -359,6 +359,10 @@ P0_MODULES = {
     "SK-018": {"module": "skill_creative_generate", "family": "creative-generator", "wo": "WO-113"},
     "SK-030": {"module": "skill_margin_analyze", "family": "margin-analyst", "wo": "WO-113"},
     "SK-047": {"module": "skill_storefront_build", "family": "storefront-builder", "wo": "WO-113"},
+    "SK-012": {"module": "skill_claims_review", "family": "claims-reviewer", "wo": "WO-113"},
+    "SK-013": {"module": "skill_compliance_research", "family": "compliance-researcher", "wo": "WO-113"},
+    "SK-026": {"module": "skill_funnel_build", "family": "funnel-builder", "wo": "WO-113"},
+    "SK-046": {"module": "skill_spend_control", "family": "spend-controller", "wo": "WO-113"},
 }
 
 # ---------------------------------------------------------------------------

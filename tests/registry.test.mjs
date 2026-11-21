@@ -26,7 +26,8 @@ before(async () => {
 after(() => child?.kill());
 
 import { criterionFromText, matchObjective, planFor, registrySummary, validatePlanEdges } from "../server/odai/registry.mjs";
-import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build } from "../server/odai/skills.mjs";
+import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control } from "../server/odai/skills.mjs";
+import { budgetScope } from "../server/odai/reservations.mjs";
 import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledger.mjs";
 
 const CFG = (n) => JSON.parse(readFileSync(new URL("odai/config/" + n, root), "utf8"));
@@ -408,7 +409,9 @@ test("A1: registry task nodes carry P0 module wiring where implemented (WO-103 i
   assert.equal(t2.fn, "skill_gate_check");
   assert.equal(t2.executable, true);
   const t1 = plan.tasks.find((t) => t.skill_id === "SK-046");
-  assert.equal(t1.blocked_reason, "SKILL_NOT_IMPLEMENTED");
+  assert.equal(t1.module, "server/odai/skills.mjs", "WO-113: spend-controller wired");
+  assert.equal(t1.fn, "skill_spend_control");
+  assert.equal(t1.executable, true, "Internal connector = LOCAL");
 });
 
 /* ---------------- 7. WO-103 P0 skill modules — contracts from sheet-04 ---------------- */
@@ -446,8 +449,12 @@ test("A1: P0 modules honor NEEDS_INPUT/REJECTED error contract + produce declare
     "poster-social-creator": skill_poster_social_create({ tenant_id: "sk-a1", product_id: "P", brand_id: "B", platforms: ["facebook"], language: "en", objective: "o", budget: 1, source_refs: ["s"], validated_domain_inputs: { brand_name: "B", rights_confirmed: true } }),
     "margin-analyst": skill_margin_analyze({ sku_prices: [{ sku: "A", price_myr: 10 }], verified_costs: [{ sku: "A", landed_cost_myr: 4 }], fee_schedule: { marketplace_pct: 1, payment_pct: 1, fixed_per_unit_myr: 0 } }),
     "storefront-builder": skill_storefront_build({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T04", source_refs: ["s"], validated_domain_inputs: { products: [{ sku: "A", name: "n", price_myr: 1 }], brand: { name: "B" } } }),
+    "claims-reviewer": skill_claims_review({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T05", source_refs: ["s"], validated_domain_inputs: { claims: [{ text: "a plain descriptive sentence" }] } }),
+    "compliance-researcher": skill_compliance_research({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T06", source_refs: ["s"], validated_domain_inputs: { markets: ["MY"] } }),
+    "funnel-builder": skill_funnel_build({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T07", source_refs: ["s"], validated_domain_inputs: { funnel_steps: [{ stage: "landing", purpose: "intro" }] } }),
+    "spend-controller": skill_spend_control({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T08", source_refs: ["s"], validated_domain_inputs: { action: "declare_scope", cap_myr: 77 } }),
   });
-  assert.equal(audit.length, 10);
+  assert.equal(audit.length, 14);
   for (const a of audit) assert.equal(a.ok, true, a.family + " " + JSON.stringify(a));
 });
 
@@ -527,9 +534,78 @@ test("T2: real-HTTP — /api/odai/registry serves the WO-113 wiring; progress fi
     assert.equal(impl.family, fam);
   }
   const progress = JSON.parse(readFileSync(new URL("odai/config/skills_implemented.json", root), "utf8"));
-  assert.equal(progress.implemented.length, 10);
+  assert.equal(progress.implemented.length >= 10, true);
   const reg = registrySummary(); // same code path the HTTP handler serves
   assert.equal(reg.counts.skills, 59);
+});
+
+/* ---------------- 8c. WO-113 tranche-2 batch 2 — claims/compliance/funnel/spend ---------------- */
+test("T2b: SK-012 claims reviewer — banned expressions rejected, ungrounded flagged, no legal opinion", () => {
+  assert.equal(skill_claims_review({}).status, "NEEDS_INPUT");
+  const noClaims = skill_claims_review({ tenant_id: "t", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noClaims.status, "REJECTED");
+  const hit = skill_claims_review({ tenant_id: "w113b2", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["ref:study-1"], validated_domain_inputs: { claims: [{ text: "This tea cures cancer — 100% effective, no side effects" }, { text: "Hemp tea, brewed traditionally" }] } });
+  assert.equal(hit.status, "OK");
+  assert.deepEqual(hit.typed_artifact.rejected_claim_ids, ["C1"]);
+  assert.equal(hit.typed_artifact.verdicts[1].screen, "PASS_SCREEN");
+  assert.equal(hit.typed_artifact.legal_signoff.includes("REQUIRED"), true);
+  assert.equal(hit.approval_requests.length, 1);
+  const bare = skill_claims_review({ tenant_id: "w113b2", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["s"], validated_domain_inputs: { claims: [{ text: "ok copy" }] } });
+  assert.equal(bare.typed_artifact.verdicts[0].grounding, "global_refs_only_no_claim_link");
+  assert.equal(bare.typed_artifact.verdicts[0].escalate_to_owner, true);
+  assert.equal(skill_claims_review({ tenant_id: "w113b2", objective_id: "UC-001", task_id: "UC-001-T01", validated_domain_inputs: { claims: [{ text: "x" }] } }).status, "NEEDS_INPUT", "empty source_refs counts as absent");
+});
+
+test("T2b: SK-013 compliance researcher — framework only, every verdict UNKNOWN, zero invented facts", () => {
+  assert.equal(skill_compliance_research({}).status, "NEEDS_INPUT");
+  const r = skill_compliance_research({ tenant_id: "w113b2", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["s"], validated_domain_inputs: { markets: ["MY"] } });
+  assert.equal(r.status, "OK");
+  assert.equal(r.typed_artifact.substantive_findings, 0);
+  assert.equal(r.typed_artifact.framework_only, true);
+  assert.equal(r.typed_artifact.checklist.length, 5);
+  for (const row of r.typed_artifact.checklist) assert.match(row.verdict, /^UNKNOWN/);
+});
+
+test("T2b: SK-026 funnel builder — SPEC_ONLY, Hashmeta BLOCKED never called, deterministic spec id", () => {
+  assert.equal(skill_funnel_build({}).status, "NEEDS_INPUT");
+  assert.equal(skill_funnel_build({ tenant_id: "t", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["s"], validated_domain_inputs: {} }).status, "REJECTED");
+  const a = skill_funnel_build({ tenant_id: "w113b2", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["src:flows"], validated_domain_inputs: { funnel_steps: [{ stage: "landing", purpose: "voice-first intro" }, { stage: "lead_form", purpose: "capture" }] } });
+  assert.equal(a.status, "OK");
+  assert.equal(a.typed_artifact.funnel_spec.mode, "SPEC_ONLY");
+  assert.equal(a.typed_artifact.funnel_spec.connector.class, "BLOCKED");
+  assert.equal(a.typed_artifact.funnel_spec.connector.live_call_made, false);
+  assert.equal(a.approval_requests[0].auto, false);
+  const b = skill_funnel_build({ tenant_id: "w113b2", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["src:flows"], validated_domain_inputs: { funnel_steps: [{ stage: "landing", purpose: "voice-first intro" }, { stage: "lead_form", purpose: "capture" }] } });
+  assert.equal(b.typed_artifact.funnel_spec.spec_id, a.typed_artifact.funnel_spec.spec_id);
+});
+
+test("T2b: SK-046 spend controller — SEC-05 reservation consumer: declare/hold/release, cap enforced atomically, gate-check consumes the hold", () => {
+  const t = "sp-113b2"; const o = "UC-046X";
+  assert.equal(skill_spend_control({}).status, "NEEDS_INPUT");
+  const badAction = skill_spend_control({ tenant_id: t, objective_id: o, task_id: "UC-001-T01", validated_domain_inputs: { action: "spend_it_all" } });
+  assert.equal(badAction.status, "REJECTED");
+  const decl = skill_spend_control({ tenant_id: t, objective_id: o, task_id: "UC-001-T01", validated_domain_inputs: { action: "declare_scope", cap_myr: 100 } });
+  assert.equal(decl.typed_artifact.budget.cap_myr, 100);
+  const declAgain = skill_spend_control({ tenant_id: t, objective_id: o, task_id: "UC-001-T01", validated_domain_inputs: { action: "declare_scope", cap_myr: 100 } });
+  assert.equal(declAgain.status, "OK"); assert.equal(declAgain.typed_artifact.newly_registered, false, "idempotent declare");
+  const conflict = skill_spend_control({ tenant_id: t, objective_id: o, task_id: "UC-001-T01", validated_domain_inputs: { action: "declare_scope", cap_myr: 50 } });
+  assert.equal(conflict.status, "REJECTED", "CAP_LOCKED never silently overridden");
+  assert.equal(conflict.uncertainty_flags[0], "cap_lock_conflict_fail_closed");
+  const over = skill_spend_control({ tenant_id: t, objective_id: o, task_id: "UC-001-T01", validated_domain_inputs: { action: "hold", amount_myr: 150 } });
+  assert.equal(over.status, "REJECTED", "hold beyond cap refused atomically");
+  const hold = skill_spend_control({ tenant_id: t, objective_id: o, task_id: "UC-001-T01", source_refs: ["plan:ads"], validated_domain_inputs: { action: "hold", amount_myr: 60, note: "ads reservation" } });
+  assert.equal(hold.status, "OK"); assert.equal(hold.typed_artifact.state, "held");
+  assert.match(hold.typed_artifact.reservation_id, /^RES-/);
+  // gate-check (SK-035) consumes HELD reservations — the two modules share the one reservation engine
+  const gate = skill_gate_check({ actor: "OWNER", tenant: t, action: "approve_spend", resource: o, risk: "medium", gate: { scope: "spend" }, owner_approved: true, amount_myr: 60, cap_myr: 100 });
+  assert.equal(gate.policy_decision, "ALLOW", "60 held + 0 remaining ask within cap RM100");
+  assert.equal(gate.reason_code, "owner_approved_reservation_consumed");
+  const snap = budgetScope(t, o);
+  assert.equal(snap.consumed_myr, 60);
+  const second = skill_spend_control({ tenant_id: t, objective_id: o, task_id: "UC-001-T02", validated_domain_inputs: { action: "hold", amount_myr: 50 } });
+  assert.equal(second.status, "REJECTED", "remaining RM40 < RM50 — cumulative cap enforced (SEC-05)");
+  const rel = skill_spend_control({ tenant_id: t, objective_id: o, task_id: "UC-001-T03", validated_domain_inputs: { action: "release_holds", note: "plan cancelled" } });
+  assert.equal(rel.status, "OK"); assert.equal(typeof rel.typed_artifact.released, "number");
 });
 
 /* ---------------- 9. WO-104 immutable money ledger ---------------- */

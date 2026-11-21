@@ -1,6 +1,6 @@
 {
  "work_order": "WO-113",
- "updated_at": "2026-11-21T08:59:01Z",
+ "updated_at": "2026-11-21T09:10:47Z",
  "implemented": [
   {
    "skill_id": "SK-009",
@@ -61,14 +61,34 @@
    "family": "storefront-builder",
    "function": "skill_storefront_build",
    "batch": "WO-113-b1"
+  },
+  {
+   "skill_id": "SK-012",
+   "family": "claims-reviewer",
+   "function": "skill_claims_review",
+   "batch": "WO-113-b2"
+  },
+  {
+   "skill_id": "SK-013",
+   "family": "compliance-researcher",
+   "function": "skill_compliance_research",
+   "batch": "WO-113-b2"
+  },
+  {
+   "skill_id": "SK-026",
+   "family": "funnel-builder",
+   "function": "skill_funnel_build",
+   "batch": "WO-113-b2"
+  },
+  {
+   "skill_id": "SK-046",
+   "family": "spend-controller",
+   "function": "skill_spend_control",
+   "batch": "WO-113-b2"
   }
  ],
  "connector_policy": "MOCK/SPEC_ONLY adapter surface only; LIVE paths BLOCKED owner-token class; SK-058 remains CONTRACT_ONLY",
  "remaining_t1": [
-  "SK-012",
-  "SK-013",
-  "SK-026",
-  "SK-046",
   "SK-049",
   "SK-002"
  ],

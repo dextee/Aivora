@@ -58,10 +58,10 @@
   },
   {
    "id": "WO-113",
-   "status": "IN_PROGRESS:batch1_done",
+   "status": "IN_PROGRESS:batches1-2_done",
    "paths": "server/odai,tests",
    "deps": [],
-   "spec": "skill modules tranche 2: locate authoritative contracts source (tools/build_registry.py / registry_intake.json) before queueing specifics | batch1 WO-113 SK-055/018/030/047 shipped (suite 124/124); remaining t1: SK-012,013,026,046,049,002; t3: 42 modules"
+   "spec": "skill modules tranche 2: locate authoritative contracts source (tools/build_registry.py / registry_intake.json) before queueing specifics | batches1-2 WO-113 (8 modules: 055/018/030/047/012/013/026/046) SK-055/018/030/047 shipped (suite 124/124); remaining t1: SK-049,SK-002; t3: 42 modules"
   },
   {
    "id": "E2E-10J",
@@ -343,5 +343,5 @@
    "verify": "DEV-11"
   }
  ],
- "updated_at": "2026-11-21T09:05:01Z"
+ "updated_at": "2026-11-21T09:11:41Z"
 }

@@ -8,13 +8,17 @@
   "intake_sha256": "73e172ce58b5aa775132aa20ff06bd3a454782c90ae9aaf5105b5c6f5c35d509",
   "p0_modules_implemented": [
     "SK-009",
+    "SK-012",
+    "SK-013",
     "SK-018",
     "SK-021",
     "SK-024",
+    "SK-026",
     "SK-030",
     "SK-035",
     "SK-040",
     "SK-041",
+    "SK-046",
     "SK-047",
     "SK-055"
   ],
@@ -552,9 +556,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "claims-reviewer",
+        "function": "skill_claims_review",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Wellness claims review",
@@ -601,9 +607,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "compliance-researcher",
+        "function": "skill_compliance_research",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Regulatory research",
@@ -1241,9 +1249,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "funnel-builder",
+        "function": "skill_funnel_build",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Landing pages",
@@ -2207,9 +2217,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "spend-controller",
+        "function": "skill_spend_control",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Spending limits",
