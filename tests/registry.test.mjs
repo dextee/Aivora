@@ -26,7 +26,7 @@ before(async () => {
 after(() => child?.kill());
 
 import { criterionFromText, matchObjective, planFor, registrySummary, validatePlanEdges } from "../server/odai/registry.mjs";
-import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate, skill_budget_plan, skill_crm_followup, skill_cashflow_forecast, skill_wan_video_create } from "../server/odai/skills.mjs";
+import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate, skill_budget_plan, skill_crm_followup, skill_cashflow_forecast, skill_wan_video_create, skill_consent_check, skill_localization_specialist, skill_payment_reconcile, skill_site_qa } from "../server/odai/skills.mjs";
 import { budgetScope } from "../server/odai/reservations.mjs";
 import { get } from "../server/odai/store.mjs";
 import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledger.mjs";
@@ -474,8 +474,12 @@ test("A1: P0 modules honor NEEDS_INPUT/REJECTED error contract + produce declare
     "crm-follow-up": skill_crm_followup({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T19", source_refs: ["s"], validated_domain_inputs: { message_template: "hi", recipients: [{ recipient_ref: "r1", consent: true, channel: "whatsapp_business" }] } }),
     "cashflow-forecaster": skill_cashflow_forecast({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T20", source_refs: ["s"], validated_domain_inputs: { opening_cash_myr: 500, horizon_weeks: 4, assumptions: { weekly_inflow_myr: 100, weekly_outflow_myr: 80 } } }),
     "wan-video-creator": (() => { const t = get("sk-a1"); if (t.products[0]) { t.products[0].review_state = "APPROVED_FOR_TEST"; } return skill_wan_video_create({ product_id: t.products[0] ? String(t.products[0].id) : "P0", storyboard: { beats: ["open", "close"] }, brand_id: "B1", language: "ms", duration: 15, aspect_ratio: "9:16", tenant_id: "sk-a1", budget_cap: 50 }); })(),
+    "consent-checker": skill_consent_check({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T21", source_refs: ["s"], validated_domain_inputs: { evaluated_on: "2026-11-21", channel_policy: { allowed_channels: ["whatsapp_business"], allowed_purposes: ["order_update"], retention_days: 365 }, contact_records: [{ record_ref: "r1", consent: true, channel: "whatsapp_business", purpose: "order_update", consent_granted_on: "2026-06-01" }] } }),
+    "localization-specialist": skill_localization_specialist({ source_content: [{ id: "1", text: "Buy 2 for RM29.90 — save {pct}%." }], locale: "ms-MY", glossary: [{ term: "Hemp Tea", keep_source_language: true }], translated_content: ["Beli 2 pada RM29.90 — jimat {pct}%."], tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T22", source_refs: ["s"] }),
+    "payment-reconciler": skill_payment_reconcile({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T23", source_refs: ["s"], validated_domain_inputs: { settlement_records: [{ idempotency_key: "PAY-X1", gross_myr: 10, fee_myr: 0, net_settled_myr: 10 }] } }),
+    "site-qa-tester": skill_site_qa({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T24", source_refs: ["s"], validated_domain_inputs: { site_spec: { pages: [{ id: "home" }], images: [{ id: "i", alt: "x" }], contact_page: "c", viewports: [{ v: 375, check: "ran" }], prices: [{ value_myr: 1 }] }, test_results: [{ id: "t", result: "PASS" }] } }),
   });
-  assert.equal(audit.length, 34);
+  assert.equal(audit.length, 38);
   for (const a of audit) assert.equal(a.ok, true, a.family + " " + JSON.stringify(a));
 });
 
@@ -995,6 +999,159 @@ test("T2g: SK-057 Wan video creator — verified-product gate (quarantine refuse
   assert.match(ok.cost_note, /reconcile-before-retry/);
   assert.ok(ok.uncertainty_flags.includes("no_video_generated_no_file_fabricated"));
   t.products[0].review_state = "QUARANTINED";
+});
+
+/* ---------------- 8i. WO-113 tranche-2 batch 8 (full-drain B8) — consent/localization/reconciliation/QA ---------------- */
+test("T2h: SK-014 consent checker — deny paths only-positives, policy mandatory, evaluated_on required, validator has no separate authority", () => {
+  assert.equal(skill_consent_check({}).status, "NEEDS_INPUT");
+  const noPol = skill_consent_check({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { contact_records: [{ record_ref: "R1" }] } });
+  assert.equal(noPol.status, "REJECTED"); assert.match(noPol.reason, /channel_policy/);
+  const base = { tenant_id: "w113b8", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["src:crm"], validated_domain_inputs: {
+    evaluated_on: "2026-11-21",
+    channel_policy: { allowed_channels: ["whatsapp_business"], allowed_purposes: ["order_update"], retention_days: 365 },
+    contact_records: [
+      { record_ref: "R1", consent: true, channel: "whatsapp_business", purpose: "order_update", consent_granted_on: "2026-01-10" },
+      { record_ref: "R2", consent: false, channel: "whatsapp_business", purpose: "order_update", consent_granted_on: "2026-01-10" },
+      { record_ref: "R3", consent: true, unsubscribed: true, channel: "whatsapp_business", purpose: "order_update", consent_granted_on: "2026-01-10" },
+      { record_ref: "R4", consent: true, channel: "email_gmail", purpose: "order_update", consent_granted_on: "2026-01-10" },
+      { record_ref: "R5", consent: true, channel: "whatsapp_business", purpose: "promo", consent_granted_on: "2026-01-10" },
+      { record_ref: "R6", consent: true, channel: "whatsapp_business", purpose: "order_update", consent_granted_on: "2025-01-01" },
+      { record_ref: "R7", consent: true, channel: "whatsapp_business", purpose: "order_update" },
+    ] } };
+  const noDate = skill_consent_check({ ...base, validated_domain_inputs: { ...base.validated_domain_inputs, evaluated_on: undefined } });
+  assert.equal(noDate.status, "REJECTED"); assert.match(noDate.reason, /evaluated_on/);
+  const r = skill_consent_check(base);
+  assert.equal(r.status, "OK");
+  const m = r.typed_artifact.consent_matrix;
+  const st = (id) => m.records.find((x) => x.record_ref === id);
+  assert.equal(st("R1").state, "PERMITTED");
+  assert.deepEqual(st("R2").reasons, ["NO_CONSENT"]);
+  assert.ok(st("R3").reasons.includes("UNSUBSCRIBED"), "unsubscribed overrides consent");
+  assert.ok(st("R4").reasons.includes("CHANNEL_NOT_IN_POLICY"));
+  assert.ok(st("R5").reasons.includes("PURPOSE_NOT_IN_POLICY"));
+  assert.ok(st("R6").reasons.includes("RETENTION_WINDOW_PASSED"), "~589d > 365d retention");
+  assert.ok(st("R7").reasons.includes("CONSENT_DATE_UNRECORDED"), "retention unknown without grant date — never assumed valid");
+  assert.equal(m.permitted_count, 1);
+  assert.equal(r.cost_actual, 0);
+  assert.ok(r.approval_requests[0].requires.match(/never auto-purged/i));
+  assert.match(r.permitted_contacts_note, /SK-006/);
+  assert.ok(r.uncertainty_flags.includes("validator_only_no_separate_authority"));
+});
+
+test("T2h: SK-029 localization specialist — never translates, numerals/placeholders/locked-terms audited, provider dispatch owner-gated", () => {
+  assert.equal(skill_localization_specialist({}).status, "NEEDS_INPUT");
+  assert.equal(skill_localization_specialist({ source_content: [{ id: "1", text: "x" }], locale: "ms" }).status, "NEEDS_INPUT", "glossary must be DECLARED (even if empty of locked terms)");
+  const badLocale = skill_localization_specialist({ source_content: [{ id: "1", text: "x" }], locale: "english!!", glossary: [] });
+  assert.equal(badLocale.status, "REJECTED"); assert.match(badLocale.reason, /BCP-47/);
+  const base = { source_content: [
+    { id: "P1", text: "Buy 2 boxes of Hemp Tea for RM29.90 — save {pct}% today." },
+    { id: "P2", text: "Results may vary. Not medical advice.", disclaimer: true },
+  ], locale: "ms-MY", glossary: [{ term: "Hemp Tea", keep_source_language: true }], source_refs: ["src:site"] };
+  const pending = skill_localization_specialist(base);
+  assert.equal(pending.status, "OK");
+  assert.equal(pending.localized_content[0].state, "PENDING_PROVIDER_TRANSLATION", "translation is provider-bound — never generated here");
+  assert.equal(pending.QA_report.pending_translation_provider, 2);
+  assert.equal(pending.approval_requests[0].auto, false);
+  const good = skill_localization_specialist({ ...base, translated_content: [
+    { id: "P1", text: "Beli 2 kotak Hemp Tea pada RM29.90 — jimat {pct}% hari ini." },
+  ] });
+  assert.equal(good.localized_content[0].state, "QA_PASS", "numerals byte-identical, placeholder kept, locked term preserved");
+  assert.equal(good.localized_content[1].state, "PENDING_PROVIDER_TRANSLATION");
+  const danger = skill_localization_specialist({ ...base, translated_content: [
+    { id: "P1", text: "Beli 2 kotak Teh Hemp pada RM39.90 — jimat {pct} hari ini." },
+    { id: "P2", text: "" },
+  ] });
+  const f = danger.localized_content[0].flags;
+  assert.ok(f.includes("NUMERALS_CHANGED_monetary_or_numeric_DANGER"), "price figure changed -> DANGER flag");
+  assert.ok(f.some((x) => x.startsWith("LOCKED_TERM_DROPPED:Hemp Tea")));
+  assert.ok(danger.terminology_flags.some((x) => x.item_id === "P2" && x.flag === "DISCLAIMER_DROPPED_regulatory"), "missing disclaimer item -> flagged");
+  const dia = skill_localization_specialist({ ...base, locale: "zh-Hant-MY", uncertain_dialects: ["zh-Hant-MY"], translated_content: ["買 2 盒 Hemp Tea RM29.90 {pct}", "x"] });
+  assert.ok(dia.terminology_flags.some((x) => x.flag.includes("DIALECT_UNCERTAIN")));
+  assert.match(dia.QA_report.label, /never auto-invoked/);
+  assert.equal(dia.cost_actual, 0);
+});
+
+test("T2h: SK-034 payment reconciler — fee arithmetic, ledger cross-match, discrepancy blocks retry, provider never called", () => {
+  assert.equal(skill_payment_reconcile({}).status, "NEEDS_INPUT");
+  const noRec = skill_payment_reconcile({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noRec.status, "REJECTED"); assert.match(noRec.reason, /settlement_records/);
+  appendMoneyEvent("w113b8p", { amount_myr: 100, direction: "in", source_tag: "pay:PAY-1", objective_id: "UC-072", task_id: "UC-072-T02" });
+  const r = skill_payment_reconcile({ tenant_id: "w113b8p", objective_id: "UC-072", task_id: "UC-072-T02", source_refs: ["src:csv"], validated_domain_inputs: {
+    expected_fee_rules: [{ channel: "stripe", pct: 3, fixed_myr: 1, tolerance_myr: 0.05 }],
+    settlement_records: [
+      { idempotency_key: "PAY-1", channel: "stripe", gross_myr: 100, fee_myr: 4, net_settled_myr: 96 },
+      { idempotency_key: "PAY-2", channel: "stripe", gross_myr: 50, fee_myr: 2.5, net_settled_myr: 46.5 },
+      { idempotency_key: "REFUND-PAY-9", channel: "stripe", gross_myr: 30, fee_myr: 0, net_settled_myr: 30 },
+    ] } });
+  assert.equal(r.status, "OK");
+  const rec = r.typed_artifact.reconciliation;
+  assert.equal(rec.provider_calls_made, 0);
+  const d = rec.records;
+  assert.equal(d[0].state, "MATCHED", "fee 4 = 3% of 100 + 1 fixed, net 96 exact, ledger tag pay:PAY-1 consumed without amount divergence");
+  assert.equal(d[0].ledger_event, "ME-w113b8p-1");
+  assert.equal(d[1].state, "DISCREPANCY");
+  assert.ok(d[1].problems.some((p) => p.startsWith("FEE_MISMATCH_expected_net_47.5")), "46.5 != 50-2.5");
+  assert.ok(d[1].problems.includes("NO_LEDGER_ENTRY_settlement_without_income_event"));
+  assert.equal(d[2].refund, true);
+  assert.match(d[2].refund_action, /SK-038.*no_auto_refund/);
+  assert.ok(d.some((x) => x.retry_guidance && /reconcile before retry/i.test(x.retry_guidance)), "no blind retries — guidance on every discrepancy");
+  assert.equal(rec.matched, 1);
+  assert.equal(rec.discrepancies, 2);
+  assert.equal(rec.blind_retries, "NEVER — reconciliation precedes any retry decision");
+  const clean = skill_payment_reconcile({ tenant_id: "w113b8p", objective_id: "UC-072", task_id: "UC-072-T02", source_refs: ["s"], validated_domain_inputs: { settlement_records: [{ idempotency_key: "PAY-1", gross_myr: 100, fee_myr: 0, net_settled_myr: 100 }] } });
+  assert.equal(clean.typed_artifact.reconciliation.matched, 1, "exact arithmetic + ledger hit matches");
+  assert.equal(clean.approval_requests.length, 0);
+});
+
+test("T2h: SK-044 site QA tester — static spec findings only, unexecuted tests never counted PASS, deploy never auto", () => {
+  assert.equal(skill_site_qa({}).status, "NEEDS_INPUT");
+  const noSpec = skill_site_qa({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noSpec.status, "REJECTED");
+  const r = skill_site_qa({ tenant_id: "w113b8q", objective_id: "UC-030", task_id: "UC-030-T01", source_refs: ["src:sk047"], validated_domain_inputs: {
+    site_spec: { spec_id: "SPEC-1", pages: [{ id: "home" }], images: [{ id: "i1" }, { id: "i2", alt: "tea cup" }], ctas: [{}, { label: "Buy" }], contact_page: "hello @ shop", prices: [], viewports: [{ v: 375 }] },
+    test_results: [{ id: "t1", result: "PASS" }, { id: "t2", result: "MAYBE" }] } });
+  assert.equal(r.status, "OK");
+  const q = r.typed_artifact.qa_report;
+  assert.ok(q.findings.some((f) => f.check === "accessibility" && f.level === "FAIL" && /i1/.test(f.detail)));
+  assert.ok(q.findings.some((f) => f.check === "content" && f.level === "WARN" && /cta 1/.test(f.detail)));
+  assert.ok(q.findings.some((f) => f.check === "responsive" && f.level === "WARN"));
+  assert.ok(q.findings.some((f) => f.check === "test_evidence" && f.level === "FAIL" && /t2/.test(f.detail)), "unrecognized result never counted as executed");
+  assert.equal(q.tests_counted_as_executed, 1);
+  assert.equal(q.readiness, "NOT_READY");
+  assert.equal(q.fail_count >= 2, true);
+  assert.equal(r.approval_requests[0].scope, "deploy_site");
+  assert.equal(r.approval_requests[0].auto, false);
+  assert.match(r.typed_artifact.mode, /no_browser_executed/);
+});
+
+test("T2h: real-HTTP registry + plan wiring for batch-8 skills (spawned engine, honest connector classes)", async () => {
+  const { status: s24, body: o24 } = await post("/api/odai/objectives", { statement: "Make my shop in Malay." });
+  assert.equal(s24, 200, "UC-024 canonical statement routes live via HTTP");
+  assert.equal(o24.plan_source, "registry"); assert.equal(o24.registry_objective_id, "UC-024");
+  const p29 = planFor("UC-024").tasks.find((t) => t.skill_id === "SK-029");
+  assert.equal(p29.module, "server/odai/skills.mjs");
+  assert.equal(p29.fn, "skill_localization_specialist");
+  assert.equal(p29.connector_class, "LOCAL");
+  assert.equal(p29.executable, true, "candidate None = LOCAL — deterministic QA module is runnable");
+  const { body: o30 } = await post("/api/odai/objectives", { statement: "Check whether my shop works." });
+  assert.equal(o30.registry_objective_id, "UC-030");
+  const p44 = planFor("UC-030").tasks.find((t) => t.skill_id === "SK-044");
+  assert.equal(p44.fn, "skill_site_qa");
+  assert.ok(["PROVIDER_SANDBOX", "BLOCKED", "MOCK", "LOCAL"].includes(p44.connector_class), "connector label decides class — never silently runnable");
+  assert.equal(p44.executable, p44.connector_class === "MOCK" || p44.connector_class === "LOCAL");
+  const { body: o72 } = await post("/api/odai/objectives", { statement: "How much money did I make?" });
+  assert.equal(o72.registry_objective_id, "UC-072");
+  const p34 = planFor("UC-072").tasks.find((t) => t.skill_id === "SK-034");
+  assert.equal(p34.fn, "skill_payment_reconcile");
+  assert.equal(p34.connector_class, "BLOCKED", "Payment provider TBD stays BLOCKED owner-token class");
+  assert.equal(p34.executable, false);
+  assert.equal(p34.blocked_reason, "CONNECTOR_BLOCKED", "implemented module + blocked provider dispatch = honest two-layer label");
+  const { body: o56 } = await post("/api/odai/objectives", { statement: "Remind customers about their orders." });
+  assert.equal(o56.registry_objective_id, "UC-056");
+  const p14 = planFor("UC-056").tasks.find((t) => t.skill_id === "SK-014");
+  assert.equal(p14.fn, "skill_consent_check");
+  const reg = await getj("/api/odai/registry"); // spawned engine (HTTP) still serves 59 skills
+  assert.equal(reg.counts.skills, 59);
 });
 
 /* ---------------- 9. WO-104 immutable money ledger ---------------- */

@@ -114,6 +114,28 @@
     "revoked_reason": "DEV-11 verification shipped ab1c46e (loop-log line only); lease closed",
     "revoked_at": "2026-11-21T09:46:14Z"
   },
+  "DEV11-VER2": {
+    "issued_at": "2026-11-21T10:44:51Z",
+    "expires_at": "2026-11-21T10:54:51Z",
+    "minutes": 10,
+    "paths": [
+      "odai/dev_docs/loop-log.jsonl",
+      "odai/dev_docs/authz-ledger.txt",
+      "odai/dev_docs/leases.json"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 6,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "verification shipped; loop-log line committed; lease closed",
+    "revoked_at": "2026-11-21T10:45:50Z"
+  },
   "LOOP-CLOSE": {
     "issued_at": "2026-11-21T09:47:21Z",
     "expires_at": "2026-11-21T09:57:21Z",
@@ -173,6 +195,26 @@
     "revoked": true,
     "revoked_reason": "done",
     "revoked_at": "2026-11-21T09:48:05Z"
+  },
+  "LOOP-LAST": {
+    "issued_at": "2026-11-21T09:48:05Z",
+    "expires_at": "2026-11-21T09:58:05Z",
+    "minutes": 10,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "end-of-wake",
+    "revoked_at": "2026-11-21T09:48:06Z"
   },
   "UI-01B": {
     "issued_at": "2026-11-20T17:30:18Z",
@@ -587,6 +629,26 @@
     "revoked": true,
     "revoked_reason": "SHIPPED 68d45f2 + close 9f4e3? see git log — wake complete 16 modules",
     "revoked_at": "2026-11-21T09:46:50Z"
+  },
+  "WO-113-B8": {
+    "issued_at": "2026-11-21T10:55:27Z",
+    "expires_at": "2026-11-21T12:25:27Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/config/",
+      "odai/dev_docs/",
+      "tools/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
   },
   "WO-A1": {
     "issued_at": "2026-11-20T14:37:22Z",

@@ -1,6 +1,6 @@
 {
   "work_order": "WO-113",
-  "updated_at": "2026-11-21T11:10:00Z",
+  "updated_at": "2026-11-21T11:10:19Z",
   "implemented": [
     {
       "skill_id": "SK-009",
@@ -205,17 +205,49 @@
       "family": "wan-video-creator",
       "function": "skill_wan_video_create",
       "batch": "WO-113-b7"
+    },
+    {
+      "skill_id": "SK-014",
+      "family": "consent-checker",
+      "function": "skill_consent_check",
+      "batch": "WO-113-b8"
+    },
+    {
+      "skill_id": "SK-029",
+      "family": "localization-specialist",
+      "function": "skill_localization_specialist",
+      "batch": "WO-113-b8"
+    },
+    {
+      "skill_id": "SK-034",
+      "family": "payment-reconciler",
+      "function": "skill_payment_reconcile",
+      "batch": "WO-113-b8"
+    },
+    {
+      "skill_id": "SK-044",
+      "family": "site-qa-tester",
+      "function": "skill_site_qa",
+      "batch": "WO-113-b8"
     }
   ],
   "connector_policy": "MOCK/SPEC_ONLY adapter surface only; LIVE paths BLOCKED owner-token class; SK-058 remains CONTRACT_ONLY",
   "remaining_t1": [],
-  "t3_count": 24,
+  "t3_count": 20,
   "t3_next4": [
-    "SK-014",
-    "SK-029",
-    "SK-034",
-    "SK-044"
+    "SK-051",
+    "SK-003",
+    "SK-015",
+    "SK-027"
   ],
-  "note_this_commit": "canonical schema restored (controller interim ids-marker reconciled; batches 1-3 entries carried forward from fe032c5 lineage)",
-  "t3_head_note": "computed from queue authority at batch-5 time (ref-desc)"
+  "t3_head_note": "computed from queue authority at batch-5 time (ref-desc)",
+  "accounting": {
+    "target_modules": 58,
+    "implemented": 38,
+    "contract_hold": 1,
+    "contract_hold_ids": [
+      "SK-058"
+    ],
+    "remaining_buildable": 20
+  }
 }

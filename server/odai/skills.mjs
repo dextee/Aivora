@@ -1197,6 +1197,206 @@ export function skill_wan_video_create(input = {}) {
   };
 }
 
+/* ---- consent-checker (SK-014) — consent/unsubscribe/retention/channel-policy validation.
+ * Pure validator inside the Identity & Tenant Guard boundary (contract: "Consent
+ * validation; no separate authority"). No sending happens here; SK-006 keeps its own
+ * absolute consent gate. Records are evaluated against an OWNER-supplied channel/purpose
+ * policy — never a default-permit assumption. Discrepancy outcomes route to owner
+ * reconciliation, never to silent deletion.
+ * out: typed_artifact{consent_matrix}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_consent_check(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const records = Array.isArray(vdi.contact_records) && vdi.contact_records.length ? vdi.contact_records : null;
+  const policy = vdi.channel_policy;
+  if (!records || !policy || !Array.isArray(policy.allowed_channels) || !Array.isArray(policy.allowed_purposes)) return { status: "REJECTED", reason: "contact_records[] and channel_policy {allowed_channels[], allowed_purposes[], retention_days?} required — consent posture is never assumed", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["policy_absent"], cost_actual: 0, approval_requests: [] };
+  const today = String(vdi.evaluated_on || "").slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) return { status: "REJECTED", reason: "evaluated_on (YYYY-MM-DD) must be supplied — date arithmetic is never guessed", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["eval_date_absent"], cost_actual: 0, approval_requests: [] };
+  const matrix = records.map((r, i) => {
+    const ref = String((r || {}).record_ref || "REC-" + (i + 1));
+    const checks = [];
+    if (!(r && r.consent === true)) checks.push("NO_CONSENT");
+    if (r && r.unsubscribed === true) checks.push("UNSUBSCRIBED");
+    const ch = String((r || {}).channel || "");
+    if (!policy.allowed_channels.includes(ch)) checks.push("CHANNEL_NOT_IN_POLICY");
+    const purpose = String((r || {}).purpose || "");
+    if (!policy.allowed_purposes.includes(purpose)) checks.push("PURPOSE_NOT_IN_POLICY");
+    const granted = String((r || {}).consent_granted_on || "");
+    if (policy.retention_days !== undefined && granted) {
+      const ageDays = Math.floor((Date.parse(today) - Date.parse(granted)) / 86400000);
+      if (Number.isFinite(ageDays) && ageDays > Number(policy.retention_days)) checks.push("RETENTION_WINDOW_PASSED");
+    } else if (policy.retention_days !== undefined && !granted) {
+      checks.push("CONSENT_DATE_UNRECORDED"); // retention cannot be evaluated without a grant date
+    }
+    return { record_ref: ref, state: checks.length ? "DENIED" : "PERMITTED", reasons: checks };
+  });
+  const permitted = matrix.filter((m) => m.state === "PERMITTED").map((m) => m.record_ref);
+  const denied = matrix.filter((m) => m.state === "DENIED");
+  const auditId = stableId("CONSENT", [String(input.tenant_id), String(input.objective_id), matrix.map((m) => m.record_ref + ":" + m.state).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "VALIDATION_ONLY", consent_matrix: { audit_id: auditId, evaluated_on: today, policy_channels: policy.allowed_channels, policy_purposes: policy.allowed_purposes, retention_days: policy.retention_days === undefined ? null : Number(policy.retention_days), records: matrix, permitted_count: permitted.length, denied_count: denied.length } },
+    evidence_refs: [auditId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["consent_flags_are_supplied_claims_not_identity_verified", "validator_only_no_separate_authority"],
+    cost_actual: 0,
+    approval_requests: denied.length ? [{ scope: "resolve_denied_records", auto: false, requires: "owner reconciliation for DISCREPANCY states (e.g. consent+unsubscribed) — records are never auto-purged" }] : [],
+    permitted_contacts_note: "PERMITTED here validates records only; any actual customer contact stays gated by SK-006 drafts + owner approval + connector class",
+  };
+}
+
+/* ---- localization-specialist (SK-029) — deterministic localization QA, not a translator.
+ * Boundary (sheet-04): "Text localization; not speech recognition". Translation itself is
+ * provider-bound: this module NEVER generates translations — it audits supplied
+ * translated_content against locked glossary terms, byte-identical numerals/currency
+ * figures, {placeholders}, and disclaimer lines, and flags uncertain dialects for review.
+ * out: localized_content, terminology_flags, QA_report (+ envelope sidecars) */
+export function skill_localization_specialist(input = {}) {
+  const missing = req(input, ["source_content", "locale"]).concat(Array.isArray(input.glossary) ? [] : ["glossary"]); // glossary may be [] (no locked terms) but must be declared
+  if (missing.length) { return { status: "NEEDS_INPUT", missing, localized_content: [], terminology_flags: [], QA_report: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] }; }
+  const items = Array.isArray(input.source_content) ? input.source_content : null;
+  if (!items || !items.length) return { status: "REJECTED", reason: "source_content[] required — content is never invented", localized_content: [], terminology_flags: [], QA_report: null };
+  const hasText = items.some((x) => String((x && (x.text || x.source)) || x || "").trim());
+  if (!hasText) return { status: "REJECTED", reason: "source_content entries carry no text — nothing to localize, copy never invented", localized_content: [], terminology_flags: [], QA_report: null };
+  const locale = String(input.locale);
+  if (!/^[a-z]{2,3}(-[A-Z][a-z]{3})*(-[A-Z]{2})?$/.test(locale)) return { status: "REJECTED", reason: "locale must be BCP-47-like (e.g. ms, ms-MY, zh-Hant-MY) — dialect is never guessed", localized_content: [], terminology_flags: [], QA_report: null };
+  const glossary = Array.isArray(input.glossary) ? input.glossary : [];
+  const terms = glossary.map((g) => String((g || {}).term || "")).filter(Boolean);
+  const translations = Array.isArray(input.translated_content) ? input.translated_content : null;
+  const extracts = (s) => ({
+    numerals: (String(s).match(/\d+(?:[.,]\d+)?/g) || []).join("|"),
+    placeholders: (String(s).match(/\{[a-zA-Z_][a-zA-Z0-9_]*\}/g) || []).slice().sort().join("|"),
+  });
+  const rows = items.map((raw, i) => {
+    const src = String((raw && (raw.text || raw.source)) || raw || "");
+    const tr = translations && translations[i] !== undefined ? String((translations[i] && typeof translations[i] === "object") ? (translations[i].text ?? "") : translations[i]) : null;
+    const flags = [];
+    if (tr === null) {
+      flags.push("TRANSLATION_NOT_SUPPLIED_provider_bound");
+    } else {
+      if (extracts(src).numerals !== extracts(tr).numerals) flags.push("NUMERALS_CHANGED_monetary_or_numeric_DANGER");
+      if (extracts(src).placeholders !== extracts(tr).placeholders) flags.push("PLACEHOLDER_MISMATCH");
+      const srcHasTerm = (t) => new RegExp("\\b" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(src);
+      const trHasTerm = (t) => new RegExp("\\b" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(tr);
+      glossary.forEach((g) => {
+        const t = String((g || {}).term || "");
+        if (t && srcHasTerm(t) && !trHasTerm(t)) flags.push("LOCKED_TERM_DROPPED:" + t);
+        if (t && g.keep_source_language && trHasTerm(t) && !srcHasTerm(t)) flags.push("LOCKED_TERM_INJECTED:" + t); // target uses source-language locked term the source never mentioned
+      });
+      if (raw && raw.disclaimer === true && /\{|\d|\.|\S/.test(src) && tr.trim().length === 0) flags.push("DISCLAIMER_DROPPED_regulatory");
+    }
+    if (Array.isArray(input.uncertain_dialects) && input.uncertain_dialects.includes(locale)) flags.push("DIALECT_UNCERTAIN_review_required");
+    return { item_id: String((raw && raw.id) || "L-" + (i + 1)), source_text: src, localized_text: tr, state: tr === null ? "PENDING_PROVIDER_TRANSLATION" : flags.length ? "FLAGGED" : "QA_PASS", flags };
+  });
+  const terminology_flags = rows.flatMap((r) => r.flags.filter((f) => /TERM|DIALECT|DISCLAIMER/.test(f)).map((f) => ({ item_id: r.item_id, flag: f })));
+  const qaId = stableId("LOCQA", [String(input.tenant_id || "global"), locale, rows.map((r) => r.item_id + ":" + r.state).join(",")]);
+  const failCount = rows.filter((r) => r.state === "FLAGGED").length;
+  const pendingCount = rows.filter((r) => r.state === "PENDING_PROVIDER_TRANSLATION").length;
+  return {
+    status: "OK",
+    localized_content: rows,
+    terminology_flags,
+    QA_report: { qa_id: qaId, locale, items: rows.length, qa_pass: rows.length - failCount - pendingCount, flagged: failCount, pending_translation_provider: pendingCount, rules: ["numerals_and_currency_byte_identical", "placeholders_preserved", "glossary_terms_locked", "disclaimers_never_dropped"], label: "deterministic QA only — translation generation NOT performed here (provider-bound, never auto-invoked)" },
+    evidence_refs: [qaId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["no_human_mt_translation_quality_claim", "source_language_assumed_from_supplied_content"],
+    cost_actual: 0,
+    approval_requests: pendingCount ? [{ scope: "provider_translation_dispatch", auto: false, requires: "owner decision — translation provider never invoked by this module" }] : [],
+  };
+}
+
+/* ---- payment-reconciler (SK-034) — settlements vs tenant money-ledger matching.
+ * Provider connector class is BLOCKED (owner-token); this module NEVER calls a provider
+ * and NEVER retries blind (contract boundary: "Match settlement records; no blind
+ * retries"). It reconciles owner-supplied settlement records against the real
+ * append-only money ledger (read via moneyEvents) and the supplied expected fees.
+ * Fee math is arithmetic only: net_expected = gross − fees, compared per record.
+ * out: typed_artifact{reconciliation}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_payment_reconcile(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const settlements = Array.isArray(vdi.settlement_records) && vdi.settlement_records.length ? vdi.settlement_records : null;
+  const expectedFees = Array.isArray(vdi.expected_fee_rules) ? vdi.expected_fee_rules : [];
+  if (!settlements) return { status: "REJECTED", reason: "settlement_records[] required — settlements are never invented or fetched", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["settlements_absent"], cost_actual: 0, approval_requests: [] };
+  const ledger = moneyEvents(String(input.tenant_id)).filter((e) => e.direction === "in");
+  const refundLedger = new Set(ledger.filter((e) => String(e.category || "") === "refund").map((e) => String(e.source_tag || "")));
+  const usedLedger = new Set();
+  const results = settlements.map((s) => {
+    const idem = String((s || {}).idempotency_key || (s || {}).reference || "");
+    const gross = Number((s || {}).gross_myr), fee = Number((s || {}).fee_myr), net = Number((s || {}).net_settled_myr);
+    const problems = [];
+    if (!idem) problems.push("no_idempotency_key_cannot_match_safely");
+    if (!Number.isFinite(gross) || !Number.isFinite(net)) problems.push("settlement_figures_missing");
+    const netExpected = Number.isFinite(gross) && Number.isFinite(fee) ? Math.round((gross - fee) * 100) / 100 : null;
+    if (netExpected !== null && Number.isFinite(net) && netExpected !== net) problems.push("FEE_MISMATCH_expected_net_" + netExpected);
+    const rule = expectedFees.find((r) => r && (r.channel === (s || {}).channel));
+    if (rule && Number.isFinite(fee)) {
+      const capFee = Math.round(Number(rule.pct) / 100 * gross * 100) / 100 + Number(rule.fixed_myr || 0);
+      if (Math.abs(fee - capFee) > Number(rule.tolerance_myr || 0.01)) problems.push("fee_outside_contracted_schedule");
+    }
+    let ledgerRef = null;
+    if (idem) {
+      const hit = ledger.find((e) => !usedLedger.has(e.event_id) && String(e.source_tag || "").includes(idem));
+      if (hit) { usedLedger.add(hit.event_id); ledgerRef = hit.event_id; if (Math.round(Number(hit.amount_myr) * 100) / 100 !== Math.round(gross * 100) / 100) problems.push("AMOUNT_DIVERGES_FROM_LEDGER"); }
+      else problems.push("NO_LEDGER_ENTRY_settlement_without_income_event");
+    }
+    const refundFlag = /refund/i.test(idem) || refundLedger.has(idem);
+    const state = problems.length ? "DISCREPANCY" : "MATCHED";
+    return { key: idem || "(unkeyed)", state, problems, ledger_event: ledgerRef, net_expected_myr: netExpected, net_settled_myr: Number.isFinite(net) ? net : null, refund: refundFlag, refund_action: refundFlag ? "REFUND_CASE_ROUTE_SK-038_owner_confirm_queue_no_auto_refund" : null, retry_guidance: problems.length ? "EXTERNAL_UNKNOWN or mismatch ⇒ reconcile before retry — this module never submits provider retries" : null };
+  });
+  const unmatchedLedger = ledger.filter((e) => !usedLedger.has(e.event_id)).map((e) => e.event_id);
+  const recId = stableId("RECON", [String(input.tenant_id), String(input.objective_id), results.map((r) => r.key + ":" + r.state).join(",")]);
+  const discrepancies = results.filter((r) => r.state === "DISCREPANCY");
+  return {
+    status: "OK",
+    typed_artifact: { mode: "MOCK_LOCAL_MATCHING", reconciliation: { reconciliation_id: recId, provider_calls_made: 0, connector_class_on_dispatch: "BLOCKED_owner_token_class", records: results, matched: results.length - discrepancies.length, discrepancies: discrepancies.length, ledger_total_in_myr: Math.round(ledger.reduce((a, e) => a + Number(e.amount_myr), 0) * 100) / 100, unmatched_ledger_income_events: unmatchedLedger, blind_retries: "NEVER — reconciliation precedes any retry decision" } },
+    evidence_refs: [recId].concat(ledger.slice(0, 25).map((e) => e.event_id), (input.source_refs || []).map(String)),
+    uncertainty_flags: ["settlement_records_are_owner_supplied_not_provider_verified", "funding_date_lag_not_modeled"],
+    cost_actual: 0,
+    approval_requests: discrepancies.length ? [{ scope: "discrepancy_resolution", auto: false, requires: "owner review per record; provider re-query needs BLOCKED LIVE connector authorization — no automatic retry, no automatic refund" }] : [],
+  };
+}
+
+/* ---- site-qa-tester (SK-044) — deterministic QA verdicts over SUPPLIED site specs and
+ * test-result records (contract boundary: "Executable checks" over the supplied artifact;
+ * no browser is launched, nothing is fabricated as executed). Designed to consume
+ * SK-047 SPEC_ONLY site specs for pre-deployment checks. Deployment NEVER auto-approved.
+ * out: typed_artifact{qa_report}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_site_qa(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const site = vdi.site_spec;
+  if (!site || typeof site !== "object") return { status: "REJECTED", reason: "site_spec required (produce via SK-047 first) — no site, no QA", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["spec_absent"], cost_actual: 0, approval_requests: [] };
+  const findings = [];
+  const push = (check, level, detail) => findings.push({ check, level, detail });
+  const pages = Array.isArray(site.pages) ? site.pages : [];
+  if (!pages.length) push("structure", "FAIL", "site_spec has no pages[] to inspect");
+  const imgs = Array.isArray(site.images) ? site.images : [];
+  imgs.forEach((im, i) => { if (!String((im || {}).alt || "").trim()) push("accessibility", "FAIL", "image " + ((im && im.id) || i + 1) + " missing alt text"); });
+  if (/lorem|ipsum|placeholder|TODO/i.test(JSON.stringify(site))) push("content", "FAIL", "placeholder copy present in spec");
+  (Array.isArray(site.ctas) ? site.ctas : []).forEach((c, i) => { if (!String((c || {}).label || "").trim()) push("content", "WARN", "cta " + (i + 1) + " has no label"); });
+  if (!String(site.contact_page || site.contact || "").trim()) push("trust", "FAIL", "no contact information in spec");
+  (Array.isArray(site.prices) ? site.prices : []).forEach((p) => { if (p && p.value_myr === undefined && p.invented) push("money", "FAIL", "price without verified figure"); });
+  if (!Array.isArray(site.viewports) || !site.viewports.length) push("responsive", "WARN", "viewports[] not declared — responsive checks pending");
+  (Array.isArray(site.viewports) ? site.viewports : []).forEach((v) => { if (!v || !String(v.check || "").trim()) push("responsive", "WARN", "viewport entry without executed check remains NOT_RUN"); });
+  const provided = Array.isArray(vdi.test_results) ? vdi.test_results : [];
+  provided.forEach((t) => { const st = String((t || {}).result || "").toUpperCase(); if (!["PASS", "FAIL", "BLOCKED"].includes(st)) push("test_evidence", "FAIL", "test " + ((t && t.id) || "?") + " result not a recognized executed outcome — unverified evidence never counts as PASS"); });
+  const runs = provided.filter((t) => ["PASS", "FAIL"].includes(String((t || {}).result || "").toUpperCase()));
+  const failures = findings.filter((f) => f.level === "FAIL").length;
+  const warnings = findings.filter((f) => f.level === "WARN").length;
+  const qaId = stableId("SITEQA", [String(input.tenant_id), String(input.objective_id), String(site.spec_id || "adhoc"), findings.map((f) => f.check + f.level).join(",")]);
+  const readiness = failures ? "NOT_READY" : (runs.length && warnings === 0 ? "READY_PENDING_OWNER" : "INCOMPLETE_EVIDENCE");
+  return {
+    status: "OK",
+    typed_artifact: { mode: "STATIC_SPEC_QA_no_browser_executed", qa_report: { qa_id: qaId, pages_inspected: pages.length, findings, fail_count: failures, warn_count: warnings, tests_counted_as_executed: runs.length, tests_not_executed_here: "responsive/perf/real-device runs are NOT executed by this module — only supplied records are counted", readiness, gate: "deployment approval is OWNER-only; QA verdict never auto-publishes" } },
+    evidence_refs: [qaId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["static_inspection_only_no_live_crawl", "accessibility_checklist_not_full_WCAG_audit"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "deploy_site", auto: false, requires: readiness === "NOT_READY" ? "fix FAIL findings first" : "explicit owner approval — publication is never automatic (SK-047 SPEC_ONLY boundary)" }],
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
@@ -1214,6 +1414,8 @@ export const P0_SKILL_FUNCTIONS = {
   "faq-retrieval-agent": skill_faq_retrieve, "order-validator": skill_order_validate,
   "budget-planner": skill_budget_plan, "crm-follow-up": skill_crm_followup,
   "cashflow-forecaster": skill_cashflow_forecast, "wan-video-creator": skill_wan_video_create,
+  "consent-checker": skill_consent_check, "localization-specialist": skill_localization_specialist,
+  "payment-reconciler": skill_payment_reconcile, "site-qa-tester": skill_site_qa,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be

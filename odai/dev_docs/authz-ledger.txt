@@ -202,3 +202,12 @@
 2026-11-21T09:48:05Z|ISSUE|LOOP-FINAL|ops=check,commit|paths=odai/dev_docs/|minutes=10|budget=12|single_use=0|expires_at=2026-11-21T09:58:05Z
 2026-11-21T09:48:05Z|HOOK_ALLOW|LOOP-FINAL|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-21T09:48:05Z|REVOKE|LOOP-FINAL|reason=done
+2026-11-21T09:48:05Z|ISSUE|LOOP-LAST|ops=check,commit|paths=odai/dev_docs/|minutes=10|budget=12|single_use=0|expires_at=2026-11-21T09:58:05Z
+2026-11-21T09:48:05Z|HOOK_ALLOW|LOOP-LAST|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-21T09:48:06Z|REVOKE|LOOP-LAST|reason=end-of-wake
+2026-11-21T10:44:51Z|ISSUE|DEV11-VER2|ops=check,commit|paths=odai/dev_docs/loop-log.jsonl,odai/dev_docs/authz-ledger.txt,odai/dev_docs/leases.json|minutes=10|budget=6|single_use=0|expires_at=2026-11-21T10:54:51Z
+2026-11-21T10:45:18Z|DENY|LOOP-LAST|op=commit|path=odai/dev_docs/loop-log.jsonl|reason=REVOKED|detail=end-of-wake
+2026-11-21T10:45:18Z|HOOK_DENY|LOOP-LAST|LOOP-LAST: LOOP-FINAL revocation parity; wake closed, no publish
+2026-11-21T10:45:50Z|HOOK_ALLOW|DEV11-VER2|odai/dev_docs/loop-log.jsonl
+2026-11-21T10:45:50Z|REVOKE|DEV11-VER2|reason=verification shipped; loop-log line committed; lease closed
+2026-11-21T10:55:27Z|ISSUE|WO-113-B8|ops=check,commit|paths=server/odai/,tests/,odai/config/,odai/dev_docs/,tools/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T12:25:27Z
