@@ -229,3 +229,14 @@
 2026-11-21T11:43:10Z|HOOK_ALLOW|WO-113-B10|odai/config/skill_contracts.json+odai/config/skills_implemented.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json+server/odai/skills.mjs+tests/registry.test.mjs+tools/build_registry.py
 2026-11-21T11:43:29Z|REVOKE|WO-113-B10|reason=SHIPPED 372a2e2; suite 163/163
 2026-11-21T11:43:29Z|ISSUE|LOOP-CLOSE-B10|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=6|single_use=0|expires_at=2026-11-21T12:03:29Z
+2026-11-21T11:43:29Z|HOOK_ALLOW|LOOP-CLOSE-B10|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json
+2026-11-21T11:43:29Z|REVOKE|LOOP-CLOSE-B10|reason=loop close for this wake component
+2026-11-21T11:43:51Z|ISSUE|WO-113-B11|ops=check,commit|paths=server/odai/,tests/,odai/config/,odai/dev_docs/,tools/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T13:13:51Z
+2026-11-21T11:46:46Z|ISSUE|DEV11-VER3|ops=check,commit|paths=odai/dev_docs/loop-log.jsonl,odai/dev_docs/authz-ledger.txt,odai/dev_docs/leases.json|minutes=10|budget=6|single_use=0|expires_at=2026-11-21T11:56:46Z
+2026-11-21T11:47:21Z|DENY|LOOP-CLOSE-B10|op=commit|path=odai/dev_docs/loop-log.jsonl|reason=REVOKED|detail=loop close for this wake component
+2026-11-21T11:47:21Z|HOOK_DENY|LOOP-CLOSE-B10|LOOP-CLOSE-B10: batch-10 lease revocation + SHIPPED line + close bookkeeping (372a2e2); no publish
+2026-11-21T11:48:02Z|HOOK_ALLOW|DEV11-VER3|odai/dev_docs/loop-log.jsonl
+2026-11-21T11:48:10Z|REVOKE|DEV11-VER3|reason=verification shipped 98d570b (loop-log line only); lease closed
+2026-11-21T11:50:14Z|HOOK_ALLOW|WO-113-B11|odai/config/skill_contracts.json+odai/config/skills_implemented.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state.json+server/odai/skills.mjs+tests/registry.test.mjs+tools/build_registry.py
+2026-11-21T11:50:39Z|REVOKE|WO-113-B11|reason=SHIPPED b33be0c; suite 168/168
+2026-11-21T11:50:39Z|ISSUE|LOOP-CLOSE-B11|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=6|single_use=0|expires_at=2026-11-21T12:10:39Z

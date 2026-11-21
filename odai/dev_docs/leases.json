@@ -136,6 +136,28 @@
     "revoked_reason": "verification shipped; loop-log line committed; lease closed",
     "revoked_at": "2026-11-21T10:45:50Z"
   },
+  "DEV11-VER3": {
+    "issued_at": "2026-11-21T11:46:46Z",
+    "expires_at": "2026-11-21T11:56:46Z",
+    "minutes": 10,
+    "paths": [
+      "odai/dev_docs/loop-log.jsonl",
+      "odai/dev_docs/authz-ledger.txt",
+      "odai/dev_docs/leases.json"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 6,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 2
+    },
+    "revoked": true,
+    "revoked_reason": "verification shipped 98d570b (loop-log line only); lease closed",
+    "revoked_at": "2026-11-21T11:48:10Z"
+  },
   "LOOP-CLOSE": {
     "issued_at": "2026-11-21T09:47:21Z",
     "expires_at": "2026-11-21T09:57:21Z",
@@ -159,6 +181,26 @@
   "LOOP-CLOSE-B10": {
     "issued_at": "2026-11-21T11:43:29Z",
     "expires_at": "2026-11-21T12:03:29Z",
+    "minutes": 20,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 6,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 2
+    },
+    "revoked": true,
+    "revoked_reason": "loop close for this wake component",
+    "revoked_at": "2026-11-21T11:43:29Z"
+  },
+  "LOOP-CLOSE-B11": {
+    "issued_at": "2026-11-21T11:50:39Z",
+    "expires_at": "2026-11-21T12:10:39Z",
     "minutes": 20,
     "paths": [
       "odai/dev_docs/"
@@ -560,6 +602,30 @@
     "revoked": true,
     "revoked_reason": "SHIPPED 372a2e2; suite 163/163",
     "revoked_at": "2026-11-21T11:43:29Z"
+  },
+  "WO-113-B11": {
+    "issued_at": "2026-11-21T11:43:51Z",
+    "expires_at": "2026-11-21T13:13:51Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/config/",
+      "odai/dev_docs/",
+      "tools/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 7
+    },
+    "revoked": true,
+    "revoked_reason": "SHIPPED b33be0c; suite 168/168",
+    "revoked_at": "2026-11-21T11:50:39Z"
   },
   "WO-113-B2": {
     "issued_at": "2026-11-21T09:11:49Z",
