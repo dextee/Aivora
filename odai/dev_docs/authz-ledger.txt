@@ -135,3 +135,6 @@
 2026-11-21T08:44:16Z|DENY|V43-REG|op=commit|path=odai/dev_docs/v43_phase0_ecom_registry.json|reason=PATH_NOT_ALLOWED|detail=path=odai/dev_docs/v43_phase0_ecom_registry.json scope=odai/dev_docs
 2026-11-21T08:44:16Z|HOOK_DENY|V43-REG|WO-V42PREP: ledger+lease state sync (audit-trail commit through the wall); freeze V42 candidate
 2026-11-21T08:54:22Z|ISSUE|V43-REG2|ops=check,commit|paths=odai/dev_docs/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T10:24:21Z
+2026-11-21T08:54:22Z|HOOK_ALLOW|V43-REG2|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/dev_docs/loop-log.jsonl+odai/dev_docs/loop-state-note.json+odai/dev_docs/loop-state.json+odai/dev_docs/v43_phase0_ecom_registry.json
+2026-11-21T08:54:31Z|REVOKE|V43-REG2|reason=SHIPPED d492bec
+2026-11-21T08:54:31Z|CLOSED|V43-REG2|verdict=SHIPPED|commit=d492bec|detail=V43 reland landed; leases+ledger staged

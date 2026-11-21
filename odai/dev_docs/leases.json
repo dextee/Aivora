@@ -107,9 +107,12 @@
     "budget": 12,
     "single_use": false,
     "used_by_op": {
-      "check": 1
+      "check": 1,
+      "commit": 4
     },
-    "revoked": false
+    "revoked": true,
+    "revoked_reason": "SHIPPED d492bec",
+    "revoked_at": "2026-11-21T08:54:31Z"
   },
   "WO-09A": {
     "issued_at": "2026-11-20T12:20:44Z",
