@@ -2,3 +2,4 @@
 {"ts": "2026-11-21T08:42:52+00:00", "actor": "V43-REG", "event": "V43 BACKLOG REGISTERED", "evidence": {"registry": "odai/dev_docs/v43_phase0_ecom_registry.json", "items_in_loop_state": 31, "v43_orders": 20, "v42_board_status": "FROZEN:559acc5 + residuals pending", "lease": "V43-REG"}}
 2026-11-21T09:05:13Z|V43-LOOP|id=WO-113|verdict=BATCH1-SHIPPED|commit=87fc7c7|tests=124/124|notes=SK-055,SK-018,SK-030,SK-047 via builder wiring; MOCK/SPEC_ONLY labels; no publish
 2026-11-21T09:11:41Z|V43-LOOP|id=WO-113|verdict=BATCH2-SHIPPED|commit=PENDING|tests=128/128|notes=SK-012,SK-013,SK-026,SK-046 (spend-controller = SEC-05 reservation consumer; gate-check integration asserted); 8/52 t1+t3 done
+{"ts":"2026-11-21T09:12:03Z","actor":"WO-113-B2","event":"CORRECTED HASHES","evidence":{"batch1":"dd3eec3 (pre-amend 87fc7c7 superseded)","batch2":"1cdc735","shipped_this_session":8,"suite":"128/128","leases_revoked":["WO-113","WO-113-B2"]}}

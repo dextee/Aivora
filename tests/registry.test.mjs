@@ -26,7 +26,7 @@ before(async () => {
 after(() => child?.kill());
 
 import { criterionFromText, matchObjective, planFor, registrySummary, validatePlanEdges } from "../server/odai/registry.mjs";
-import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control } from "../server/odai/skills.mjs";
+import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design } from "../server/odai/skills.mjs";
 import { budgetScope } from "../server/odai/reservations.mjs";
 import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledger.mjs";
 
@@ -453,8 +453,12 @@ test("A1: P0 modules honor NEEDS_INPUT/REJECTED error contract + produce declare
     "compliance-researcher": skill_compliance_research({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T06", source_refs: ["s"], validated_domain_inputs: { markets: ["MY"] } }),
     "funnel-builder": skill_funnel_build({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T07", source_refs: ["s"], validated_domain_inputs: { funnel_steps: [{ stage: "landing", purpose: "intro" }] } }),
     "spend-controller": skill_spend_control({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T08", source_refs: ["s"], validated_domain_inputs: { action: "declare_scope", cap_myr: 77 } }),
+    "supplier-verification": skill_supplier_verify({ supplier_details: [{ supplier_ref: "S", name: "N", registration_no: "R" }], agreements: [{ supplier_ref: "S", doc_ref: "d" }], price_lists: [{ supplier_ref: "S" }] }),
+    "audience-researcher": skill_audience_research({ market: "MY", product: "p", allowed_channels: ["fb"] }),
+    "business-model-analyst": skill_business_model_analyze({ owner_constraints: { weekly_hours: 20 }, market: "MY", available_capital: 100 }),
+    "campaign-strategist": skill_campaign_design({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T09", source_refs: ["s"], validated_domain_inputs: { owner_budget_cap_myr: 10, audience_segments: ["a"], channels: ["c"] } }),
   });
-  assert.equal(audit.length, 14);
+  assert.equal(audit.length, 18);
   for (const a of audit) assert.equal(a.ok, true, a.family + " " + JSON.stringify(a));
 });
 
@@ -606,6 +610,64 @@ test("T2b: SK-046 spend controller — SEC-05 reservation consumer: declare/hold
   assert.equal(second.status, "REJECTED", "remaining RM40 < RM50 — cumulative cap enforced (SEC-05)");
   const rel = skill_spend_control({ tenant_id: t, objective_id: o, task_id: "UC-001-T03", validated_domain_inputs: { action: "release_holds", note: "plan cancelled" } });
   assert.equal(rel.status, "OK"); assert.equal(typeof rel.typed_artifact.released, "number");
+});
+
+/* ---------------- 8d. WO-113 tranche-2 batch 3 — supplier/audience/model/campaign ---------------- */
+test("T2c: SK-049 supplier verification — documents-only verdicts, UNVERIFIED_PENDING_AGREEMENT never softened", () => {
+  assert.equal(skill_supplier_verify({}).status, "NEEDS_INPUT");
+  const r = skill_supplier_verify({
+    supplier_details: [
+      { supplier_ref: "SUP-A", name: "Alpha Goods", registration_no: "2019001A", fulfillment_terms: "D+3" },
+      { supplier_ref: "SUP-B", name: "Beta Foods" },
+    ],
+    agreements: [{ supplier_ref: "SUP-A", doc_ref: "AGR-1" }],
+    price_lists: [{ supplier_ref: "SUP-A", item: "x" }],
+  });
+  assert.equal(r.status, "OK");
+  assert.equal(r.supplier_verification[0].verdict, "VERIFIED_ON_DOCUMENTS");
+  assert.equal(r.supplier_verification[1].verdict, "UNVERIFIED_PENDING_AGREEMENT");
+  assert.ok(r.exceptions.some((e) => e.issue === "IDENTITY_EVIDENCE_MISSING" && e.supplier_ref === "SUP-B"));
+  assert.ok(r.exceptions.some((e) => e.issue === "NO_QUOTED_COSTS_ON_FILE" && e.supplier_ref === "SUP-B"));
+  assert.match(r.supplier_verification[0].verdict_note || r.supplier_verification[0].caveat, /no external registry lookup/i);
+});
+
+test("T2c: SK-002 audience researcher — lawful cohorts, assumptions labelled, sensitive targeting excluded", () => {
+  assert.equal(skill_audience_research({}).status, "NEEDS_INPUT");
+  const r = skill_audience_research({ market: "MY", product: "herbal tea", allowed_channels: ["facebook", "whatsapp_business"] });
+  assert.equal(r.status, "OK");
+  assert.equal(r.segment_profiles.length, 3);
+  for (const p of r.segment_profiles) { assert.ok(p.assumption, "every profile carries its assumption register"); assert.equal(p.lawful_basis.includes("non-sensitive"), true); }
+  assert.ok(r.exclusions.some((e) => /sensitive_attributes/.test(e)));
+  assert.ok(r.exclusions.some((e) => /personally_identifiable/.test(e)));
+  assert.ok(r.exclusions.some((e) => /scraped/.test(e)));
+});
+
+test("T2c: SK-005 business model analyst — deterministic constraint fit, assumptions + risk register, no market facts invented", () => {
+  assert.equal(skill_business_model_analyze({}).status, "NEEDS_INPUT");
+  const bad = skill_business_model_analyze({ owner_constraints: {}, market: "MY", available_capital: -1 });
+  assert.equal(bad.status, "REJECTED");
+  const r = skill_business_model_analyze({ owner_constraints: { weekly_hours: 10, mobility: "limited", digital_literacy: "basic" }, market: "MY", available_capital: 0 });
+  assert.equal(r.status, "OK");
+  assert.equal(r.ranked_business_models.length, 4);
+  const sorted = [...r.ranked_business_models].sort((a, b) => b.fit_score - a.fit_score);
+  assert.deepEqual(r.ranked_business_models.map((x) => x.model), sorted.map((x) => x.model), "ranking is by fit_score desc");
+  assert.equal(r.ranked_business_models.find((x) => x.model === "pop_up_preorder").fit_score <= r.ranked_business_models[0].fit_score, true, "mobility-limited owner penalises pop-up");
+  assert.ok(r.assumptions.some((a) => /ASSUMPTIONS/.test(a)) && r.assumptions.some((a) => /no live market data/i.test(a)));
+  assert.equal(r.risk_register.length >= 3, true);
+});
+
+test("T2c: SK-007 campaign strategist — cap mandatory, DRAFT_ONLY, activation NEVER without per-campaign owner approval, Hashmeta untouched", () => {
+  assert.equal(skill_campaign_design({}).status, "NEEDS_INPUT");
+  const noCap = skill_campaign_design({ tenant_id: "t", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["s"], validated_domain_inputs: { audience_segments: ["a"], channels: ["fb"] } });
+  assert.equal(noCap.status, "REJECTED");
+  const ok = skill_campaign_design({ tenant_id: "w113b3", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["src:plan"], validated_domain_inputs: { owner_budget_cap_myr: 300, audience_segments: ["value_seeker_bargain_hunters"], channels: ["facebook"] } });
+  assert.equal(ok.status, "OK");
+  assert.equal(ok.typed_artifact.campaign_draft.mode, "DRAFT_ONLY");
+  assert.equal(ok.typed_artifact.campaign_draft.activation.activated, false);
+  assert.equal(ok.typed_artifact.campaign_draft.activation.connector_class, "BLOCKED");
+  assert.equal(ok.typed_artifact.campaign_draft.owner_budget_cap_myr, 300);
+  assert.match(ok.typed_artifact.campaign_draft.spend_rule, /SK-035 atomic reservation gate/);
+  assert.equal(ok.approval_requests[0].auto, false);
 });
 
 /* ---------------- 9. WO-104 immutable money ledger ---------------- */

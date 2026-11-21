@@ -273,11 +273,38 @@
     "used_by_op": {
       "commit": 12
     },
-    "revoked": false
+    "revoked": true,
+    "revoked_reason": "batch1 shipped dd3eec3; next batches take fresh leases",
+    "revoked_at": "2026-11-21T09:12:03Z"
   },
   "WO-113-B2": {
     "issued_at": "2026-11-21T09:11:49Z",
     "expires_at": "2026-11-21T10:41:49Z",
+    "minutes": 90,
+    "paths": [
+      "server/odai/",
+      "tests/",
+      "odai/config/skills_implemented.json",
+      "odai/config/skill_contracts.json",
+      "odai/dev_docs/",
+      "tools/build_registry.py"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 7
+    },
+    "revoked": true,
+    "revoked_reason": "SHIPPED 1cdc735",
+    "revoked_at": "2026-11-21T09:12:03Z"
+  },
+  "WO-113-B3": {
+    "issued_at": "2026-11-21T09:15:38Z",
+    "expires_at": "2026-11-21T10:45:38Z",
     "minutes": 90,
     "paths": [
       "server/odai/",

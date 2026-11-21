@@ -498,6 +498,139 @@ export function skill_storefront_build(input = {}) {
   };
 }
 
+/* ---- supplier-verification (SK-049) — document-grounded supplier checks, no web lookup.
+ * A supplier with no agreement on file is UNVERIFIED_PENDING_AGREEMENT (V43 ECOM-15 state),
+ * never "verified". Contradictory/duplicate refs raise exceptions.
+ * out: supplier_verification, exceptions, evidence_refs */
+export function skill_supplier_verify(input = {}) {
+  const missing = req(input, ["supplier_details", "agreements", "price_lists"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, supplier_verification: [], exceptions: [], evidence_refs: [] };
+  const rows = []; const exceptions = []; const evRefs = [];
+  const agBySupplier = new Map();
+  for (const a of input.agreements) { const k = String(a.supplier_ref ?? a.supplier ?? ""); if (!agBySupplier.has(k)) agBySupplier.set(k, []); agBySupplier.get(k).push(a); evRefs.push("agreement:" + (a.doc_ref || k)); }
+  const seenRefs = new Set();
+  for (const s of input.supplier_details) {
+    const ref = String(s.supplier_ref ?? s.name ?? "");
+    if (seenRefs.has(ref)) exceptions.push({ supplier_ref: ref, issue: "CONTRADICTORY_DUPLICATE_SUPPLIER_REF" });
+    seenRefs.add(ref);
+    const ags = agBySupplier.get(ref) || [];
+    const hasIdentity = Boolean(s.name && (s.registration_no || s.business_reg_no || s.company_registry));
+    if (!hasIdentity) exceptions.push({ supplier_ref: ref, issue: "IDENTITY_EVIDENCE_MISSING" });
+    const priceRows = input.price_lists.filter((p) => String(p.supplier_ref ?? "") === ref);
+    if (!priceRows.length) exceptions.push({ supplier_ref: ref, issue: "NO_QUOTED_COSTS_ON_FILE" });
+    evRefs.push("supplier:" + ref);
+    rows.push({
+      supplier_ref: ref,
+      identity: hasIdentity ? "documented_fields_present" : "MISSING",
+      agreement_state: ags.length ? (ags.some((a) => a.expired === true) ? "AGREEMENT_EXPIRED" : "AGREEMENT_ON_FILE") : "UNVERIFIED_PENDING_AGREEMENT",
+      fulfillment_terms: s.fulfillment_terms ? "supplied" : "UNKNOWN",
+      inventory_feed: s.inventory_feed ? "supplied" : "UNKNOWN_not_connected",
+      quoted_costs: priceRows.length ? priceRows.length + " price list row(s)" : "UNKNOWN",
+      verdict: hasIdentity && ags.length && ags.every((a) => a.expired !== true) ? "VERIFIED_ON_DOCUMENTS" : "UNVERIFIED_PENDING_AGREEMENT",
+      caveat: "document presence only — no external registry lookup was or will be performed without an authorized connector",
+    });
+  }
+  return { status: "OK", supplier_verification: rows, exceptions, evidence_refs: evRefs };
+}
+
+/* ---- audience-researcher (SK-002) — lawful non-sensitive segment PROFILES.
+ * Demand evidence only from supplied observations; everything else is a labelled
+ * assumption. No personal data, no scraping, sensitive attributes excluded by construction.
+ * out: segment_profiles, evidence, exclusions */
+export function skill_audience_research(input = {}) {
+  const missing = req(input, ["market", "product", "allowed_channels"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, segment_profiles: [], evidence: [], exclusions: ["inputs_absent"] };
+  const channels = input.allowed_channels.map(String);
+  const obs = Array.isArray(input.observed_demand) ? input.observed_demand : [];
+  const profiles = [
+    { segment: "value_seeker_bargain_hunters", basis: "interest + price sensitivity at channel level", assumption: "price sensitivity inferred from product positioning, NOT from personal data" },
+    { segment: "convenience_first_repeat_buyers", basis: "repeat-purchase pattern intent on own store channels", assumption: "no individual identities used — cohort level only" },
+    { segment: "gift_givers_occasional", basis: "seasonal/occasion interest categories permitted by platform", assumption: "occasion intent assumed absent supply-side observation" },
+  ].map((p) => ({ ...p, market: String(input.market), product: String(input.product), lawful_basis: "non-sensitive interest/context targeting; no profiling of personal attributes" }));
+  if (obs.length) for (const pr of profiles) pr.evidence_link = "observed_demand_rows_supplied"; // supplied data raises the label, nothing invented
+  return {
+    status: "OK", segment_profiles: profiles,
+    evidence: obs.map(String).concat(["assumption_register:3"]),
+    exclusions: ["sensitive_attributes(health/religion/ethnicity/sexual_orientation/politics)", "individual_personally_identifiable_targeting", "scraped_or_purchased_personal_data", ...(!obs.length ? ["demand_claims_without_observed_data"] : [])],
+    note: "ASSUMPTION-labelled profiles: with no lawful demand dataset supplied, nothing is presented as observed fact",
+  };
+}
+
+/* ---- business-model-analyst (SK-005) — constraint-fit ranking for an elderly solopreneur.
+ * Candidate models and their structural properties are the SUPPLIED templates below
+ * (assumption register); ranking arithmetic is deterministic, capital fit checks inputs.
+ * out: ranked_business_models, assumptions, risk_register */
+const BUSINESS_MODEL_TEMPLATES = [
+  { model: "marketplace_reselling", startup_complexity: 2, compliance_burden: 2, cash_flow_exposure: "holds_stock_or_preorders", manual_work_hours_week: 15 },
+  { model: "supplier_direct_dropship", startup_complexity: 3, compliance_burden: 3, cash_flow_exposure: "low_if_supplier_credit_absent", manual_work_hours_week: 10 },
+  { model: "pop_up_preorder", startup_complexity: 1, compliance_burden: 1, cash_flow_exposure: "preorder_funded", manual_work_hours_week: 8 },
+  { model: "content_led_affiliate", startup_complexity: 2, compliance_burden: 1, cash_flow_exposure: "near_zero", manual_work_hours_week: 12 },
+];
+export function skill_business_model_analyze(input = {}) {
+  const missing = req(input, ["owner_constraints", "market", "available_capital"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, ranked_business_models: [], assumptions: [], risk_register: [] };
+  const c = input.owner_constraints || {};
+  const capital = Number(input.available_capital);
+  if (!(capital >= 0)) return { status: "REJECTED", reason: "available_capital must be a non-negative number", ranked_business_models: [], assumptions: [], risk_register: [] };
+  const maxHours = c.weekly_hours !== undefined ? Number(c.weekly_hours) : 20;
+  const mobilityOk = c.mobility !== "limited";
+  const digital = c.digital_literacy === "high" || c.digital_literacy === "confident";
+  const assumptions = [
+    "template complexity/burden scores are structural ASSUMPTIONS registered here — not market facts",
+    "capital fit uses only the supplied available_capital figure",
+    "no live market data consulted (no connector authorized) — market label recorded only",
+  ];
+  const ranked = BUSINESS_MODEL_TEMPLATES
+    .map((t) => {
+      let fit = 10 - t.startup_complexity - t.compliance_burden;
+      if (!digital && t.startup_complexity >= 3) fit -= 3;
+      if (!mobilityOk && t.model === "pop_up_preorder") fit -= 4;
+      if (t.manual_work_hours_week > maxHours) fit -= 4;
+      if (capital <= 0 && (t.model === "marketplace_reselling" || t.model === "supplier_direct_dropship")) fit -= 3;
+      return { ...t, fit_score: fit, market: String(input.market), needs_voice_first_ui: true };
+    })
+    .sort((a, b) => b.fit_score - a.fit_score || a.model.localeCompare(b.model));
+  const risk_register = [
+    { risk: "supplier_reliability_unverified", severity: "high", applies_to: ["supplier_direct_dropship", "marketplace_reselling"], mitigation: "SK-049 document verification + ECOM-15 agreement state machine" },
+    { risk: "cash_flow_gap", severity: "medium", applies_to: ["marketplace_reselling"], mitigation: "pre-order funding or central-company checkout (ECOM-06)" },
+    { risk: "digital_burden_on_owner", severity: "medium", applies_to: ranked.map((x) => x.model), mitigation: "voice-first dashboard + AI operator defaults (directive §18)" },
+    { risk: "claims_compliance", severity: "high", applies_to: ["content_led_affiliate", "pop_up_preorder"], mitigation: "SK-012 screen + SK-013 UNKNOWN-until-cited posture" },
+  ];
+  return { status: "OK", ranked_business_models: ranked, assumptions, risk_register };
+}
+
+/* ---- campaign-strategist (SK-007) — draft campaign design within the OWNER'S declared cap.
+ * Handoff (SK-056 marketing connector activation) is BLOCKED without per-campaign owner
+ * approval; nothing here spends or activates. Hashmeta never called.
+ * out: typed_artifact{campaign_draft}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_campaign_design(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const cap = Number(vdi.owner_budget_cap_myr);
+  if (!(cap >= 0) || vdi.owner_budget_cap_myr === undefined || vdi.owner_budget_cap_myr === null) return { status: "REJECTED", reason: "owner_budget_cap_myr must be a declared non-negative number — campaigns are never designed around an absent cap", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["cap_absent_rejected"], cost_actual: 0, approval_requests: [] };
+  const audience = Array.isArray(vdi.audience_segments) ? vdi.audience_segments.map(String) : [];
+  const channels = Array.isArray(vdi.channels) ? vdi.channels.map(String) : [];
+  if (!audience.length || !channels.length) return { status: "REJECTED", reason: "audience_segments[] and channels[] required (from SK-002 lawful segments only)", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["strategy_inputs_incomplete"], cost_actual: 0, approval_requests: [] };
+  const draftId = stableId("CAMP", [String(input.tenant_id), String(input.objective_id), audience.join(","), channels.join(","), String(cap)]);
+  const kpi = String(vdi.goal_kpi || "units_sold");
+  return {
+    status: "OK",
+    typed_artifact: {
+      campaign_draft: {
+        draft_id: draftId, mode: "DRAFT_ONLY", goal: String(vdi.goal || "owner-stated objective"), kpi: { metric: kpi, target: vdi.kpi_target !== undefined ? Number(vdi.kpi_target) : "UNKNOWN_set_by_owner", measurable: kpi !== "UNKNOWN" },
+        audience_segments: audience, channels, owner_budget_cap_myr: cap,
+        spend_rule: "every spend action passes SK-035 atomic reservation gate <= cap; this design holds nothing by itself",
+        activation: { requested: false, handoff: "SK-056 via Hashmeta Marketing Connector", connector_class: "BLOCKED", activated: false },
+      },
+    },
+    evidence_refs: [draftId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["campaign_NOT_activated", "hashmeta_marketing_connector_BLOCKED"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "activate_paid_campaign", auto: false, requires: "explicit per-campaign owner approval + transaction-level spend gate (NEVER automatic)" }],
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
@@ -505,6 +638,8 @@ export const P0_SKILL_FUNCTIONS = {
   "margin-analyst": skill_margin_analyze, "storefront-builder": skill_storefront_build,
   "claims-reviewer": skill_claims_review, "compliance-researcher": skill_compliance_research,
   "funnel-builder": skill_funnel_build, "spend-controller": skill_spend_control,
+  "supplier-verification": skill_supplier_verify, "audience-researcher": skill_audience_research,
+  "business-model-analyst": skill_business_model_analyze, "campaign-strategist": skill_campaign_design,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be
