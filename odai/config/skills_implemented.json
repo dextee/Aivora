@@ -1,253 +1,277 @@
 {
-  "work_order": "WO-113",
-  "updated_at": "2026-11-21T11:10:19Z",
-  "implemented": [
-    {
-      "skill_id": "SK-009",
-      "family": "catalog-query",
-      "function": "skill_catalog_query",
-      "batch": "WO-103"
-    },
-    {
-      "skill_id": "SK-021",
-      "family": "evidence-append",
-      "function": "skill_evidence_append",
-      "batch": "WO-103"
-    },
-    {
-      "skill_id": "SK-024",
-      "family": "ledger-append",
-      "function": "skill_ledger_append",
-      "batch": "WO-103"
-    },
-    {
-      "skill_id": "SK-035",
-      "family": "gate-check",
-      "function": "skill_gate_check",
-      "batch": "WO-103"
-    },
-    {
-      "skill_id": "SK-040",
-      "family": "report-compose",
-      "function": "skill_report_compose",
-      "batch": "WO-103"
-    },
-    {
-      "skill_id": "SK-041",
-      "family": "schedule-scaffold",
-      "function": "skill_schedule_scaffold",
-      "batch": "WO-103"
-    },
-    {
-      "skill_id": "SK-018",
-      "family": "creative-generator",
-      "function": "skill_creative_generate",
-      "batch": "WO-113-b1"
-    },
-    {
-      "skill_id": "SK-030",
-      "family": "margin-analyst",
-      "function": "skill_margin_analyze",
-      "batch": "WO-113-b1"
-    },
-    {
-      "skill_id": "SK-047",
-      "family": "storefront-builder",
-      "function": "skill_storefront_build",
-      "batch": "WO-113-b1"
-    },
-    {
-      "skill_id": "SK-055",
-      "family": "poster-social-creator",
-      "function": "skill_poster_social_create",
-      "batch": "WO-113-b1"
-    },
-    {
-      "skill_id": "SK-012",
-      "family": "claims-reviewer",
-      "function": "skill_claims_review",
-      "batch": "WO-113-b2"
-    },
-    {
-      "skill_id": "SK-013",
-      "family": "compliance-researcher",
-      "function": "skill_compliance_research",
-      "batch": "WO-113-b2"
-    },
-    {
-      "skill_id": "SK-026",
-      "family": "funnel-builder",
-      "function": "skill_funnel_build",
-      "batch": "WO-113-b2"
-    },
-    {
-      "skill_id": "SK-046",
-      "family": "spend-controller",
-      "function": "skill_spend_control",
-      "batch": "WO-113-b2"
-    },
-    {
-      "skill_id": "SK-002",
-      "family": "audience-researcher",
-      "function": "skill_audience_research",
-      "batch": "WO-113-b3"
-    },
-    {
-      "skill_id": "SK-005",
-      "family": "business-model-analyst",
-      "function": "skill_business_model_analyze",
-      "batch": "WO-113-b3"
-    },
-    {
-      "skill_id": "SK-007",
-      "family": "campaign-strategist",
-      "function": "skill_campaign_design",
-      "batch": "WO-113-b3"
-    },
-    {
-      "skill_id": "SK-049",
-      "family": "supplier-verification",
-      "function": "skill_supplier_verify",
-      "batch": "WO-113-b3"
-    },
-    {
-      "skill_id": "SK-011",
-      "family": "checkout-integrator",
-      "function": "skill_checkout_integrate",
-      "batch": "WO-113-b4"
-    },
-    {
-      "skill_id": "SK-016",
-      "family": "conversation-designer",
-      "function": "skill_conversation_design",
-      "batch": "WO-113-b4"
-    },
-    {
-      "skill_id": "SK-019",
-      "family": "demand-researcher",
-      "function": "skill_demand_research",
-      "batch": "WO-113-b4"
-    },
-    {
-      "skill_id": "SK-025",
-      "family": "fulfillment-planner",
-      "function": "skill_fulfillment_plan",
-      "batch": "WO-113-b4"
-    },
-    {
-      "skill_id": "SK-031",
-      "family": "objective-planner",
-      "function": "skill_objective_plan",
-      "batch": "WO-113-b5"
-    },
-    {
-      "skill_id": "SK-048",
-      "family": "supplier-dispatcher",
-      "function": "skill_supplier_dispatch",
-      "batch": "WO-113-b5"
-    },
-    {
-      "skill_id": "SK-056",
-      "family": "marketing-os-campaign-builder",
-      "function": "skill_marketing_campaign_build",
-      "batch": "WO-113-b5"
-    },
-    {
-      "skill_id": "SK-017",
-      "family": "conversion-analyst",
-      "function": "skill_conversion_analyze",
-      "batch": "WO-113-b5"
-    },
-    {
-      "skill_id": "SK-020",
-      "family": "escalation-agent",
-      "function": "skill_escalation_triage",
-      "batch": "WO-113-b6"
-    },
-    {
-      "skill_id": "SK-022",
-      "family": "experiment-analyst",
-      "function": "skill_experiment_analyze",
-      "batch": "WO-113-b6"
-    },
-    {
-      "skill_id": "SK-023",
-      "family": "faq-retrieval-agent",
-      "function": "skill_faq_retrieve",
-      "batch": "WO-113-b6"
-    },
-    {
-      "skill_id": "SK-033",
-      "family": "order-validator",
-      "function": "skill_order_validate",
-      "batch": "WO-113-b6"
-    },
-    {
-      "skill_id": "SK-004",
-      "family": "budget-planner",
-      "function": "skill_budget_plan",
-      "batch": "WO-113-b7"
-    },
-    {
-      "skill_id": "SK-006",
-      "family": "crm-follow-up",
-      "function": "skill_crm_followup",
-      "batch": "WO-113-b7"
-    },
-    {
-      "skill_id": "SK-008",
-      "family": "cashflow-forecaster",
-      "function": "skill_cashflow_forecast",
-      "batch": "WO-113-b7"
-    },
-    {
-      "skill_id": "SK-057",
-      "family": "wan-video-creator",
-      "function": "skill_wan_video_create",
-      "batch": "WO-113-b7"
-    },
-    {
-      "skill_id": "SK-014",
-      "family": "consent-checker",
-      "function": "skill_consent_check",
-      "batch": "WO-113-b8"
-    },
-    {
-      "skill_id": "SK-029",
-      "family": "localization-specialist",
-      "function": "skill_localization_specialist",
-      "batch": "WO-113-b8"
-    },
-    {
-      "skill_id": "SK-034",
-      "family": "payment-reconciler",
-      "function": "skill_payment_reconcile",
-      "batch": "WO-113-b8"
-    },
-    {
-      "skill_id": "SK-044",
-      "family": "site-qa-tester",
-      "function": "skill_site_qa",
-      "batch": "WO-113-b8"
-    }
-  ],
-  "connector_policy": "MOCK/SPEC_ONLY adapter surface only; LIVE paths BLOCKED owner-token class; SK-058 remains CONTRACT_ONLY",
-  "remaining_t1": [],
-  "t3_count": 20,
-  "t3_next4": [
-    "SK-051",
-    "SK-003",
-    "SK-015",
-    "SK-027"
-  ],
-  "t3_head_note": "computed from queue authority at batch-5 time (ref-desc)",
-  "accounting": {
-    "target_modules": 58,
-    "implemented": 38,
-    "contract_hold": 1,
-    "contract_hold_ids": [
-      "SK-058"
-    ],
-    "remaining_buildable": 20
+ "work_order": "WO-113",
+ "updated_at": "2026-11-21T11:31:28Z",
+ "implemented": [
+  {
+   "skill_id": "SK-009",
+   "family": "catalog-query",
+   "function": "skill_catalog_query",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-021",
+   "family": "evidence-append",
+   "function": "skill_evidence_append",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-024",
+   "family": "ledger-append",
+   "function": "skill_ledger_append",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-035",
+   "family": "gate-check",
+   "function": "skill_gate_check",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-040",
+   "family": "report-compose",
+   "function": "skill_report_compose",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-041",
+   "family": "schedule-scaffold",
+   "function": "skill_schedule_scaffold",
+   "batch": "WO-103"
+  },
+  {
+   "skill_id": "SK-018",
+   "family": "creative-generator",
+   "function": "skill_creative_generate",
+   "batch": "WO-113-b1"
+  },
+  {
+   "skill_id": "SK-030",
+   "family": "margin-analyst",
+   "function": "skill_margin_analyze",
+   "batch": "WO-113-b1"
+  },
+  {
+   "skill_id": "SK-047",
+   "family": "storefront-builder",
+   "function": "skill_storefront_build",
+   "batch": "WO-113-b1"
+  },
+  {
+   "skill_id": "SK-055",
+   "family": "poster-social-creator",
+   "function": "skill_poster_social_create",
+   "batch": "WO-113-b1"
+  },
+  {
+   "skill_id": "SK-012",
+   "family": "claims-reviewer",
+   "function": "skill_claims_review",
+   "batch": "WO-113-b2"
+  },
+  {
+   "skill_id": "SK-013",
+   "family": "compliance-researcher",
+   "function": "skill_compliance_research",
+   "batch": "WO-113-b2"
+  },
+  {
+   "skill_id": "SK-026",
+   "family": "funnel-builder",
+   "function": "skill_funnel_build",
+   "batch": "WO-113-b2"
+  },
+  {
+   "skill_id": "SK-046",
+   "family": "spend-controller",
+   "function": "skill_spend_control",
+   "batch": "WO-113-b2"
+  },
+  {
+   "skill_id": "SK-002",
+   "family": "audience-researcher",
+   "function": "skill_audience_research",
+   "batch": "WO-113-b3"
+  },
+  {
+   "skill_id": "SK-005",
+   "family": "business-model-analyst",
+   "function": "skill_business_model_analyze",
+   "batch": "WO-113-b3"
+  },
+  {
+   "skill_id": "SK-007",
+   "family": "campaign-strategist",
+   "function": "skill_campaign_design",
+   "batch": "WO-113-b3"
+  },
+  {
+   "skill_id": "SK-049",
+   "family": "supplier-verification",
+   "function": "skill_supplier_verify",
+   "batch": "WO-113-b3"
+  },
+  {
+   "skill_id": "SK-011",
+   "family": "checkout-integrator",
+   "function": "skill_checkout_integrate",
+   "batch": "WO-113-b4"
+  },
+  {
+   "skill_id": "SK-016",
+   "family": "conversation-designer",
+   "function": "skill_conversation_design",
+   "batch": "WO-113-b4"
+  },
+  {
+   "skill_id": "SK-019",
+   "family": "demand-researcher",
+   "function": "skill_demand_research",
+   "batch": "WO-113-b4"
+  },
+  {
+   "skill_id": "SK-025",
+   "family": "fulfillment-planner",
+   "function": "skill_fulfillment_plan",
+   "batch": "WO-113-b4"
+  },
+  {
+   "skill_id": "SK-031",
+   "family": "objective-planner",
+   "function": "skill_objective_plan",
+   "batch": "WO-113-b5"
+  },
+  {
+   "skill_id": "SK-048",
+   "family": "supplier-dispatcher",
+   "function": "skill_supplier_dispatch",
+   "batch": "WO-113-b5"
+  },
+  {
+   "skill_id": "SK-056",
+   "family": "marketing-os-campaign-builder",
+   "function": "skill_marketing_campaign_build",
+   "batch": "WO-113-b5"
+  },
+  {
+   "skill_id": "SK-017",
+   "family": "conversion-analyst",
+   "function": "skill_conversion_analyze",
+   "batch": "WO-113-b5"
+  },
+  {
+   "skill_id": "SK-020",
+   "family": "escalation-agent",
+   "function": "skill_escalation_triage",
+   "batch": "WO-113-b6"
+  },
+  {
+   "skill_id": "SK-022",
+   "family": "experiment-analyst",
+   "function": "skill_experiment_analyze",
+   "batch": "WO-113-b6"
+  },
+  {
+   "skill_id": "SK-023",
+   "family": "faq-retrieval-agent",
+   "function": "skill_faq_retrieve",
+   "batch": "WO-113-b6"
+  },
+  {
+   "skill_id": "SK-033",
+   "family": "order-validator",
+   "function": "skill_order_validate",
+   "batch": "WO-113-b6"
+  },
+  {
+   "skill_id": "SK-004",
+   "family": "budget-planner",
+   "function": "skill_budget_plan",
+   "batch": "WO-113-b7"
+  },
+  {
+   "skill_id": "SK-006",
+   "family": "crm-follow-up",
+   "function": "skill_crm_followup",
+   "batch": "WO-113-b7"
+  },
+  {
+   "skill_id": "SK-008",
+   "family": "cashflow-forecaster",
+   "function": "skill_cashflow_forecast",
+   "batch": "WO-113-b7"
+  },
+  {
+   "skill_id": "SK-057",
+   "family": "wan-video-creator",
+   "function": "skill_wan_video_create",
+   "batch": "WO-113-b7"
+  },
+  {
+   "skill_id": "SK-014",
+   "family": "consent-checker",
+   "function": "skill_consent_check",
+   "batch": "WO-113-b8"
+  },
+  {
+   "skill_id": "SK-029",
+   "family": "localization-specialist",
+   "function": "skill_localization_specialist",
+   "batch": "WO-113-b8"
+  },
+  {
+   "skill_id": "SK-034",
+   "family": "payment-reconciler",
+   "function": "skill_payment_reconcile",
+   "batch": "WO-113-b8"
+  },
+  {
+   "skill_id": "SK-044",
+   "family": "site-qa-tester",
+   "function": "skill_site_qa",
+   "batch": "WO-113-b8"
+  },
+  {
+   "skill_id": "SK-051",
+   "family": "threat-monitor",
+   "function": "skill_threat_monitor",
+   "batch": "WO-113-b9"
+  },
+  {
+   "skill_id": "SK-027",
+   "family": "identity-agent",
+   "function": "skill_identity_agent",
+   "batch": "WO-113-b9"
+  },
+  {
+   "skill_id": "SK-015",
+   "family": "content-planner",
+   "function": "skill_content_planner",
+   "batch": "WO-113-b9"
+  },
+  {
+   "skill_id": "SK-003",
+   "family": "brand-setup-specialist",
+   "function": "skill_brand_setup_specialist",
+   "batch": "WO-113-b9"
   }
+ ],
+ "connector_policy": "MOCK/SPEC_ONLY adapter surface only; LIVE paths BLOCKED owner-token class; SK-058 remains CONTRACT_ONLY",
+ "remaining_t1": [],
+ "t3_count": 16,
+ "t3_next4": [
+  "SK-028",
+  "SK-032",
+  "SK-037",
+  "SK-038"
+ ],
+ "t3_head_note": "queue authority: skill_queue_remaining.json list order; SK-057 DISCONTINUED (built stub kept for audit trail per b7 record), SK-058 CONTRACT_HOLD",
+ "accounting": {
+  "target_modules": 58,
+  "implemented": 42,
+  "contract_hold": 1,
+  "contract_hold_ids": [
+   "SK-058"
+  ],
+  "remaining_buildable": 16
+ }
 }

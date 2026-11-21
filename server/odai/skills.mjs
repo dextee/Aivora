@@ -1397,6 +1397,198 @@ export function skill_site_qa(input = {}) {
   };
 }
 
+/* ---- threat-monitor (SK-051) — rule-based detection over SUPPLIED observation records.
+ * The single monitoring authority (sheet-04 boundary: "One monitoring authority" — the
+ * canonical AIVORA SHIELD Monitor). No live telemetry ingestion, no network, no blocking
+ * action: every finding is an ADVISORY for the owner/SHIELD pipeline; mitigation is
+ * never executed here. Deterministic patterns only — nothing is invented as a threat.
+ * out: typed_artifact{detections}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_threat_monitor(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const observations = Array.isArray(vdi.observations) && vdi.observations.length ? vdi.observations : null;
+  if (!observations) return { status: "REJECTED", reason: "observations[] required — threats are never invented or scanned in; supply SHIELD evidence records", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["observations_absent"], cost_actual: 0, approval_requests: [] };
+  const baseline = vdi.baseline && typeof vdi.baseline === "object" ? vdi.baseline : {};
+  const INJECTION_PATTERNS = [
+    [/ignore\s+(all\s+|any\s+|the\s+)?previous\s+instructions/i, "INSTRUCTION_OVERRIDE_ATTEMPT"],
+    [/you\s+are\s+now\b/i, "ROLE_REASSIGNMENT_ATTEMPT"],
+    [/system\s+prompt/i, "SYSTEM_PROMPT_PROBE"],
+    [/\b(api[_ -]?key|secret|credential|password)\b/i, "SECRET_REQUEST_PATTERN"],
+    [/act\s+as\s+(the\s+)?(owner|admin|root)/i, "PRIVILEGE_IMPERSONATION_PATTERN"],
+    [/exfiltrat|send\s+(all|the)\s+(data|records)\s+to/i, "EXFILTRATION_PATTERN"],
+  ];
+  const detections = observations.map((raw, i) => {
+    const o = raw && typeof raw === "object" ? raw : {};
+    const ref = String(o.ref || "OBS-" + (i + 1));
+    const text = String(o.text || "");
+    const flags = [];
+    let severity = ["low", "medium", "high", "critical"].includes(String(o.severity)) ? String(o.severity) : "unknown";
+    INJECTION_PATTERNS.forEach(([re, code]) => { if (re.test(text)) flags.push("PROMPT_INJECTION_SUSPECT:" + code); });
+    if (flags.some((f) => f.startsWith("PROMPT_INJECTION")) && severity !== "critical") severity = "high";
+    const amount = Number(o.amount_myr);
+    const typical = Number(baseline.typical_spend_myr);
+    if (Number.isFinite(amount) && Number.isFinite(typical) && amount > typical) flags.push("SPEND_ANOMALY_" + amount + "_gt_" + typical);
+    if (Array.isArray(baseline.known_devices) && baseline.known_devices.length && o.device !== undefined && !baseline.known_devices.includes(String(o.device))) flags.push("UNKNOWN_DEVICE:" + String(o.device));
+    if (Array.isArray(baseline.known_sources) && baseline.known_sources.length && o.source !== undefined && !baseline.known_sources.includes(String(o.source))) flags.push("UNKNOWN_SOURCE:" + String(o.source));
+    if (o.tenant_ref !== undefined && String(o.tenant_ref) !== String(input.tenant_id)) { flags.push("CROSS_TENANT_REFERENCE"); severity = "critical"; }
+    const state = severity === "critical" ? "CRITICAL" : flags.length ? "SUSPECT" : (severity === "unknown" ? "UNCLASSIFIED_manual_review" : "CLEAR");
+    const weight = (flags.some((f) => f === "CROSS_TENANT_REFERENCE") ? 60 : 0)
+      + (flags.some((f) => f.startsWith("PROMPT_INJECTION")) ? 40 : 0)
+      + (flags.some((f) => f.startsWith("SPEND_ANOMALY")) ? 20 : 0)
+      + (flags.some((f) => /^UNKNOWN_(DEVICE|SOURCE)/.test(f)) ? 10 : 0)
+      + (flags.length === 0 && severity === "unknown" ? 15 : 0);
+    return { observation_ref: ref, state, severity, flags, risk_weight: weight, action: state === "CLEAR" ? "none" : "escalate_to_owner_shield_only" };
+  });
+  const riskScore = Math.min(100, detections.reduce((a, d) => a + d.risk_weight, 0));
+  const nonClear = detections.filter((d) => d.state !== "CLEAR");
+  const monId = stableId("THREAT", [String(input.tenant_id), String(input.objective_id), detections.map((d) => d.observation_ref + ":" + d.state).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "ADVISORY_DETECTION_ONLY", monitoring_authority: "SK-051 AIVORA SHIELD Monitor is the single monitoring authority — no shadow monitors are started here", threat_report: { report_id: monId, observations_evaluated: detections.length, clear: detections.length - nonClear.length, suspect_or_critical: nonClear.length, risk_score: riskScore, detections, scoring: "deterministic weights (cross-tenant 60, injection 40, spend 20, unknown device/source 10, unclassified 15), capped at 100" }, blocks_executed: 0, auto_block: "NEVER — mitigation (lockout, credential rotation, e-stop) is an owner/SHIELD decision through the approval gateway" },
+    evidence_refs: [monId].concat(nonClear.map((d) => String(input.objective_id) + "/" + d.observation_ref), (input.source_refs || []).map(String)),
+    uncertainty_flags: ["detections_are_rule_based_on_supplied_records_only", "no_live_telemetry_ingestion_no_network", "severity_of_supplied_records_is_claimed_not_measured"],
+    cost_actual: 0,
+    approval_requests: nonClear.length ? [{ scope: "threat_mitigation", auto: false, requires: "owner review per finding — this module observes and reports; it never blocks, locks out or contacts anyone" }] : [],
+  };
+}
+
+/* ---- identity-agent (SK-027) — RBAC/session/step-up VALIDATION over supplied records.
+ * Single identity authority (sheet-04 boundary). Advisory only: verdicts validate the
+ * supplied session matrix; real enforcement stays with the policy gateway (SK-035).
+ * Roles/permissions/sessions are never invented — unknown role ⇒ DENIED, never guessed.
+ * out: typed_artifact{identity_verdicts}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_identity_agent(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const sessions = Array.isArray(vdi.sessions) && vdi.sessions.length ? vdi.sessions : null;
+  if (!sessions) return { status: "REJECTED", reason: "sessions[] required — identities are never invented", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["sessions_absent"], cost_actual: 0, approval_requests: [] };
+  const matrix = vdi.role_matrix && typeof vdi.role_matrix === "object" ? vdi.role_matrix : null;
+  if (!matrix) return { status: "REJECTED", reason: "role_matrix required — permissions are never assumed", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["role_matrix_absent"], cost_actual: 0, approval_requests: [] };
+  const stepUp = Array.isArray(vdi.step_up_actions) && vdi.step_up_actions.length ? vdi.step_up_actions.map(String) : ["spend", "publish", "contact_customer"];
+  const verdicts = sessions.map((raw, i) => {
+    const s = raw && typeof raw === "object" ? raw : {};
+    const id = String(s.session_id || "S-" + (i + 1));
+    const role = String(s.role || "");
+    const checks = [];
+    if (s.tenant_id !== undefined && String(s.tenant_id) !== String(input.tenant_id)) checks.push({ action: "(session)", state: "DENIED", reason: "CROSS_TENANT_SESSION" });
+    const allowedList = matrix[role];
+    if (!Object.prototype.hasOwnProperty.call(matrix, role)) checks.push({ action: "(role)", state: "DENIED", reason: "UNKNOWN_ROLE_not_in_matrix" });
+    else (Array.isArray(s.requested_actions) ? s.requested_actions : []).forEach((a) => {
+      const act = String(a);
+      const inRole = (allowedList || []).map(String).includes("*") || (allowedList || []).map(String).includes(act);
+      if (!inRole) checks.push({ action: act, state: "DENIED", reason: "ACTION_NOT_IN_ROLE" });
+      else if (stepUp.includes(act) && s.mfa_verified !== true) checks.push({ action: act, state: "STEP_UP_REQUIRED", reason: "high_risk_action_without_verified_step_up" });
+      else checks.push({ action: act, state: "VALID", reason: null });
+    });
+    if (Object.prototype.hasOwnProperty.call(matrix, role) && !Array.isArray(s.requested_actions) && !checks.length) checks.push({ action: "(none)", state: "NO_ACTIONS_DECLARED", reason: "nothing to validate — empty request is not a pass" });
+    const worst = checks.some((c) => c.state === "DENIED") ? "DENIED" : checks.some((c) => c.state === "STEP_UP_REQUIRED") ? "STEP_UP_REQUIRED" : checks.some((c) => c.state === "VALID") ? "PASS_VALIDATION" : "INCONCLUSIVE";
+    return { session_id: id, role, tenant_match: s.tenant_id === undefined ? "not_declared" : String(s.tenant_id) === String(input.tenant_id), mfa: s.mfa_verified === true, checks, state: worst };
+  });
+  const blocked = verdicts.filter((v) => v.state !== "PASS_VALIDATION");
+  const idId = stableId("IDENT", [String(input.tenant_id), String(input.objective_id), verdicts.map((v) => v.session_id + ":" + v.state).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "VALIDATION_ONLY", identity_authority_note: "SK-027 is the single identity validation authority; actual authorization decisions are enforced by the policy gateway (SK-035) — this module grants nothing", step_up_actions: stepUp, identity_verdicts: { verdict_id: idId, sessions_evaluated: verdicts.length, pass: verdicts.length - blocked.length, blocked_or_step_up: blocked.length, records: verdicts } },
+    evidence_refs: [idId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["sessions_and_roles_are_supplied_claims_not_directory_synced", "mfa_flag_is_asserted_not_attested"],
+    cost_actual: 0,
+    approval_requests: blocked.length ? [{ scope: "identity_resolution", auto: false, requires: "owner review for DENIED / STEP_UP_REQUIRED sessions — never auto-upgraded, never auto-cleared" }] : [],
+  };
+}
+
+/* ---- content-planner (SK-015) — deterministic editorial calendar generator.
+ * Same skill family as campaign-strategist (SK-007) per contract boundary but scoped to
+ * calendars; coordinates SK-055 for poster/social creative and records that video is
+ * provider-unbound (SK-057 DISCONTINUED — media handled via SK-001 upload/reuse only,
+ * never generated here). Drafts only: publishing is NEVER automatic. CTA destinations
+ * and product references must be supplied — placeholders are flagged, never invented.
+ * out: typed_artifact{editorial_calendar}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_content_planner(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const ALLOWED_PLATFORMS = ["facebook", "youtube", "linkedin"];
+  const platforms = Array.isArray(vdi.platforms) ? vdi.platforms.map((p) => String(p).toLowerCase()) : [];
+  if (!platforms.length) return { status: "REJECTED", reason: "platforms[] required (facebook/youtube/linkedin per allowed_capabilities) — channels are never guessed", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: 0, approval_requests: [] };
+  const invalid = platforms.filter((p) => !ALLOWED_PLATFORMS.includes(p));
+  if (invalid.length) return { status: "REJECTED", reason: "platform outside allowed_capabilities: " + invalid.join(",") + " — capability list is contract-locked", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["platform_out_of_scope"], cost_actual: 0, approval_requests: [] };
+  const weeks = Number(vdi.weeks);
+  if (!Number.isInteger(weeks) || weeks < 1 || weeks > 8) return { status: "REJECTED", reason: "weeks must be an integer 1..8 — planning horizon is declared, not assumed", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["horizon_invalid"], cost_actual: 0, approval_requests: [] };
+  const goal = String(vdi.goal || "");
+  if (!goal) return { status: "REJECTED", reason: "goal required — content intent is never invented", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["goal_absent"], cost_actual: 0, approval_requests: [] };
+  const themes = Array.isArray(vdi.themes) && vdi.themes.length ? vdi.themes.map(String) : [goal.toLowerCase()];
+  const tenant = get(String(input.tenant_id));
+  const catalogIds = new Set((((tenant && tenant.products) || [])).map((p) => String(p.id)));
+  const unknownRefs = (Array.isArray(vdi.product_refs) ? vdi.product_refs : []).map(String).filter((r) => !catalogIds.has(r));
+  const ctas = Array.isArray(vdi.cta_destinations) ? vdi.cta_destinations : [];
+  const ctaMissing = !ctas.length;
+  const calendar = [];
+  for (let w = 1; w <= weeks; w++) for (const p of platforms) {
+    const theme = themes[(w - 1 + platforms.indexOf(p)) % themes.length];
+    const row = { slot_id: "W" + w + "-" + p, week: w, platform: p, theme, draft_status: "DRAFT_ONLY", goal, asset_needs: p === "youtube"
+      ? { video: "PROVIDER_UNBOUND — SK-057 DISCONTINUED per owner directive 2026-11-21; media only via SK-001 upload/reuse (never generated)", poster: "coordinate SK-055 draft" }
+      : { poster: "coordinate SK-055 draft", video: "not required for this slot" } };
+    if (ctaMissing) row.flags = ["CTA_DESTINATION_UNSPECIFIED_destination_never_invented"]; else row.cta_refs = ctas.map((c) => String((c && c.label) || "")).filter(Boolean);
+    if (unknownRefs.length) row.flags = (row.flags || []).concat(unknownRefs.map((r) => "UNKNOWN_PRODUCT_REF:" + r));
+    calendar.push(row);
+  }
+  const planId = stableId("CAL", [String(input.tenant_id), String(input.objective_id), platforms.join(","), String(weeks), goal]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "DRAFT_CALENDAR_no_publishing", editorial_calendar: { plan_id: planId, goal, platforms, weeks, slots: calendar.length, rows: calendar, claim_verification: "product claims in drafts must pass SK-012 screening before any use", coordination: { posters: "SK-055", video: "SK-057_DISCONTINUED_use_SK-001_upload_or_reuse" } } },
+    evidence_refs: [planId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["engagement_forecasts_not_produced", "themes_and_goal_are_owner_supplied_not_researched"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "publish_posts", auto: false, requires: "explicit owner approval per platform; social connectors are MOCK/SANDBOX class — LIVE posting is never automatic" }],
+  };
+}
+
+/* ---- brand-setup-specialist (SK-003) — deterministic name ideation + positioning +
+ * visual brief from SUPPLIED inputs only. Boundary (sheet-04): name ideation ONLY —
+ * domain/trademark availability is NEVER checked (no network) and never claimed;
+ * verification is a separate owner-run registration step. Options are built purely from
+ * the caller's keywords/suffixes/product tokens (combinatorics, not generation).
+ * out: brand_options, positioning, asset_brief (+ audit-expected outputs) */
+export function skill_brand_setup_specialist(input = {}) {
+  const missing = req(input, ["products", "audience", "brand_preferences"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, brand_options: [], positioning: null, asset_brief: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const products = Array.isArray(input.products) ? input.products : [];
+  if (!products.length) return { status: "REJECTED", reason: "products[] must carry at least one entry — offering is never invented", brand_options: [], positioning: null, asset_brief: null };
+  const prefs = input.brand_preferences && typeof input.brand_preferences === "object" ? input.brand_preferences : null;
+  if (!prefs) return { status: "REJECTED", reason: "brand_preferences object required — style is never guessed", brand_options: [], positioning: null, asset_brief: null };
+  const keywords = (Array.isArray(prefs.keywords) ? prefs.keywords : []).map((k) => String(k).trim()).filter((k) => /^[a-zA-Z0-9]{2,}$/.test(k));
+  if (!keywords.length) return { status: "REJECTED", reason: "brand_preferences.keywords[] required (simple alphanumeric tokens) — names are invented from YOUR words only", brand_options: [], positioning: null, asset_brief: null };
+  const suffixes = (Array.isArray(prefs.suffixes) && prefs.suffixes.length ? prefs.suffixes : ["a", "io", "ex"]).map((s) => String(s).replace(/[^a-zA-Z0-9]/g, "")).filter(Boolean);
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  const prodTokens = products.map((p) => String((p && p.name) || p || "")).filter(Boolean).flatMap((n) => n.split(/[^A-Za-z0-9]+/)).map(cap).slice(0, 2);
+  const options = [];
+  const seen = new Set();
+  const addOption = (name, derivation) => { const key = name.toLowerCase(); if (!seen.has(key) && name.length >= 3) { seen.add(key); options.push({ name, derivation, availability: { domain: "NOT_CHECKED_no_network", trademark: "NOT_CHECKED_registry_query_required" }, ownership_claim: "none — availability and registrability are NOT asserted" }); } };
+  for (const k of keywords) for (const s of suffixes) addOption(cap(k) + s.toLowerCase(), "keyword '" + k + "' + declared suffix '" + s + "'");
+  for (const k of keywords) for (const t of prodTokens) addOption(cap(t) + k.toLowerCase(), "product token '" + t + "' + keyword '" + k + "'");
+  const short = options.slice(0, 8);
+  if (!short.length) return { status: "REJECTED", reason: "inputs produced no name-eligible tokens — nothing to combine", brand_options: [], positioning: null, asset_brief: null };
+  const audience = String(input.audience).trim();
+  const promise = prefs.promise ? String(prefs.promise).trim() : "no unverified claims are added at positioning stage";
+  const positioning = "For " + audience + ", " + cap(keywords[0]) + "-led offering that " + promise + ". [template composition from supplied inputs — not a marketing guarantee]";
+  const assetBrief = { tone: prefs.tone ? String(prefs.tone) : "UNDECLARED_owner_to_provide", colors: Array.isArray(prefs.colors) ? prefs.colors.map(String) : [], typography: prefs.typography ? (Array.isArray(prefs.typography) ? prefs.typography.map(String) : [String(prefs.typography)]) : [], status: "BRIEF_DRAFT_ONLY", note: "visual brief drafted from declared preferences; asset production happens later via SK-055/SK-001, not here" };
+  const brandId = stableId("BRAND", [String(input.tenant_id || "global"), short.map((o) => o.name).join(","), audience]);
+  return {
+    status: "OK",
+    brand_options: short,
+    positioning,
+    asset_brief: assetBrief,
+    typed_artifact: { mode: "IDEATION_ONLY", ideation_provenance: brandId, input_keywords: keywords, product_tokens: prodTokens },
+    evidence_refs: [brandId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["domain_and_trademark_availability_unverified_no_network_access", "name_quality_is_rule_derived_not_human_creative"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "brand_selection_and_registration", auto: false, requires: "owner picks a name, then runs trademark/domain verification and registration as a SEPARATE confirmed step — this module never claims or reserves anything" }],
+    note: "boundary honored: name ideation only; registration verified separately",
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
@@ -1416,6 +1608,8 @@ export const P0_SKILL_FUNCTIONS = {
   "cashflow-forecaster": skill_cashflow_forecast, "wan-video-creator": skill_wan_video_create,
   "consent-checker": skill_consent_check, "localization-specialist": skill_localization_specialist,
   "payment-reconciler": skill_payment_reconcile, "site-qa-tester": skill_site_qa,
+  "threat-monitor": skill_threat_monitor, "identity-agent": skill_identity_agent,
+  "content-planner": skill_content_planner, "brand-setup-specialist": skill_brand_setup_specialist,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be

@@ -387,6 +387,10 @@ P0_MODULES = {
     "SK-029": {"module": "skill_localization_specialist", "family": "localization-specialist", "wo": "WO-113"},
     "SK-034": {"module": "skill_payment_reconcile", "family": "payment-reconciler", "wo": "WO-113"},
     "SK-044": {"module": "skill_site_qa", "family": "site-qa-tester", "wo": "WO-113"},
+    "SK-051": {"module": "skill_threat_monitor", "family": "threat-monitor", "wo": "WO-113"},
+    "SK-027": {"module": "skill_identity_agent", "family": "identity-agent", "wo": "WO-113"},
+    "SK-015": {"module": "skill_content_planner", "family": "content-planner", "wo": "WO-113"},
+    "SK-003": {"module": "skill_brand_setup_specialist", "family": "brand-setup-specialist", "wo": "WO-113"},
 }
 
 # ---------------------------------------------------------------------------
