@@ -75,6 +75,27 @@
     "revoked_reason": "verification closed loop-log committed 051aa9b",
     "revoked_at": "2026-11-21T09:34:31Z"
   },
+  "DEV11-SK-B8": {
+    "issued_at": "2026-11-21T13:27:49Z",
+    "expires_at": "2026-11-21T14:12:49Z",
+    "minutes": 45,
+    "paths": [
+      "odai/dev_docs/",
+      "tests/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "verification committed 8461243, no further writes",
+    "revoked_at": "2026-11-21T13:29:21Z"
+  },
   "DEV11-V": {
     "issued_at": "2026-11-21T02:26:15Z",
     "expires_at": "2026-11-21T03:11:15Z",
