@@ -774,6 +774,148 @@ export function skill_fulfillment_plan(input = {}) {
   };
 }
 
+/* ---- objective-planner (SK-031) — goal decomposition into a validated DAG.
+ * "One planner": deterministic topological structuring of OWNER-STATED goals only.
+ * Success metrics stay UNKNOWN until the owner supplies numbers — never invented.
+ * out: typed_artifact{objective_dag}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_objective_plan(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const goal = String(vdi.goal_statement || "").trim();
+  const tasks = Array.isArray(vdi.tasks) ? vdi.tasks : null;
+  if (!goal || !tasks || !tasks.length) return { status: "REJECTED", reason: "goal_statement and tasks[] must be owner-supplied — decomposition of an absent goal is invention", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["goal_absent_rejected"], cost_actual: 0, approval_requests: [] };
+  const ids = tasks.map((t) => String(t.id));
+  if (new Set(ids).size !== ids.length) return { status: "REJECTED", reason: "duplicate task ids in decomposition", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["dag_invalid"], cost_actual: 0, approval_requests: [] };
+  const idset = new Set(ids);
+  for (const t of tasks) for (const d of (t.deps || [])) if (!idset.has(String(d))) return { status: "REJECTED", reason: "unknown dependency '" + d + "' on task " + t.id, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["dag_invalid"], cost_actual: 0, approval_requests: [] };
+  const marks = new Map(ids.map((i) => [i, 0]));
+  const visit = (i) => {
+    if (marks.get(i) === 1) return false;
+    if (marks.get(i) === 2) return true;
+    marks.set(i, 1);
+    const t = tasks.find((x) => String(x.id) === i);
+    for (const d of (t.deps || [])) if (!visit(String(d))) return false;
+    marks.set(i, 2); return true;
+  };
+  for (const i of ids) if (!visit(i)) return { status: "REJECTED", reason: "dependency cycle detected — plan refused (validatePlanEdges semantics)", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["dag_invalid"], cost_actual: 0, approval_requests: [] };
+  const placed = new Map();
+  const depth = (i) => { if (placed.has(i)) return placed.get(i); const t = tasks.find((x) => String(x.id) === i); const d = 1 + Math.max(0, ...(t.deps || []).map((q) => depth(String(q)))); placed.set(i, d); return d; };
+  const layers = ids.map((i) => ({ id: i, layer: depth(i) - 1 })).sort((a, b) => a.layer - b.layer || a.id.localeCompare(b.id));
+  const dagId = stableId("DAG", [String(input.tenant_id), String(input.objective_id), ids.join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: {
+      mode: "LOCAL_DETERMINISTIC",
+      objective_dag: {
+        plan_id: dagId, goal, tasks: layers.map((l) => {
+          const t = tasks.find((x) => String(x.id) === l.id);
+          return { id: l.id, layer: l.layer, deps: (t.deps || []).map(String), success_criteria: t.success_criteria ? String(t.success_criteria) : "UNKNOWN_owner_metric_required", owner_stated: true };
+        }),
+      },
+    },
+    evidence_refs: [dagId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["criteria_UNKNOWN_where_owner_metric_absent_never_invented", "single_planner_no_parallel_authority"],
+    cost_actual: 0, approval_requests: [{ scope: "commit_objective_plan", auto: false, requires: "owner confirmation of goal wording and metrics before task graph activation" }],
+  };
+}
+
+/* ---- supplier-dispatcher (SK-048) — PO RECORD builder; external dispatch BLOCKED.
+ * Connector class BLOCKED (CAT-21, supplier connector TBD): every dispatch attempt returns
+ * BLOCKED with retry guidance, per error_and_recovery — a confirmed state is NEVER fabricated.
+ * External outcome UNKNOWN ⇒ reconcile_before_retry enforced. Real supplier emails NEVER.
+ * out: typed_artifact{po_record, dispatch}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_supplier_dispatch(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const approved = vdi.approved_order_refs;
+  if (!Array.isArray(approved) || !approved.length) return { status: "REJECTED", reason: "approved_order_refs[] required — dispatch boundary is 'approved order only' (SK-046 hold must precede)", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["approval_missing_rejected"], cost_actual: 0, approval_requests: [] };
+  const items = Array.isArray(vdi.line_items) && vdi.line_items.length ? vdi.line_items : null;
+  const sup = String(vdi.supplier_ref || "").trim();
+  if (!items || !sup) return { status: "REJECTED", reason: "line_items[] and supplier_ref required; costs/quantities are never invented", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["po_fields_missing"], cost_actual: 0, approval_requests: [] };
+  if (vdi.supplier_verdict !== "VERIFIED_ON_DOCUMENTS") return { status: "REJECTED", reason: "supplier not VERIFIED_ON_DOCUMENTS (SK-049) — dispatch refuses UNVERIFIED_PENDING_AGREEMENT sourcing", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["supplier_unverified"], cost_actual: 0, approval_requests: [] };
+  const poId = stableId("PO", [String(input.tenant_id), sup, approved.join(","), items.map((i) => (i.sku || "?") + "x" + (i.qty ?? "?")).join(",")]);
+  const prior = String(vdi.prior_dispatch_state || "").toUpperCase();
+  return {
+    status: "BLOCKED",
+    typed_artifact: {
+      mode: "MOCK", po_record: { po_id: poId, supplier_ref: sup, line_items: items.map((i) => ({ sku: String(i.sku || "?"), qty: i.qty ?? null })), approved_order_refs: approved.map(String), idempotency_key: poId },
+      dispatch: { connector_class: "BLOCKED", matrix_row: "CAT-21 rule1 supplier connector TBD", attempted: false, sent: false, confirmation_state: prior === "UNKNOWN" || prior === "EXTERNAL_UNKNOWN" ? "RECONCILE_BEFORE_RETRY" : "NOT_ATTEMPTED", retry_guidance: "re-issue via ECOM-17 outbox once owner-token LIVE connector exists; reconcile any UNKNOWN outcome BEFORE retry (T13 semantics)" },
+    },
+    evidence_refs: [poId, "CAT-21:BLOCKED"],
+    uncertainty_flags: ["supplier_confirmation_never_assumed", "real_supplier_email_NEVER_automated"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "live_supplier_dispatch", auto: false, requires: "owner authorization (credentials + connector LIVE class) — record built here is PO CONTENT only, not evidence of transmission" }],
+  };
+}
+
+/* ---- marketing-os-campaign-builder (SK-056) — Hashmeta campaign draft, activation BLOCKED.
+ * Consumes ONLY owner-approved draft material (SK-007 lineage: DRAFT campaigns with explicit
+ * cap/audience/channels). Hashmeta connector is BLOCKED owner-token class: nothing is created
+ * externally; T20 no-duplicate-social-publishing rule held by design (this skill never publishes).
+ * out: campaign_plan, hashmeta_campaign_draft_id, estimated_costs, approval_request, kpis */
+export function skill_marketing_campaign_build(input = {}) {
+  const missing = req(input, ["objective_id", "tenant_id", "product_ids", "audience", "channels", "budget_cap", "currency", "approval_policy"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, campaign_plan: null, hashmeta_campaign_draft_id: null, estimated_costs: null, approval_request: null, kpis: [] };
+  if (String(input.currency) !== "MYR") return { status: "REJECTED", reason: "currency must be MYR (central-company checkout currency); FX assumptions are never auto-applied", campaign_plan: null, hashmeta_campaign_draft_id: null, estimated_costs: null, approval_request: null, kpis: [] };
+  const cap = Number(input.budget_cap);
+  const audience = Array.isArray(input.audience) ? input.audience.map(String) : [String(input.audience)];
+  const channels = Array.isArray(input.channels) ? input.channels.map(String) : [];
+  if (!(cap > 0) || !audience.length || !channels.length) return { status: "REJECTED", reason: "positive budget_cap with audience[] and channels[] required — campaign scope is never inferred", campaign_plan: null, hashmeta_campaign_draft_id: null, estimated_costs: null, approval_request: null, kpis: [] };
+  const draftId = stableId("HMC", [String(input.tenant_id), String(input.objective_id), audience.join(","), channels.join(","), String(cap)]);
+  return {
+    status: "OK",
+    campaign_plan: { draft_id: draftId, mode: "DRAFT_ONLY", objective: String(input.objective_id), products: input.product_ids.map(String), audience, channels, spend_rule: "each spend step passes SK-035/SK-046 atomic reservation <= " + cap + " MYR; plan itself holds nothing" },
+    hashmeta_campaign_draft_id: draftId + "-HASHMETA-DRAFT",
+    estimated_costs: { basis: "ESTIMATE_NOT_QUOTED_no_connector_priced", cap_myr: cap, committed_myr: 0, note: "actual prices UNKNOWN until owner-approved sandbox quote — never fabricated" },
+    approval_request: { id: draftId + "-APPR", state: "PENDING_OWNER_APPROVAL", auto: false, requires: "explicit per-campaign owner approval; activation handoff blocked while Hashmeta connector is BLOCKED (owner-token class)" },
+    kpis: [{ metric: "owner_declared_conversion_goal", target: "UNKNOWN_set_by_owner", measurable: false }],
+    activation: { connector_class: "BLOCKED", activated: false, social_publishing: "NONE — duplicate-publish rule T20 held; publishing routes via approved post tooling only" },
+    evidence_refs: [draftId], uncertainty_flags: ["hashmeta_NEVER_called_live", "draft_id_is_local_record_only"],
+    cost_actual: 0,
+  };
+}
+
+/* ---- conversion-analyst (SK-017) — funnel arithmetic on supplied counted events only.
+ * Connector-bound (Google Analytics: unverified class) ⇒ NO live traffic pulls; rows must be
+ * tenant-supplied with provenance. Correlation is reported, causality is NEVER assumed
+ * (contract boundary) and change proposals are estimates, not promised lifts.
+ * out: typed_artifact{conversion_analysis}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_conversion_analyze(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const stages = Array.isArray(vdi.funnel_stage_counts) ? vdi.funnel_stage_counts : null;
+  if (!stages || stages.length < 2) return { status: "REJECTED", reason: "funnel_stage_counts[] (>=2 stages, each {stage, entered, completed, source_ref}) required — GA4 is not consulted, rates are never invented", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["metrics_absent_rejected"], cost_actual: 0, approval_requests: [] };
+  const rows = [];
+  for (const s of stages) {
+    if (!s || !s.stage || !Number.isFinite(Number(s.entered)) || !Number.isFinite(Number(s.completed)) || !s.source_ref) return { status: "REJECTED", reason: "every stage needs stage/entered/completed/source_ref — uncounted data is refused, not estimated", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["stage_row_invalid"], cost_actual: 0, approval_requests: [] };
+    const entered = Number(s.entered), completed = Number(s.completed);
+    if (entered < 0 || completed < 0 || completed > entered) return { status: "REJECTED", reason: "stage '" + s.stage + "' counts impossible (completed>entered or negative)", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["counts_impossible"], cost_actual: 0, approval_requests: [] };
+    const pct = entered ? Math.round((completed / entered) * 10000) / 100 : 0;
+    rows.push({ stage: String(s.stage), entered, completed, rate_pct: pct, source_ref: String(s.source_ref) });
+  }
+  const worst = [...rows].sort((a, b) => a.rate_pct - b.rate_pct)[0];
+  const analysisId = stableId("CVA", [String(input.tenant_id), String(input.objective_id), rows.map((r) => r.stage + "=" + r.rate_pct).join(";")]);
+  return {
+    status: "OK",
+    typed_artifact: {
+      mode: "LOCAL_ARITHMETIC_EXTERNAL_ANALYTICS_BLOCKED",
+      conversion_analysis: {
+        analysis_id: analysisId, stages: rows,
+        lowest_conversion_stage: worst.stage,
+        interpretation_rule: "correlation only — causality NOT assumed per contract boundary; segment comparisons need supplied segment data",
+        recommendations: [{ stage: worst.stage, action_class: "CRO_hypothesis", detail: "propose ONE plain-language test for '" + worst.stage + "'; expected lift UNKNOWN_until_tested (no promised results)" }],
+      },
+    },
+    evidence_refs: [analysisId].concat(rows.map((r) => r.source_ref)),
+    uncertainty_flags: ["google_analytics_connector_unverified_no_live_pull", "rates_describe_supplied_counts_only"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "run_cro_change", auto: false, requires: "owner approval before any storefront change (SK-047 rebuild stays gated)" }],
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
@@ -785,6 +927,8 @@ export const P0_SKILL_FUNCTIONS = {
   "business-model-analyst": skill_business_model_analyze, "campaign-strategist": skill_campaign_design,
   "checkout-integrator": skill_checkout_integrate, "conversation-designer": skill_conversation_design,
   "demand-researcher": skill_demand_research, "fulfillment-planner": skill_fulfillment_plan,
+  "objective-planner": skill_objective_plan, "supplier-dispatcher": skill_supplier_dispatch,
+  "marketing-os-campaign-builder": skill_marketing_campaign_build, "conversion-analyst": skill_conversion_analyze,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be

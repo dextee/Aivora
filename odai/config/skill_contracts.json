@@ -15,6 +15,7 @@
     "SK-012",
     "SK-013",
     "SK-016",
+    "SK-017",
     "SK-018",
     "SK-019",
     "SK-021",
@@ -22,13 +23,16 @@
     "SK-025",
     "SK-026",
     "SK-030",
+    "SK-031",
     "SK-035",
     "SK-040",
     "SK-041",
     "SK-046",
     "SK-047",
+    "SK-048",
     "SK-049",
-    "SK-055"
+    "SK-055",
+    "SK-056"
   ],
   "registry_version": "business-plane-v2.1-a1",
   "row_count": 59,
@@ -823,9 +827,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "conversion-analyst",
+        "function": "skill_conversion_analyze",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Funnel metrics",
@@ -1513,9 +1519,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "objective-planner",
+        "function": "skill_objective_plan",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Goal decomposition",
@@ -2341,9 +2349,11 @@
       "error_and_recovery": "If inputs absent return NEEDS_INPUT; if connector fails return BLOCKED with retry guidance; if external outcome unknown return EXTERNAL_UNKNOWN and reconcile before retry.",
       "execution_steps": "Read validated inputs; check provenance; call scoped tools; verify result; emit evidence and costs; request approval for external effects.",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "supplier-dispatcher",
+        "function": "skill_supplier_dispatch",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "Supplier API",
@@ -2734,9 +2744,11 @@
       "error_and_recovery": "Missing Hashmeta capability: mark BLOCKED and retain portable campaign specification",
       "execution_steps": "research -> plan -> cost preview -> policy -> Hashmeta draft -> review -> approved activation",
       "implementation": {
-        "function": null,
-        "module": null,
-        "status": "NOT_IMPLEMENTED"
+        "family": "marketing-os-campaign-builder",
+        "function": "skill_marketing_campaign_build",
+        "module": "server/odai/skills.mjs",
+        "status": "IMPLEMENTED_P0",
+        "work_order": "WO-113"
       },
       "keywords": [
         "marketing os",

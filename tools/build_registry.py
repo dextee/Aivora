@@ -371,6 +371,10 @@ P0_MODULES = {
     "SK-016": {"module": "skill_conversation_design", "family": "conversation-designer", "wo": "WO-113"},
     "SK-019": {"module": "skill_demand_research", "family": "demand-researcher", "wo": "WO-113"},
     "SK-025": {"module": "skill_fulfillment_plan", "family": "fulfillment-planner", "wo": "WO-113"},
+    "SK-031": {"module": "skill_objective_plan", "family": "objective-planner", "wo": "WO-113"},
+    "SK-048": {"module": "skill_supplier_dispatch", "family": "supplier-dispatcher", "wo": "WO-113"},
+    "SK-056": {"module": "skill_marketing_campaign_build", "family": "marketing-os-campaign-builder", "wo": "WO-113"},
+    "SK-017": {"module": "skill_conversion_analyze", "family": "conversion-analyst", "wo": "WO-113"},
 }
 
 # ---------------------------------------------------------------------------

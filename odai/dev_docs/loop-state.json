@@ -58,10 +58,10 @@
   },
   {
    "id": "WO-113",
-   "status": "IN_PROGRESS:batches1-4_done_16_modules",
+   "status": "IN_PROGRESS:batches1-5_done_20_modules",
    "paths": "server/odai,tests",
    "deps": [],
-   "spec": "16/52 deterministic modules shipped (t1 drained; b4: SK-011 checkout-integrator sandbox+CAT-21 BLOCKED live, SK-016 conversation scripts, SK-019 demand cited-evidence, SK-025 fulfillment verified-only routing); next t3 head: SK-031,048,056,017; suite 136/136 (also repaired controller-schema T2 regression: skills_implemented.json canonical restore)"
+   "spec": "20/52 deterministic modules shipped (b5: SK-031 DAG planner, SK-048 dispatcher BLOCKED-CAT-21 reconcile-before-retry, SK-056 Hashmeta DRAFT_ONLY activation-BLOCKED, SK-017 counts-only conversion analyst no-causality); next t3 head: SK-020,022,023,033; suite 140/140"
   },
   {
    "id": "E2E-10J",

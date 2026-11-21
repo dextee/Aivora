@@ -26,7 +26,7 @@ before(async () => {
 after(() => child?.kill());
 
 import { criterionFromText, matchObjective, planFor, registrySummary, validatePlanEdges } from "../server/odai/registry.mjs";
-import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan } from "../server/odai/skills.mjs";
+import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze } from "../server/odai/skills.mjs";
 import { budgetScope } from "../server/odai/reservations.mjs";
 import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledger.mjs";
 
@@ -461,8 +461,12 @@ test("A1: P0 modules honor NEEDS_INPUT/REJECTED error contract + produce declare
     "conversation-designer": skill_conversation_design({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T10", source_refs: ["s"], validated_domain_inputs: { tone: "warm", languages: ["ms"], common_objections: ["price"] } }),
     "demand-researcher": skill_demand_research({ product_category: "tea", geography: "MY", time_window: "90d", supplied_observations: [{ type: "verified_transaction", value: 3, source_ref: "o1" }] }),
     "fulfillment-planner": skill_fulfillment_plan({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T11", source_refs: ["s"], validated_domain_inputs: { order_items: [{ sku: "A" }], supplier_rows: [{ supplier_ref: "S1", verdict: "VERIFIED_ON_DOCUMENTS", sla_days: 3 }] } }),
+    "objective-planner": skill_objective_plan({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T12", source_refs: ["s"], validated_domain_inputs: { goal_statement: "g", tasks: [{ id: "a" }, { id: "b", deps: ["a"] }] } }),
+    "supplier-dispatcher": skill_supplier_dispatch({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T13", source_refs: ["s"], validated_domain_inputs: { approved_order_refs: ["O1"], line_items: [{ sku: "A", qty: 1 }], supplier_ref: "S1", supplier_verdict: "VERIFIED_ON_DOCUMENTS" } }),
+    "marketing-os-campaign-builder": skill_marketing_campaign_build({ objective_id: "UC-001", tenant_id: "sk-a1", product_ids: ["P1"], audience: ["a"], channels: ["fb"], budget_cap: 100, currency: "MYR", approval_policy: "per-campaign" }),
+    "conversion-analyst": skill_conversion_analyze({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T14", source_refs: ["s"], validated_domain_inputs: { funnel_stage_counts: [{ stage: "view", entered: 10, completed: 4, source_ref: "x" }, { stage: "cart", entered: 4, completed: 1, source_ref: "y" }] } }),
   });
-  assert.equal(audit.length, 22);
+  assert.equal(audit.length, 26);
   for (const a of audit) assert.equal(a.ok, true, a.family + " " + JSON.stringify(a));
 });
 
@@ -756,6 +760,80 @@ test("T2d: SK-025 fulfillment planner — verified suppliers only, SLA labelled 
   assert.equal(p.dispatch.outbound_po_or_email, "NEVER_FROM_THIS_SKILL");
   assert.ok(p.routes.every((r) => r.sla_basis.includes("not_guarantee")));
   assert.equal(ok.typed_artifact.mode, "SANDBOX_PLAN_EXTERNAL_BLOCKED");
+});
+
+/* ---------------- 8f. WO-113 tranche-2 batch 5 — objective/dispatch/marketing-os/conversion ---------------- */
+test("T2e: SK-031 objective planner — owner-stated goals only, DAG validated (cycle/unknown-dep refused), UNKNOWN criteria kept UNKNOWN", () => {
+  assert.equal(skill_objective_plan({}).status, "NEEDS_INPUT");
+  const noGoal = skill_objective_plan({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noGoal.status, "REJECTED");
+  const cyc = skill_objective_plan({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { goal_statement: "grow", tasks: [{ id: "a", deps: ["b"] }, { id: "b", deps: ["a"] }] } });
+  assert.equal(cyc.status, "REJECTED"); assert.match(cyc.reason, /cycle/i);
+  const unk = skill_objective_plan({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { goal_statement: "grow", tasks: [{ id: "a", deps: ["zz"] }] } });
+  assert.equal(unk.status, "REJECTED"); assert.match(unk.reason, /unknown dependency/i);
+  const ok = skill_objective_plan({ tenant_id: "w113b5", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["src:owner"], validated_domain_inputs: { goal_statement: "first 10 sales", tasks: [{ id: "catalog", success_criteria: "20 validated SKUs" }, { id: "storefront", deps: ["catalog"] }, { id: "launch", deps: ["storefront"], success_criteria: "10 orders" }] } });
+  assert.equal(ok.status, "OK");
+  const tasks = ok.typed_artifact.objective_dag.tasks;
+  assert.deepEqual(tasks.map((x) => x.id), ["catalog", "storefront", "launch"]);
+  assert.deepEqual(tasks.map((x) => x.layer), [0, 1, 2]);
+  assert.equal(tasks[1].success_criteria, "UNKNOWN_owner_metric_required");
+  assert.ok(ok.uncertainty_flags.some((u) => /never_invented/.test(u)));
+});
+
+test("T2e: SK-048 supplier dispatcher — approved-orders-only gate, BLOCKED CAT-21 with reconcile-before-retry, confirmation never fabricated", () => {
+  assert.equal(skill_supplier_dispatch({}).status, "NEEDS_INPUT");
+  const noApproval = skill_supplier_dispatch({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { line_items: [{ sku: "A", qty: 1 }], supplier_ref: "S1", supplier_verdict: "VERIFIED_ON_DOCUMENTS" } });
+  assert.equal(noApproval.status, "REJECTED"); assert.match(noApproval.reason, /approved order/i);
+  const unver = skill_supplier_dispatch({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { approved_order_refs: ["O1"], line_items: [{ sku: "A", qty: 1 }], supplier_ref: "S1", supplier_verdict: "UNVERIFIED_PENDING_AGREEMENT" } });
+  assert.equal(unver.status, "REJECTED");
+  const ok = skill_supplier_dispatch({ tenant_id: "w113b5", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["src:po"], validated_domain_inputs: { approved_order_refs: ["ORD-7"], line_items: [{ sku: "TEA-1", qty: 5 }], supplier_ref: "SUP-A", supplier_verdict: "VERIFIED_ON_DOCUMENTS" } });
+  assert.equal(ok.status, "BLOCKED");
+  assert.equal(ok.typed_artifact.dispatch.connector_class, "BLOCKED");
+  assert.equal(ok.typed_artifact.dispatch.sent, false);
+  assert.equal(ok.typed_artifact.dispatch.confirmation_state, "NOT_ATTEMPTED");
+  const retry = skill_supplier_dispatch({ tenant_id: "w113b5", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["src:po"], validated_domain_inputs: { approved_order_refs: ["ORD-7"], line_items: [{ sku: "TEA-1", qty: 5 }], supplier_ref: "SUP-A", supplier_verdict: "VERIFIED_ON_DOCUMENTS", prior_dispatch_state: "EXTERNAL_UNKNOWN" } });
+  assert.equal(retry.typed_artifact.dispatch.confirmation_state, "RECONCILE_BEFORE_RETRY");
+  assert.equal(retry.typed_artifact.po_record.idempotency_key, ok.typed_artifact.po_record.po_id, "same inputs → same idempotency key (dup protection)");
+  assert.equal(ok.approval_requests[0].auto, false);
+});
+
+test("T2e: SK-056 marketing OS builder — DRAFT_ONLY, MYR cap mandatory, Hashmeta activation BLOCKED, zero live spend/publish, T20 held", () => {
+  assert.equal(skill_marketing_campaign_build({}).status, "NEEDS_INPUT");
+  const fx = skill_marketing_campaign_build({ objective_id: "O", tenant_id: "t", product_ids: ["P"], audience: ["a"], channels: ["fb"], budget_cap: 100, currency: "USD", approval_policy: "per-campaign" });
+  assert.equal(fx.status, "REJECTED");
+  const ok = skill_marketing_campaign_build({ objective_id: "UC-001", tenant_id: "w113b5", product_ids: ["P1", "P2"], audience: ["value_seeker_bargain_hunters"], channels: ["facebook"], budget_cap: 300, currency: "MYR", approval_policy: "per-campaign-owner-approval" });
+  assert.equal(ok.status, "OK");
+  assert.equal(ok.campaign_plan.mode, "DRAFT_ONLY");
+  assert.match(ok.campaign_plan.spend_rule, /atomic reservation/);
+  assert.equal(ok.activation.connector_class, "BLOCKED");
+  assert.equal(ok.activation.activated, false);
+  assert.equal(ok.estimated_costs.committed_myr, 0);
+  assert.equal(ok.estimated_costs.basis.includes("ESTIMATE_NOT_QUOTED"), true);
+  assert.equal(ok.approval_request.state, "PENDING_OWNER_APPROVAL");
+  assert.equal(ok.approval_request.auto, false);
+  assert.equal(ok.kpis[0].measurable, false);
+  assert.ok(ok.hashmeta_campaign_draft_id.includes("HASHMETA-DRAFT"));
+  assert.ok(ok.uncertainty_flags.includes("hashmeta_NEVER_called_live"));
+});
+
+test("T2e: SK-017 conversion analyst — supplied counts only, impossible counts refused, causality not assumed", () => {
+  assert.equal(skill_conversion_analyze({}).status, "NEEDS_INPUT");
+  const noData = skill_conversion_analyze({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(noData.status, "REJECTED");
+  const impossible = skill_conversion_analyze({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { funnel_stage_counts: [{ stage: "a", entered: 1, completed: 5, source_ref: "x" }, { stage: "b", entered: 5, completed: 1, source_ref: "y" }] } });
+  assert.equal(impossible.status, "REJECTED");
+  const ok = skill_conversion_analyze({ tenant_id: "w113b5", objective_id: "UC-001", task_id: "UC-001-T04", source_refs: ["src:funnel"], validated_domain_inputs: { funnel_stage_counts: [
+    { stage: "product_view", entered: 100, completed: 40, source_ref: "store:views-q3" },
+    { stage: "checkout_start", entered: 40, completed: 12, source_ref: "store:checkout-q3" },
+    { stage: "purchase", entered: 12, completed: 5, source_ref: "store:orders-q3" },
+  ] } });
+  assert.equal(ok.status, "OK");
+  const a = ok.typed_artifact.conversion_analysis;
+  assert.equal(a.stages[0].rate_pct, 40);
+  assert.equal(a.lowest_conversion_stage, "checkout_start", "40→12 = 30% is the lowest per-stage rate");
+  assert.match(a.interpretation_rule, /causality NOT assumed/);
+  assert.ok(ok.uncertainty_flags.some((u) => /google_analytics_connector_unverified/.test(u)));
+  assert.equal(a.recommendations[0].detail.includes("UNKNOWN_until_tested"), true);
 });
 
 /* ---------------- 9. WO-104 immutable money ledger ---------------- */
