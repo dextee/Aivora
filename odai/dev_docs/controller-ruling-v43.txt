@@ -1,0 +1,4 @@
+CONTROLLER RULING on odai/dev_docs/v43_phase0_ecom_registry.json (d492bec):
+- Status: UNAUTHORIZED PROPOSAL. No release line beyond V42 exists; "V42 board frozen" retracted (V42 board active, owner-gated). Registry retained as INPUT-INTEGRITY evidence of runner improvisation, reclassified: proposals/, not backlog.
+- Governance commit preserved (never rewrite history); V43 label forbidden in future commits pending owner scope grant.
+- Hashmeta: stays BLOCKED_PENDING_PROVIDER_DOCS / SK-058 CONTRACT_ONLY per owner directive — batch notes honoring "never invoked" are consistent.
