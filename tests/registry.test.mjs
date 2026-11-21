@@ -26,7 +26,7 @@ before(async () => {
 after(() => child?.kill());
 
 import { criterionFromText, matchObjective, planFor, registrySummary, validatePlanEdges } from "../server/odai/registry.mjs";
-import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze } from "../server/odai/skills.mjs";
+import { skill_ledger_append, skill_catalog_query, skill_evidence_append, skill_gate_check, skill_schedule_scaffold, skill_report_compose, p0ContractFieldAudit, skill_creative_generate, skill_poster_social_create, skill_margin_analyze, skill_storefront_build, skill_claims_review, skill_compliance_research, skill_funnel_build, skill_spend_control, skill_supplier_verify, skill_audience_research, skill_business_model_analyze, skill_campaign_design, skill_checkout_integrate, skill_conversation_design, skill_demand_research, skill_fulfillment_plan, skill_objective_plan, skill_supplier_dispatch, skill_marketing_campaign_build, skill_conversion_analyze, skill_escalation_triage, skill_experiment_analyze, skill_faq_retrieve, skill_order_validate } from "../server/odai/skills.mjs";
 import { budgetScope } from "../server/odai/reservations.mjs";
 import { appendMoneyEvent, moneyTotals, moneyEvents } from "../server/odai/ledger.mjs";
 
@@ -465,8 +465,12 @@ test("A1: P0 modules honor NEEDS_INPUT/REJECTED error contract + produce declare
     "supplier-dispatcher": skill_supplier_dispatch({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T13", source_refs: ["s"], validated_domain_inputs: { approved_order_refs: ["O1"], line_items: [{ sku: "A", qty: 1 }], supplier_ref: "S1", supplier_verdict: "VERIFIED_ON_DOCUMENTS" } }),
     "marketing-os-campaign-builder": skill_marketing_campaign_build({ objective_id: "UC-001", tenant_id: "sk-a1", product_ids: ["P1"], audience: ["a"], channels: ["fb"], budget_cap: 100, currency: "MYR", approval_policy: "per-campaign" }),
     "conversion-analyst": skill_conversion_analyze({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "UC-001-T14", source_refs: ["s"], validated_domain_inputs: { funnel_stage_counts: [{ stage: "view", entered: 10, completed: 4, source_ref: "x" }, { stage: "cart", entered: 4, completed: 1, source_ref: "y" }] } }),
+    "escalation-agent": skill_escalation_triage({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T15", source_refs: ["s"], validated_domain_inputs: { complaints: [{ ref: "c1", text_class: "refund_request" }] } }),
+    "experiment-analyst": skill_experiment_analyze({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T16", source_refs: ["s"], validated_domain_inputs: { variant_a: { exposures: 100, conversions: 5, source_ref: "x" }, variant_b: { exposures: 100, conversions: 8, source_ref: "y" }, min_sample_per_arm: 50 } }),
+    "faq-retrieval-agent": skill_faq_retrieve({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T17", source_refs: ["s"], validated_domain_inputs: { question: "how do i return an order", owner_approved_kb_ids: ["KB-1"], kb_documents: [{ kb_id: "KB-1", title: "Returns", answer_text: "Returns within 14 days." }] } }),
+    "order-validator": skill_order_validate({ tenant_id: "sk-a1", objective_id: "UC-001", task_id: "sk-a1-T18", source_refs: ["s"], validated_domain_inputs: { lines: [{ sku: "A", qty: 1 }], currency: "MYR", total_myr: 10, idempotency_key: "k-sk-a1-18" } }),
   });
-  assert.equal(audit.length, 26);
+  assert.equal(audit.length, 30);
   for (const a of audit) assert.equal(a.ok, true, a.family + " " + JSON.stringify(a));
 });
 
@@ -834,6 +838,82 @@ test("T2e: SK-017 conversion analyst — supplied counts only, impossible counts
   assert.match(a.interpretation_rule, /causality NOT assumed/);
   assert.ok(ok.uncertainty_flags.some((u) => /google_analytics_connector_unverified/.test(u)));
   assert.equal(a.recommendations[0].detail.includes("UNKNOWN_until_tested"), true);
+});
+
+/* ---------------- 8g. WO-113 tranche-2 batch 6 — escalation/experiment/faq/order-validator ---------------- */
+test("T2f: SK-020 escalation agent — text_class triage, money/delivery to owner TOP queue, zero customer contact", () => {
+  assert.equal(skill_escalation_triage({}).status, "NEEDS_INPUT");
+  const none = skill_escalation_triage({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: {} });
+  assert.equal(none.status, "REJECTED");
+  const ok = skill_escalation_triage({ tenant_id: "w113b6", objective_id: "UC-001", task_id: "UC-001-T01", source_refs: ["src:ticket"], validated_domain_inputs: { complaints: [
+    { ref: "C1", text_class: "refund_request", order_ref: "TEST-ORD-1" },
+    { ref: "C2", text_class: "delivery_failure" },
+    { ref: "C3", text_class: "other_enquiry" },
+    { ref: "C4", text_class: "made_up_class" },
+  ], sla_hours: 24 } });
+  assert.equal(ok.status, "OK");
+  const items = ok.typed_artifact.escalation.items;
+  assert.equal(items.find((x) => x.ref === "C1").queue, "owner_exception_TOP");
+  assert.equal(items.find((x) => x.ref === "C2").severity, "high");
+  assert.equal(items.find((x) => x.ref === "C3").queue, "owner_daily_digest");
+  assert.equal(items.find((x) => x.ref === "C4").text_class, "other_enquiry", "unknown class degrades to GENERAL, never dropped");
+  assert.equal(ok.typed_artifact.escalation.human_handoff.customer_contact_made, false);
+});
+
+test("T2f: SK-022 experiment analyst — pre-declared threshold mandatory, INSUFFICIENT_SAMPLE honest, correlation-not-causation", () => {
+  assert.equal(skill_experiment_analyze({}).status, "NEEDS_INPUT");
+  const noThr = skill_experiment_analyze({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { variant_a: { exposures: 50, conversions: 2 }, variant_b: { exposures: 50, conversions: 4 } } });
+  assert.equal(noThr.status, "REJECTED"); assert.match(noThr.reason, /pre-declared/i);
+  const small = skill_experiment_analyze({ tenant_id: "w113b6", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["s"], validated_domain_inputs: { variant_a: { exposures: 10, conversions: 1, source_ref: "x" }, variant_b: { exposures: 12, conversions: 3, source_ref: "y" }, min_sample_per_arm: 100 } });
+  assert.equal(small.status, "OK");
+  assert.equal(small.typed_artifact.experiment_analysis.verdict, "INSUFFICIENT_SAMPLE_keep_running");
+  const big = skill_experiment_analyze({ tenant_id: "w113b6", objective_id: "UC-001", task_id: "UC-001-T02", source_refs: ["s"], validated_domain_inputs: { variant_a: { name: "old_page", exposures: 1000, conversions: 20, source_ref: "x" }, variant_b: { name: "voice_page", exposures: 1000, conversions: 35, source_ref: "y" }, min_sample_per_arm: 500 } });
+  assert.equal(big.status, "OK");
+  assert.match(big.typed_artifact.experiment_analysis.verdict, /voice_page_FAVOURED_correlation_only/);
+  assert.ok(big.uncertainty_flags.includes("attribution_is_correlational_not_causal"));
+  const impossible = skill_experiment_analyze({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { variant_a: { exposures: 5, conversions: 9 }, variant_b: { exposures: 600, conversions: 3 }, min_sample_per_arm: 500 } });
+  assert.equal(impossible.status, "REJECTED");
+});
+
+test("T2f: SK-023 FAQ retrieval — approved-KB-only gate, citations, NO fabricated fallback (escalation route), replies gated", () => {
+  assert.equal(skill_faq_retrieve({}).status, "NEEDS_INPUT");
+  const noKb = skill_faq_retrieve({ tenant_id: "t", objective_id: "O", task_id: "T", source_refs: ["s"], validated_domain_inputs: { question: "returns?" } });
+  assert.equal(noKb.status, "REJECTED"); assert.match(noKb.reason, /approved knowledge/i);
+  const miss = skill_faq_retrieve({ tenant_id: "w113b6", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["s"], validated_domain_inputs: { question: "do you ship to antarctica", owner_approved_kb_ids: ["KB-1"], kb_documents: [{ kb_id: "KB-1", title: "Returns", answer_text: "Returns within 14 days." }] } });
+  assert.equal(miss.status, "OK");
+  assert.equal(miss.typed_artifact.faq_answer.state, "NO_APPROVED_MATCH");
+  assert.equal(miss.typed_artifact.faq_answer.answer_text, null);
+  assert.ok(String(miss.typed_artifact.faq_answer.escalate_ref_suggestion).startsWith("SK-020:"));
+  const hit = skill_faq_retrieve({ tenant_id: "w113b6", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["src:kb"], validated_domain_inputs: { question: "how do i return an order please", owner_approved_kb_ids: ["KB-1", "KB-9"], kb_documents: [
+    { kb_id: "KB-1", title: "Returns policy", answer_text: "Returns accepted within 14 days of delivery." },
+    { kb_id: "KB-2", title: "Unapproved doc", answer_text: "secret internal pricing" },
+  ] } });
+  assert.equal(hit.status, "OK");
+  assert.equal(hit.typed_artifact.faq_answer.state, "ANSWERED");
+  assert.equal(hit.typed_artifact.faq_answer.citation.kb_id, "KB-1");
+  assert.ok(hit.evidence_refs.includes("kb:KB-1"));
+  assert.equal(hit.typed_artifact.faq_answer.send_to_customer.automatic, false);
+  const unapproved = skill_faq_retrieve({ tenant_id: "w113b6", objective_id: "UC-001", task_id: "UC-001-T03", source_refs: ["s"], validated_domain_inputs: { question: "secret pricing internal", owner_approved_kb_ids: ["KB-1"], kb_documents: [{ kb_id: "KB-2", answer_text: "secret internal pricing secret" }] } });
+  assert.equal(unapproved.typed_artifact.faq_answer.state, "NO_APPROVED_MATCH", "docs outside owner-approved id list are never retrievable");
+});
+
+test("T2f: SK-033 order validator — schema enforcement, idempotent replay same-fingerprint, conflicting duplicate refused, TEST-labelled register", () => {
+  assert.equal(skill_order_validate({}).status, "NEEDS_INPUT");
+  const bad = skill_order_validate({ tenant_id: "w113b6x", objective_id: "UC-001", task_id: "T", source_refs: ["s"], validated_domain_inputs: { lines: [{ sku: "", qty: 0 }], currency: "USD", total_myr: -5 } });
+  assert.equal(bad.status, "REJECTED");
+  assert.ok(bad.typed_artifact.validation.problems.length >= 3, "each rule reports separately (incl missing idempotency_key)");
+  const base = { tenant_id: "w113b6x", objective_id: "UC-001", task_id: "T", source_refs: ["src:store"], validated_domain_inputs: { lines: [{ sku: "TEA-1", qty: 2 }], currency: "MYR", total_myr: 39.9, idempotency_key: "ord-key-1" } };
+  const first = skill_order_validate(base);
+  assert.equal(first.status, "OK");
+  assert.equal(first.typed_artifact.validation.duplicate, false);
+  const replay = skill_order_validate(base);
+  assert.equal(replay.typed_artifact.validation.duplicate, true);
+  assert.equal(replay.typed_artifact.validation.result, "IDEMPOTENT_REPLAY_OK");
+  const conflict = skill_order_validate({ ...base, validated_domain_inputs: { ...base.validated_domain_inputs, total_myr: 99 } });
+  assert.equal(conflict.status, "OK");
+  assert.equal(conflict.typed_artifact.validation.result, "DUPLICATE_KEY_CONFLICT_REJECTED");
+  assert.equal(conflict.typed_artifact.validation.valid, false);
+  assert.ok(first.uncertainty_flags.some((u) => /TEST-labelled/.test(u)));
 });
 
 /* ---------------- 9. WO-104 immutable money ledger ---------------- */

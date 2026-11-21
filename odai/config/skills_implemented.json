@@ -1,6 +1,6 @@
 {
   "work_order": "WO-113",
-  "updated_at": "2026-11-21T10:05:00Z",
+  "updated_at": "2026-11-21T10:40:00Z",
   "implemented": [
     {
       "skill_id": "SK-009",
@@ -157,16 +157,40 @@
       "family": "conversion-analyst",
       "function": "skill_conversion_analyze",
       "batch": "WO-113-b5"
+    },
+    {
+      "skill_id": "SK-020",
+      "family": "escalation-agent",
+      "function": "skill_escalation_triage",
+      "batch": "WO-113-b6"
+    },
+    {
+      "skill_id": "SK-022",
+      "family": "experiment-analyst",
+      "function": "skill_experiment_analyze",
+      "batch": "WO-113-b6"
+    },
+    {
+      "skill_id": "SK-023",
+      "family": "faq-retrieval-agent",
+      "function": "skill_faq_retrieve",
+      "batch": "WO-113-b6"
+    },
+    {
+      "skill_id": "SK-033",
+      "family": "order-validator",
+      "function": "skill_order_validate",
+      "batch": "WO-113-b6"
     }
   ],
   "connector_policy": "MOCK/SPEC_ONLY adapter surface only; LIVE paths BLOCKED owner-token class; SK-058 remains CONTRACT_ONLY",
   "remaining_t1": [],
-  "t3_count": 32,
+  "t3_count": 28,
   "t3_next4": [
-    "SK-020",
-    "SK-022",
-    "SK-023",
-    "SK-033"
+    "SK-057",
+    "SK-004",
+    "SK-006",
+    "SK-008"
   ],
   "note_this_commit": "canonical schema restored (controller interim ids-marker reconciled; batches 1-3 entries carried forward from fe032c5 lineage)",
   "t3_head_note": "computed from queue authority at batch-5 time (ref-desc)"

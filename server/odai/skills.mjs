@@ -8,7 +8,7 @@
  * error_and_recovery: absent contract inputs -> status NEEDS_INPUT (+missing list);
  * refused writes -> REJECTED with reason; nothing is ever invented on failure.
  */
-import { get } from "./store.mjs";
+import { get, logEvent } from "./store.mjs";
 import { createHash } from "node:crypto";
 import { appendMoneyEvent, moneyEvents, moneyTotals } from "./ledger.mjs";
 import { loadSkillContract } from "./registry.mjs";
@@ -844,7 +844,7 @@ export function skill_supplier_dispatch(input = {}) {
       dispatch: { connector_class: "BLOCKED", matrix_row: "CAT-21 rule1 supplier connector TBD", attempted: false, sent: false, confirmation_state: prior === "UNKNOWN" || prior === "EXTERNAL_UNKNOWN" ? "RECONCILE_BEFORE_RETRY" : "NOT_ATTEMPTED", retry_guidance: "re-issue via ECOM-17 outbox once owner-token LIVE connector exists; reconcile any UNKNOWN outcome BEFORE retry (T13 semantics)" },
     },
     evidence_refs: [poId, "CAT-21:BLOCKED"],
-    uncertainty_flags: ["supplier_confirmation_never_assumed", "real_supplier_email_NEVER_automated"],
+    uncertainty_flags: ["supplier_confirmation_never_assumed", "real_supplier_email_NEVER"],
     cost_actual: 0,
     approval_requests: [{ scope: "live_supplier_dispatch", auto: false, requires: "owner authorization (credentials + connector LIVE class) — record built here is PO CONTENT only, not evidence of transmission" }],
   };
@@ -916,6 +916,161 @@ export function skill_conversion_analyze(input = {}) {
   };
 }
 
+/* ---- escalation-agent (SK-020) — complaint triage into owner queues with SLA labels.
+ * Internal coverage class: deterministic triage, never contacts the customer. Human
+ * handoff is the deliverable; money-loss / delivery-failure classes route to the TOP of
+ * the owner exception queue (elderly solopreneur: short, plain action list).
+ * out: typed_artifact{escalation}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_escalation_triage(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const complaints = Array.isArray(vdi.complaints) && vdi.complaints.length ? vdi.complaints : null;
+  if (!complaints) return { status: "REJECTED", reason: "complaints[] ({ref, text_class, order_ref?}) required — triage of absent complaints would fabricate customer state", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["complaints_absent_rejected"], cost_actual: 0, approval_requests: [] };
+  const slaHours = Number.isFinite(Number(vdi.sla_hours)) ? Number(vdi.sla_hours) : 24;
+  const CLASSES = { refund_request: "MONEY", delivery_failure: "DELIVERY", product_quality: "PRODUCT", other_enquiry: "GENERAL" };
+  const rows = complaints.map((c, i) => {
+    const cls = String((c || {}).text_class || "other_enquiry").toLowerCase();
+    const kind = CLASSES[cls] ? cls : "other_enquiry";
+    const sev = kind === "refund_request" || kind === "delivery_failure" ? "high" : kind === "product_quality" ? "medium" : "low";
+    return { ref: String((c || {}).ref || "ESC-" + (i + 1)), text_class: kind, severity: sev, order_ref: (c || {}).order_ref ? String(c.order_ref) : null, queue: sev === "high" ? "owner_exception_TOP" : "owner_daily_digest", sla_hours: sev === "high" ? Math.min(slaHours, 4) : slaHours, plain_action: sev === "high" ? "one-tap: open order, approve refund path (SK-046 release) or reply draft" : "batch-review with drafted reply (SK-016 tone)" };
+  });
+  const escId = stableId("ESC", [String(input.tenant_id), String(input.objective_id), rows.map((r) => r.ref + r.text_class).join(",")]);
+  return {
+    status: "OK",
+    typed_artifact: { mode: "LOCAL_DETERMINISTIC", escalation: { escalation_id: escId, items: rows, human_handoff: { to: "owner (solopreneur) + delegated helper option", customer_contact_made: false, live_reply_route: "SK-023 gated answers only" } } },
+    evidence_refs: [escId].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["classification_from_supplied_text_class_only", "no_semantic_analysis_of_raw_customer_words"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "send_apology_or_refund_comm", auto: false, requires: "owner approval — outbound customer contact NEVER automatic (SK-016/SK-011 boundary)" }],
+  };
+}
+
+/* ---- experiment-analyst (SK-022) — A/B arithmetic on supplied variant counts.
+ * Threshold must be PRE-DECLARED (stop post-hoc goal-posting); GA4 connector class is
+ * unverified ⇒ no live pull; attribution stays correlational per contract boundary.
+ * out: typed_artifact{experiment_analysis}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+const vbi_source_present = (a, b) => Boolean(a.source_ref && b.source_ref);
+export function skill_experiment_analyze(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const va = vdi.variant_a, vb = vdi.variant_b, thr = vdi.min_sample_per_arm;
+  const shape = (v) => v && Number.isFinite(Number(v.exposures)) && Number.isFinite(Number(v.conversions)) && Number(v.exposures) > 0;
+  if (!shape(va) || !shape(vb)) return { status: "REJECTED", reason: "variant_a/variant_b with exposures+conversions counts required — metrics are never invented (GA connector not consulted)", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["variant_counts_absent"], cost_actual: 0, approval_requests: [] };
+  if (!Number.isFinite(Number(thr)) || Number(thr) <= 0) return { status: "REJECTED", reason: "min_sample_per_arm must be a pre-declared positive threshold before any verdict (error_and_recovery: no post-hoc conclusions)", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["threshold_missing"], cost_actual: 0, approval_requests: [] };
+  const under = Number(va.exposures) < Number(thr) || Number(vb.exposures) < Number(thr);
+  const pa = Number(va.conversions) / Number(va.exposures), pb = Number(vb.conversions) / Number(vb.exposures);
+  if (Number(va.conversions) > Number(va.exposures) || Number(vb.conversions) > Number(vb.exposures)) return { status: "REJECTED", reason: "conversions exceed exposures — impossible counts refused", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["counts_impossible"], cost_actual: 0, approval_requests: [] };
+  const expId = stableId("EXP", [String(input.tenant_id), String(va.name || "A"), String(vb.name || "B"), String(thr)]);
+  const verdict = under ? "INSUFFICIENT_SAMPLE_keep_running" : (Math.abs(pa - pb) < 1e-12 ? "NO_DIFFERENCE" : (pb > pa ? String(vb.name || "B") : String(va.name || "A")) + "_FAVOURED_correlation_only");
+  return {
+    status: "OK",
+    typed_artifact: {
+      mode: "LOCAL_ARITHMETIC_EXTERNAL_ANALYTICS_BLOCKED",
+      experiment_analysis: { experiment_id: expId, arms: { [String(va.name || "A")]: { exposure: Number(va.exposures), conv_rate: Math.round(pa * 10000) / 100 }, [String(vb.name || "B")]: { exposure: Number(vb.exposures), conv_rate: Math.round(pb * 10000) / 100 } }, min_sample_per_arm: Number(thr), threshold_pre_declared: true, verdict, difference_pct_points: Math.round((pb - pa) * 10000) / 100 },
+    },
+    evidence_refs: [expId].concat([va, vb].flatMap((v) => v.source_ref ? [String(v.source_ref)] : [])),
+    uncertainty_flags: ["attribution_is_correlational_not_causal", "google_analytics_connector_unverified_no_live_pull", ...(!vbi_source_present(va, vb) ? ["arms_missing_source_ref_descriptive_only"] : [])],
+    cost_actual: 0,
+    approval_requests: [{ scope: "rollout_winner", auto: false, requires: "owner approval before adopting a variant on the live storefront (SK-047 gate)" }],
+  };
+}
+
+/* ---- faq-retrieval-agent (SK-023) — grounded answers over APPROVED documents only.
+ * Corpus is supplied/registered approved text (Supabase LIVE class connector-bound and
+ * BLOCKED — nothing is fetched remotely here). Deterministic keyword retrieval; NO approval
+ * ⇒ REJECTED; no doc match ⇒ answer with NO fabricated fallback, route to SK-020 escalation.
+ * out: typed_artifact{faq_answer}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_faq_retrieve(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const question = String(vdi.question || "").trim().toLowerCase();
+  const approvedOk = vdi.owner_approved_kb_ids;
+  if (!question) return { status: "REJECTED", reason: "question required", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["question_absent"], cost_actual: 0, approval_requests: [] };
+  if (!Array.isArray(approvedOk) || !approvedOk.length) return { status: "REJECTED", reason: "owner_approved_kb_ids[] required — the reply brain answers only from owner-approved knowledge (boundary: approved knowledge only)", typed_artifact: null, evidence_refs: [], uncertainty_flags: ["kb_approval_missing_rejected"], cost_actual: 0, approval_requests: [] };
+  const docs = Array.isArray(vdi.kb_documents) ? vdi.kb_documents : [];
+  const allow = new Set(approvedOk.map(String));
+  const terms = question.split(/[^a-z0-9]+/).filter((t) => t.length > 3);
+  const scored = docs
+    .filter((d) => d && allow.has(String(d.kb_id)))
+    .map((d) => {
+      const hay = (String(d.text || "") + " " + String(d.title || "")).toLowerCase();
+      const hits = terms.reduce((n, t) => n + (hay.includes(t) ? 1 : 0), 0);
+      return { doc: d, hits };
+    })
+    .filter((s) => s.hits > 0)
+    .sort((a, b) => b.hits - a.hits || String(a.doc.kb_id).localeCompare(String(b.doc.kb_id)));
+  const answerId = stableId("FAQ", [String(input.tenant_id), question, approvedOk.join(",")]);
+  if (!scored.length) {
+    return {
+      status: "OK",
+      typed_artifact: { mode: "GROUNDED_RETRIEVAL_NO_GENERATION", faq_answer: { answer_id: answerId, state: "NO_APPROVED_MATCH", answer_text: null, note: "no fabricated fallback — unanswerable questions route to human escalation (SK-020 queue)", escalate_ref_suggestion: "SK-020:" + answerId } },
+      evidence_refs: [answerId], uncertainty_flags: ["no_approved_doc_matched"],
+      cost_actual: 0, approval_requests: [{ scope: "answer_outside_kb", auto: false, requires: "owner must ADD approved knowledge first; speculative replies prohibited" }],
+    };
+  }
+  const top = scored[0].doc;
+  return {
+    status: "OK",
+    typed_artifact: { mode: "GROUNDED_RETRIEVAL_NO_GENERATION", faq_answer: { answer_id: answerId, state: "ANSWERED", answer_text: String(top.answer_text ?? top.text), citation: { kb_id: String(top.kb_id), title: top.title ? String(top.title) : null }, send_to_customer: { automatic: false, gate: "outbound customer replies require owner approval (policy gateway)" } } },
+    evidence_refs: [answerId, "kb:" + String(top.kb_id)].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["retrieval_over_supplied_approved_corpus_only", "supabase_live_kb_sync_BLOCKED_connector_class"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "auto_reply_customer", auto: false, requires: "explicit owner approval per reply — customer contact NEVER automatic" }],
+  };
+}
+
+/* ---- order-validator (SK-033) — schema + duplicate/idempotency checks; registers valid orders.
+ * Validation is deterministic over the payload; duplicate detection uses a persistent
+ * idempotency fingerprint in the tenant's in-memory order register (Supabase LIVE class is
+ * BLOCKED — register is local, TEST-labelled, never presented as durable DB truth).
+ * out: typed_artifact{validation}, evidence_refs, uncertainty_flags, cost_actual, approval_requests */
+export function skill_order_validate(input = {}) {
+  const missing = req(input, ["tenant_id", "objective_id", "task_id", "validated_domain_inputs", "source_refs"]);
+  if (missing.length) return { status: "NEEDS_INPUT", missing, typed_artifact: null, evidence_refs: [], uncertainty_flags: ["inputs_absent"], cost_actual: null, approval_requests: [] };
+  const vdi = input.validated_domain_inputs || {};
+  const problems = [];
+  const lines = Array.isArray(vdi.lines) ? vdi.lines : null;
+  if (!lines || !lines.length) problems.push("lines[] required with sku+qty");
+  else for (const l of lines) {
+    if (!l || !String(l.sku || "").trim()) problems.push("line missing sku");
+    if (!l || !Number.isInteger(Number(l.qty)) || Number(l.qty) <= 0) problems.push("line qty must be positive integer");
+  }
+  if (vdi.currency !== "MYR") problems.push("currency must be MYR (central-company checkout policy)");
+  if (!Number.isFinite(Number(vdi.total_myr)) || Number(vdi.total_myr) <= 0) problems.push("total_myr must be a positive number");
+  if (!String(vdi.idempotency_key || "").trim()) problems.push("idempotency_key required");
+  if (problems.length) return { status: "REJECTED", reason: "order failed schema validation", typed_artifact: { validation: { valid: false, problems } }, evidence_refs: [], uncertainty_flags: ["schema_invalid"], cost_actual: 0, approval_requests: [] };
+  const t = get(String(input.tenant_id)); // only valid-shaped orders touch the tenant register
+  const key = String(vdi.idempotency_key);
+  const existing = t.orders.find((o) => o.idempotency_key === key);
+  const fingerprint = createHash("sha256").update([key, lines.map((l) => l.sku + "x" + l.qty).join(","), String(vdi.total_myr)].join("\u0000")).digest("hex").slice(0, 16);
+  if (existing) {
+    const sameFp = existing.order_fingerprint === fingerprint;
+    return {
+      status: "OK",
+      typed_artifact: { validation: { valid: sameFp, duplicate: true, replay_of: existing.order_id || null, result: sameFp ? "IDEMPOTENT_REPLAY_OK" : "DUPLICATE_KEY_CONFLICT_REJECTED", problems: sameFp ? [] : ["same idempotency_key with different payload — refused, no overwrite"], order_fingerprint: fingerprint } },
+      evidence_refs: [existing.order_id || key].concat((input.source_refs || []).map(String)),
+      uncertainty_flags: ["local_register_not_durable_db_supabase_live_BLOCKED"],
+      cost_actual: 0, approval_requests: [],
+    };
+  }
+  const order = (t.orders[t.orders.length - 1] || { order_id: "T-0" }).order_id;
+  const seq = Number(String(order).replace(/\D/g, "") || 0) + 1;
+  const rec = { order_id: "TEST-ORD-" + String(seq).padStart(3, "0"), kind: "TEST_SIMULATED", idempotency_key: key, order_fingerprint: fingerprint, lines: lines.map((l) => ({ sku: String(l.sku), qty: Number(l.qty) })), currency: "MYR", amount: Number(vdi.total_myr), status: "VALIDATED_UNCHECKOUT" };
+  t.orders.push(rec);
+  logEvent(t, { event: "order_validated", order_id: rec.order_id, mode: "TEST_SIMULATED" });
+  return {
+    status: "OK",
+    typed_artifact: { validation: { valid: true, duplicate: false, order_id: rec.order_id, order_fingerprint: fingerprint, server_side_amount_rule: "amount must equal recalculated server price at checkout (SK-011) — validation records, does not charge", problems: [] } },
+    evidence_refs: [rec.order_id].concat((input.source_refs || []).map(String)),
+    uncertainty_flags: ["local_register_not_durable_db_supabase_live_BLOCKED", "TEST-labelled_no_ACTUAL_effect"],
+    cost_actual: 0,
+    approval_requests: [{ scope: "persist_to_production_db", auto: false, requires: "ECOM migration path + owner authorization — in-memory register is not a production datastore" }],
+  };
+}
+
 export const P0_SKILL_FUNCTIONS = {
   "ledger-append": skill_ledger_append, "catalog-query": skill_catalog_query, "evidence-append": skill_evidence_append,
   "gate-check": skill_gate_check, "schedule-scaffold": skill_schedule_scaffold, "report-compose": skill_report_compose,
@@ -929,6 +1084,8 @@ export const P0_SKILL_FUNCTIONS = {
   "demand-researcher": skill_demand_research, "fulfillment-planner": skill_fulfillment_plan,
   "objective-planner": skill_objective_plan, "supplier-dispatcher": skill_supplier_dispatch,
   "marketing-os-campaign-builder": skill_marketing_campaign_build, "conversion-analyst": skill_conversion_analyze,
+  "escalation-agent": skill_escalation_triage, "experiment-analyst": skill_experiment_analyze,
+  "faq-retrieval-agent": skill_faq_retrieve, "order-validator": skill_order_validate,
 };
 
 /* contract audit helper used by tests: declared sheet-04 required_input_fields must be

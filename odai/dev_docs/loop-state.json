@@ -58,10 +58,10 @@
   },
   {
    "id": "WO-113",
-   "status": "IN_PROGRESS:batches1-5_done_20_modules",
+   "status": "IN_PROGRESS:batches1-6_done_24_modules",
    "paths": "server/odai,tests",
    "deps": [],
-   "spec": "20/52 deterministic modules shipped (b5: SK-031 DAG planner, SK-048 dispatcher BLOCKED-CAT-21 reconcile-before-retry, SK-056 Hashmeta DRAFT_ONLY activation-BLOCKED, SK-017 counts-only conversion analyst no-causality); next t3 head: SK-020,022,023,033; suite 140/140"
+   "spec": "24/52 deterministic modules shipped (b6: SK-020 triage queues, SK-022 pre-declared-threshold A/B, SK-023 approved-KB grounded retrieval no-fallback, SK-033 idempotent order validation TEST-labelled); next t3 head: SK-057,004,006,008; suite 144/144"
   },
   {
    "id": "E2E-10J",

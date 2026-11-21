@@ -375,6 +375,10 @@ P0_MODULES = {
     "SK-048": {"module": "skill_supplier_dispatch", "family": "supplier-dispatcher", "wo": "WO-113"},
     "SK-056": {"module": "skill_marketing_campaign_build", "family": "marketing-os-campaign-builder", "wo": "WO-113"},
     "SK-017": {"module": "skill_conversion_analyze", "family": "conversion-analyst", "wo": "WO-113"},
+    "SK-020": {"module": "skill_escalation_triage", "family": "escalation-agent", "wo": "WO-113"},
+    "SK-022": {"module": "skill_experiment_analyze", "family": "experiment-analyst", "wo": "WO-113"},
+    "SK-023": {"module": "skill_faq_retrieve", "family": "faq-retrieval-agent", "wo": "WO-113"},
+    "SK-033": {"module": "skill_order_validate", "family": "order-validator", "wo": "WO-113"},
 }
 
 # ---------------------------------------------------------------------------
