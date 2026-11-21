@@ -150,7 +150,9 @@
     "used_by_op": {
       "commit": 1
     },
-    "revoked": false
+    "revoked": true,
+    "revoked_reason": "final",
+    "revoked_at": "2026-11-21T09:47:40Z"
   },
   "UI-01B": {
     "issued_at": "2026-11-20T17:30:18Z",
