@@ -111,3 +111,27 @@
 2026-11-21T02:34:02Z|REVOKE|DEV11-V|reason=DEV11-V SHIPPED — WO-111C verdict PASS-WITH-GAPS (allow-path proof via live hook; report in odai/dev_docs/)
 2026-11-21T02:34:02Z|HOOK_ALLOW|DEV11-V|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-21T06:19:33Z|ISSUE|WO-V42PREP|ops=check,commit|paths=odai/dev_docs/|minutes=20|budget=12|single_use=0|expires_at=2026-11-21T06:39:33Z
+2026-11-21T06:19:33Z|HOOK_ALLOW|WO-V42PREP|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-21T06:19:33Z|REVOKE|WO-V42PREP|reason=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:41:44Z|ISSUE|V43-REG|ops=check,commit|paths=odai/dev_docs|minutes=45|budget=12|single_use=0|expires_at=2026-11-21T09:26:44Z
+2026-11-21T08:43:03Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/loop-log.jsonl|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:03Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/loop-state-note.json|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:03Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/loop-state.json|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:03Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/v43_phase0_ecom_registry.json|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:03Z|HOOK_DENY|WO-V42PREP|WO-V42PREP: ledger+lease state sync (audit-trail commit through the wall); freeze V42 candidate
+2026-11-21T08:43:03Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/loop-log.jsonl|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:03Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/loop-state-note.json|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:03Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/loop-state.json|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:04Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/v43_phase0_ecom_registry.json|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:03Z|HOOK_DENY|WO-V42PREP|WO-V42PREP: ledger+lease state sync (audit-trail commit through the wall); freeze V42 candidate
+2026-11-21T08:43:59Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/loop-log.jsonl|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:59Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/loop-state-note.json|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:59Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/loop-state.json|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:59Z|DENY|WO-V42PREP|op=commit|path=odai/dev_docs/v43_phase0_ecom_registry.json|reason=REVOKED|detail=WO-V42PREP SHIPPED (state sync only, no source changes; no publish)
+2026-11-21T08:43:59Z|HOOK_DENY|WO-V42PREP|WO-V42PREP: ledger+lease state sync (audit-trail commit through the wall); freeze V42 candidate
+2026-11-21T08:44:16Z|DENY|V43-REG|op=commit|path=odai/dev_docs/loop-log.jsonl|reason=PATH_NOT_ALLOWED|detail=path=odai/dev_docs/loop-log.jsonl scope=odai/dev_docs
+2026-11-21T08:44:16Z|DENY|V43-REG|op=commit|path=odai/dev_docs/loop-state-note.json|reason=PATH_NOT_ALLOWED|detail=path=odai/dev_docs/loop-state-note.json scope=odai/dev_docs
+2026-11-21T08:44:16Z|DENY|V43-REG|op=commit|path=odai/dev_docs/loop-state.json|reason=PATH_NOT_ALLOWED|detail=path=odai/dev_docs/loop-state.json scope=odai/dev_docs
+2026-11-21T08:44:16Z|DENY|V43-REG|op=commit|path=odai/dev_docs/v43_phase0_ecom_registry.json|reason=PATH_NOT_ALLOWED|detail=path=odai/dev_docs/v43_phase0_ecom_registry.json scope=odai/dev_docs
+2026-11-21T08:44:16Z|HOOK_DENY|V43-REG|WO-V42PREP: ledger+lease state sync (audit-trail commit through the wall); freeze V42 candidate
+2026-11-21T08:54:22Z|ISSUE|V43-REG2|ops=check,commit|paths=odai/dev_docs/|minutes=90|budget=12|single_use=0|expires_at=2026-11-21T10:24:21Z

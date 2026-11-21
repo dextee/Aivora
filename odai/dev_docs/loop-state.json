@@ -1,0 +1,346 @@
+{
+ "items": [
+  {
+   "id": "SEC-05FIX",
+   "status": "SHIPPED:5eff275",
+   "paths": "server/odai,tests",
+   "deps": [],
+   "spec": "atomic budget reservations; A2 proofs ENFORCED; suite 119/119"
+  },
+  {
+   "id": "WO-111C",
+   "status": "SHIPPED:e3247b0",
+   "paths": "odai/dev_docs,tests",
+   "deps": [],
+   "spec": "preventive pre-commit lease boundary"
+  },
+  {
+   "id": "WO-111D",
+   "status": "SHIPPED:6fb9877",
+   "paths": "tools",
+   "deps": [],
+   "spec": "seal flow GAP-01 owner-authorized"
+  },
+  {
+   "id": "WO-111E",
+   "status": "SHIPPED:324bced",
+   "paths": "tests",
+   "deps": [],
+   "spec": "seal-flow A2 fixture hermetic 19/19"
+  },
+  {
+   "id": "UI-01B",
+   "status": "SHIPPED:b5f912f",
+   "paths": "src,tests",
+   "deps": [],
+   "spec": "voice-first USER default; ADMIN-gated chips"
+  },
+  {
+   "id": "DEV11-V",
+   "status": "SHIPPED:c28d1ad",
+   "paths": "odai/dev_docs,tests",
+   "deps": [],
+   "spec": "independent verification WO-111C PASS-WITH-GAPS"
+  },
+  {
+   "id": "UI-03",
+   "status": "PENDING",
+   "paths": "src,tests",
+   "deps": [],
+   "spec": "SHIELD console mobile-responsive, live data only; verify against current ledger before work"
+  },
+  {
+   "id": "UI-04",
+   "status": "PENDING",
+   "paths": "src,tests",
+   "deps": [],
+   "spec": "Factory dashboard from real registry + loop history (build_registry.py is authoritative)"
+  },
+  {
+   "id": "WO-113",
+   "status": "VERIFY-THEN-PENDING",
+   "paths": "server/odai,tests",
+   "deps": [],
+   "spec": "skill modules tranche 2: locate authoritative contracts source (tools/build_registry.py / registry_intake.json) before queueing specifics"
+  },
+  {
+   "id": "E2E-10J",
+   "status": "PENDING",
+   "paths": "tests",
+   "deps": [
+    "WO-113"
+   ],
+   "spec": "10-domain journey battery vs live engine"
+  },
+  {
+   "id": "ECOM-01",
+   "status": "REGISTERED",
+   "paths": "server/hashmeta.mjs,odai/contracts/hashmeta_*,tests/ecom_hashmeta*",
+   "deps": [],
+   "spec": "Hashmeta discovery \u2014 Provider contracts, capability evidence, adapter disabled by default",
+   "phase": 1,
+   "owners": "DEV-06",
+   "mode_gate": "MOCK after capability evidence; hashmeta connector stays UNVERIFIED/BLOCKED until ECOM-01 passes DEV-11",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-02",
+   "status": "REGISTERED",
+   "paths": "server/ecom/tenants.mjs,odai/migrations/003*,tests/ecom_tenants*",
+   "deps": [],
+   "spec": "Tenant provisioning \u2014 Authenticated tenant, unique slug, default draft store",
+   "phase": 3,
+   "owners": "DEV-03/09",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-03",
+   "status": "REGISTERED",
+   "paths": "server/ecom/routes.mjs,server.mjs,tests/ecom_routing*",
+   "deps": [
+    "ECOM-02"
+   ],
+   "spec": "Public routing \u2014 Resolve published username and allowlisted public fields",
+   "phase": 3,
+   "owners": "DEV-03",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-04",
+   "status": "REGISTERED",
+   "paths": "server/ecom/catalog.mjs,odai/migrations/004*,tests/ecom_catalog*",
+   "deps": [],
+   "spec": "Catalog schema \u2014 Reuse canonical IDs; validate provenance and permissions",
+   "phase": 2,
+   "owners": "DEV-05",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-05",
+   "status": "REGISTERED",
+   "paths": "src/storefront/*,tests/ecom_storefront*",
+   "deps": [
+    "ECOM-03",
+    "ECOM-13"
+   ],
+   "spec": "Store UI \u2014 Responsive branded product pages and cart",
+   "phase": 3,
+   "owners": "DEV-04",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-06",
+   "status": "REGISTERED",
+   "paths": "server/ecom/checkout.mjs,tests/ecom_checkout*",
+   "deps": [
+    "ECOM-05",
+    "ECOM-14",
+    "ECOM-16"
+   ],
+   "spec": "Checkout \u2014 Sandbox company checkout; signed webhook",
+   "phase": 4,
+   "owners": "DEV-03/06",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-07",
+   "status": "REGISTERED",
+   "paths": "server/ecom/creative.mjs,tests/ecom_creative*",
+   "deps": [
+    "ECOM-13"
+   ],
+   "spec": "Creative generation \u2014 Approved assets; budget reserve and creative preview",
+   "phase": 6,
+   "owners": "DEV-02/06",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-08",
+   "status": "REGISTERED",
+   "paths": "server/ecom/social.mjs,tests/ecom_social*",
+   "deps": [
+    "ECOM-07"
+   ],
+   "spec": "Social publishing \u2014 Authorized connector; receipt or BLOCKED",
+   "phase": 6,
+   "owners": "DEV-06",
+   "mode_gate": "BLOCKED until owner approval (social-posting NEVER); T20 must stay green",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-09",
+   "status": "REGISTERED",
+   "paths": "server/ecom/analytics.mjs,tests/ecom_analytics*",
+   "deps": [
+    "ECOM-03"
+   ],
+   "spec": "Analytics \u2014 Tenant-scoped event ingestion, consent",
+   "phase": 6,
+   "owners": "DEV-05",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-10",
+   "status": "REGISTERED",
+   "paths": "server/ecom/reports.mjs,tests/ecom_reports*",
+   "deps": [
+    "ECOM-09",
+    "ECOM-14",
+    "ECOM-18"
+   ],
+   "spec": "Reports \u2014 Verified sales and earnings; UNKNOWN missing metrics",
+   "phase": 6,
+   "owners": "DEV-03/07",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-11",
+   "status": "REGISTERED",
+   "paths": "server/ecom/security.mjs,tools/guardrails_preflight.mjs,tests/ecom_security*",
+   "deps": [],
+   "spec": "Security \u2014 Server-side policy and isolation baseline; continuous gate",
+   "phase": 7,
+   "owners": "DEV-08/12",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-12",
+   "status": "REGISTERED",
+   "paths": "odai/dev_docs/evidence/ECOM*,tests/acceptance/*",
+   "deps": [
+    "ECOM-01",
+    "ECOM-06",
+    "ECOM-08",
+    "ECOM-10",
+    "ECOM-11",
+    "ECOM-19",
+    "ECOM-20"
+   ],
+   "spec": "Independent acceptance \u2014 Revision-bound test and release verdict",
+   "phase": 7,
+   "owners": "DEV-11/13",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-13",
+   "status": "REGISTERED",
+   "paths": "server/ecom/selection.mjs,src/merchant/*,tests/ecom_selection*",
+   "deps": [
+    "ECOM-02",
+    "ECOM-04",
+    "ECOM-11"
+   ],
+   "spec": "Selection and branding \u2014 Select existing products; merchant overrides; draft preview",
+   "phase": 2,
+   "owners": "DEV-03/04/05",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-14",
+   "status": "REGISTERED",
+   "paths": "server/ecom/payments.mjs,server/ecom/margin.mjs,tests/ecom_payment*",
+   "deps": [
+    "ECOM-02",
+    "ECOM-04",
+    "ECOM-11"
+   ],
+   "spec": "Payment and earnings \u2014 Immutable financial events and price snapshots",
+   "phase": 4,
+   "owners": "DEV-03/05",
+   "mode_gate": "MOCK/SANDBOX only; live payment gated on owner + gateway merchant terms",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-15",
+   "status": "REGISTERED",
+   "paths": "server/ecom/suppliers.mjs,tests/ecom_suppliers*",
+   "deps": [
+    "ECOM-04"
+   ],
+   "spec": "Supplier management \u2014 Approved direct-ship contracts and SKU mappings",
+   "phase": 2,
+   "owners": "DEV-03/05",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-16",
+   "status": "REGISTERED",
+   "paths": "server/ecom/inventory.mjs,tests/ecom_inventory*",
+   "deps": [
+    "ECOM-15"
+   ],
+   "spec": "Stock synchronization \u2014 Atomic reservation, expiry and stale-stock hold",
+   "phase": 2,
+   "owners": "DEV-05/06",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-17",
+   "status": "REGISTERED",
+   "paths": "server/ecom/outbox.mjs,tests/ecom_routing*",
+   "deps": [
+    "ECOM-06",
+    "ECOM-15"
+   ],
+   "spec": "Supplier order routing \u2014 Outbox, split orders and idempotent acknowledgment",
+   "phase": 5,
+   "owners": "DEV-03/06",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-18",
+   "status": "REGISTERED",
+   "paths": "server/ecom/fulfillment.mjs,tests/ecom_fulfillment*",
+   "deps": [
+    "ECOM-17"
+   ],
+   "spec": "Shipment tracking \u2014 Tracking and delivery proof; sandbox adapter",
+   "phase": 5,
+   "owners": "DEV-06",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-19",
+   "status": "REGISTERED",
+   "paths": "server/ecom/returns.mjs,tests/ecom_returns*",
+   "deps": [
+    "ECOM-06",
+    "ECOM-18"
+   ],
+   "spec": "Returns and refunds \u2014 Partial refunds and reversals",
+   "phase": 5,
+   "owners": "DEV-03/05",
+   "mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "verify": "DEV-11"
+  },
+  {
+   "id": "ECOM-20",
+   "status": "REGISTERED",
+   "paths": "server/ecom/settlement.mjs,tests/ecom_settlement*",
+   "deps": [
+    "ECOM-14",
+    "ECOM-19"
+   ],
+   "spec": "Settlements \u2014 Reconciled payable, atomic payout and approval",
+   "phase": 5,
+   "owners": "DEV-03/05/11",
+   "mode_gate": "MOCK/SANDBOX; real payouts NEVER without owner authorization",
+   "verify": "DEV-11"
+  }
+ ]
+}

@@ -1,0 +1,494 @@
+{
+ "registry": "AIVORA V43 ECOM work-order registration (Phase 0)",
+ "generated_at": "2026-11-21T07:44:16+00:00",
+ "generated_in_session": "3a382a65-4730-47d2-aaa3-1b6af0fab03c (AIVORA V43 E-commerce Initialization)",
+ "canonical_repo_reference": {
+  "path": "/mnt/pages/page-repo-1255a831-bc45-4ee3-a572-8f3e587ad2a",
+  "custody_status": "MOUNT RESTORED 2026-11-21T08:3xZ via canonical gate: page_repo.py prepare -> open --page-id app-1fe44043-4ed153f9; repo_path=/mnt/pages/page-repo-1255a831-bc45-4ee3-a572-8ff3e587ad2a; head=559acc55a5ff7831b40571a80606e47a0611cc39",
+  "cached_copies_inspected": [
+   {
+    "session": "01a1f9c1-f60e-70dd-aeeb-6919241cebbb",
+    "head": "8ad7db7",
+    "role": "main-app coordination clone (UI-02/DEV-11 lineage)",
+    "caveat": "origin bundle /tmp/qwenwork/ui02 gone; release pins 00b9f2d (v41) / 07d2124 (v40) are not objects in this clone -> behind or off-chain vs canonical release history; NOT a write target"
+   },
+   {
+    "session": "01a1f9ba-24a4-7af4-982a-50916fc35597",
+    "head": "b23bae0",
+    "role": "UI-01B shell repo (superseded per lease UI-01B.json)"
+   }
+  ],
+  "page_id": "app-1fe44043-4ed153f9"
+ },
+ "branch": "Physical branch DEFERRED: Pages git-control invariant binds page_repo checkpoint/validate to branch main and forbids hand branch changes in the managed repo (git-control.md). V43 isolation enforced by additive-only paths + backlog tagging + writer-lock serialization (same scheme that shipped UI/SEC/WO tranches on main). A physical branch would be a platform-level decision.",
+ "permanent_controller": {
+  "loop_worker": "01a1f9d0-9cee-797b-8899-06f6cecc5dc4 status=active (RESUMED 2026-11-21 ~07:50Z under owner continuation directive; every-30min; payload updated additively: original V42 persona text 4875 chars preserved verbatim + V43 20-item backlog appended = 10297 chars)",
+  "dev11_verifier": "01a1f9d0-9f52-73d0-a8e4-cc9147002bc8 status=active hourly (last runs 03:36Z-07:36Z completed)",
+  "prompt_registration": "Continuation Prompts 2-4 + phased prompt book (Phases 1-7, automatic phase progression, coordination directive) are now REGISTERED in the existing Development Agent's persistent backlog via the loop-worker payload; on first mount-present tick the worker mirrors ECOM-01..20 into odai/dev_docs/loop-state.json (this registry verbatim) and self-continues across phases without manual prompting; phase advancement gated ONLY on DEV-11 PASS/BLOCKED verdicts, mount gate, writer-locks and owner approvals. No new agent/controller/scheduler created.",
+  "coordination_directive_status": "Applied to existing V42 controller (same worker): single repo/registry/controller/security architecture/dashboard; V42 precedence retained; V43 runs as subordinate Tranche H continuation, never merges/publishes without release approval.",
+  "mount_reattach_fix": "Every loop session must run page_repo.py prepare && open --page-id app-1fe44043-4ed153f9 before declaring the gate failed (mounts never survive sandbox replacement). Root cause of B1 resolved."
+ },
+ "reusable_components_actual": {
+  "tenant_scoped_schema": "odai/migrations/001_init.sql = 22 tenant-scoped tables (product/variant/price/inventory/listing/consent/campaign/spend/order/fulfillment/refund/expense/fx/ledger/profit/run/trace/receipt) + 002 odai_objective/odai_gate_decision; ECOM-04 extends, does not fork",
+  "policy_and_connectors": "server/odai/policy.mjs + connector_readiness_9_0.json: 9 connectors ALL UNVERIFIED / external_writes_enabled=false / approval_required=true \u2014 matches MOCK/SANDBOX/LIVE/BLOCKED mandate",
+  "objective_engine": "server/odai/objectives.mjs TASKS=11, GATES=3; workflow.mjs 10-beat receipts, SPECIALISTS=6 observed in this clone",
+  "hashmeta_bridge": "server/hashmeta.mjs real MCP client (initialize->tools/list->tools/call, Bearer HASHMETA_API_TOKEN, TOOL_RX discovery, omni-flash generation fallback); pack register: 7/7 ops BLOCKED -> ECOM-01 evidence task seeds from this",
+  "ledger_and_locks": "odai/dev_docs/ledger/{SHIPPED.ndjson,leases/*.json} + loop-state/loop-log append-only convention",
+  "guardrails": "tools/guardrails_preflight.mjs (DEV-12 G1-G5; bound into approve() via npm run precheck, WO-02) + tools/release_evidence.mjs (revision-bound evidence, WO-04)",
+  "catalog_fixtures": "odai/data/catalog_fnyglobal_seeded.json + products_from_fnyglobal.json (seeded/labelling discipline present; synthetic company profile flag)",
+  "shield_ui": "SHIELD mode + ui_modes_9_0 contract: six defence tiles, server-authorised /api/odai/view, simulation-only labelling rules",
+  "claimed_vs_observed": "13 agents / 32 roles / 67 skill contracts NOT observable in available artifacts (clone shows SPECIALISTS=6, TASKS=11; skill_contracts.json absent, lives only on canonical mount). Reuse recorded at actual values; claim reconciliation = ECOM-12 evidence item."
+ },
+ "preservation": {
+  "v42": "untouched - all V43 paths additive (server/ecom/*, migrations >=003, new test files); no edits to server/odai/* internals, guardrail logic, or .qw-pages publish artifacts",
+  "v41_live": "clupxd6g.qwenwork.page - publishing DISABLED (owner gate); no deploy in Phase 0"
+ },
+ "governance": "SHIELD six-axis + SEC-05 atomic budget (WO-111/SEC-05FIX lineage; test T21) + DEV-11 independent verification mandatory per WO + DEV-12 preflight on every dispatch + DEV-13 watch (no self-granted authority; external-write NEVER unchanged)",
+ "acceptance_matrix_source": {
+  "count": 26,
+  "bind": "T01-T26 -> ECOM-12",
+  "t_bindings": "T01->ECOM-04/13 T02->ECOM-03 T03->ECOM-02/11 T04->ECOM-02 T05->ECOM-04/07 T06->ECOM-01 T07->ECOM-14 T08->ECOM-16 T09->ECOM-14 T10->ECOM-14 T11->ECOM-14/20 T12->ECOM-06 T13->ECOM-17 T14->ECOM-06/15 T15->ECOM-19 T16->ECOM-20 T17->ECOM-14/20 T18->ECOM-19 T19->ECOM-09 T20->ECOM-08 T21->ECOM-14(SEC-05) T22->custody gate (proven today: safe abort, zero writes) T23->ECOM-05 UI suite T24->release_evidence+owner gate T25->ECOM-01 T26->BLOCKED pending owner"
+ },
+ "work_orders": [
+  {
+   "id": "ECOM-01",
+   "module": "Hashmeta discovery",
+   "owner_pool": "DEV-06",
+   "reconciled_dependencies": [],
+   "dependency_layer": 0,
+   "writer_lock_paths": [
+    "server/hashmeta.mjs",
+    "odai/contracts/hashmeta_*",
+    "tests/ecom_hashmeta*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK after capability evidence; hashmeta connector stays UNVERIFIED/BLOCKED until ECOM-01 passes DEV-11",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Provider contracts, capability evidence, adapter disabled by default"
+  },
+  {
+   "id": "ECOM-02",
+   "module": "Tenant provisioning",
+   "owner_pool": "DEV-03/09",
+   "reconciled_dependencies": [],
+   "dependency_layer": 0,
+   "writer_lock_paths": [
+    "server/ecom/tenants.mjs",
+    "odai/migrations/003*",
+    "tests/ecom_tenants*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Authenticated tenant, unique slug, default draft store"
+  },
+  {
+   "id": "ECOM-03",
+   "module": "Public routing",
+   "owner_pool": "DEV-03",
+   "reconciled_dependencies": [
+    "ECOM-02"
+   ],
+   "dependency_layer": 1,
+   "writer_lock_paths": [
+    "server/ecom/routes.mjs",
+    "server.mjs",
+    "tests/ecom_routing*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Resolve published username and allowlisted public fields"
+  },
+  {
+   "id": "ECOM-04",
+   "module": "Catalog schema",
+   "owner_pool": "DEV-05",
+   "reconciled_dependencies": [],
+   "dependency_layer": 0,
+   "writer_lock_paths": [
+    "server/ecom/catalog.mjs",
+    "odai/migrations/004*",
+    "tests/ecom_catalog*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Reuse canonical IDs; validate provenance and permissions"
+  },
+  {
+   "id": "ECOM-05",
+   "module": "Store UI",
+   "owner_pool": "DEV-04",
+   "reconciled_dependencies": [
+    "ECOM-03",
+    "ECOM-13"
+   ],
+   "dependency_layer": 2,
+   "writer_lock_paths": [
+    "src/storefront/*",
+    "tests/ecom_storefront*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Responsive branded product pages and cart"
+  },
+  {
+   "id": "ECOM-06",
+   "module": "Checkout",
+   "owner_pool": "DEV-03/06",
+   "reconciled_dependencies": [
+    "ECOM-05",
+    "ECOM-14",
+    "ECOM-16"
+   ],
+   "dependency_layer": 3,
+   "writer_lock_paths": [
+    "server/ecom/checkout.mjs",
+    "tests/ecom_checkout*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Sandbox company checkout; signed webhook"
+  },
+  {
+   "id": "ECOM-07",
+   "module": "Creative generation",
+   "owner_pool": "DEV-02/06",
+   "reconciled_dependencies": [
+    "ECOM-13"
+   ],
+   "dependency_layer": 2,
+   "writer_lock_paths": [
+    "server/ecom/creative.mjs",
+    "tests/ecom_creative*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Approved assets; budget reserve and creative preview"
+  },
+  {
+   "id": "ECOM-08",
+   "module": "Social publishing",
+   "owner_pool": "DEV-06",
+   "reconciled_dependencies": [
+    "ECOM-07"
+   ],
+   "dependency_layer": 3,
+   "writer_lock_paths": [
+    "server/ecom/social.mjs",
+    "tests/ecom_social*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "BLOCKED until owner approval (social-posting NEVER); T20 must stay green",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Authorized connector; receipt or BLOCKED"
+  },
+  {
+   "id": "ECOM-09",
+   "module": "Analytics",
+   "owner_pool": "DEV-05",
+   "reconciled_dependencies": [
+    "ECOM-03"
+   ],
+   "dependency_layer": 2,
+   "writer_lock_paths": [
+    "server/ecom/analytics.mjs",
+    "tests/ecom_analytics*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Tenant-scoped event ingestion, consent"
+  },
+  {
+   "id": "ECOM-10",
+   "module": "Reports",
+   "owner_pool": "DEV-03/07",
+   "reconciled_dependencies": [
+    "ECOM-09",
+    "ECOM-14",
+    "ECOM-18"
+   ],
+   "dependency_layer": 6,
+   "writer_lock_paths": [
+    "server/ecom/reports.mjs",
+    "tests/ecom_reports*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Verified sales and earnings; UNKNOWN missing metrics"
+  },
+  {
+   "id": "ECOM-11",
+   "module": "Security",
+   "owner_pool": "DEV-08/12",
+   "reconciled_dependencies": [],
+   "dependency_layer": 0,
+   "writer_lock_paths": [
+    "server/ecom/security.mjs",
+    "tools/guardrails_preflight.mjs",
+    "tests/ecom_security*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Server-side policy and isolation baseline; continuous gate"
+  },
+  {
+   "id": "ECOM-12",
+   "module": "Independent acceptance",
+   "owner_pool": "DEV-11/13",
+   "reconciled_dependencies": [
+    "ECOM-01",
+    "ECOM-06",
+    "ECOM-08",
+    "ECOM-10",
+    "ECOM-11",
+    "ECOM-19",
+    "ECOM-20"
+   ],
+   "dependency_layer": 8,
+   "writer_lock_paths": [
+    "odai/dev_docs/evidence/ECOM*",
+    "tests/acceptance/*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Revision-bound test and release verdict"
+  },
+  {
+   "id": "ECOM-13",
+   "module": "Selection and branding",
+   "owner_pool": "DEV-03/04/05",
+   "reconciled_dependencies": [
+    "ECOM-02",
+    "ECOM-04",
+    "ECOM-11"
+   ],
+   "dependency_layer": 1,
+   "writer_lock_paths": [
+    "server/ecom/selection.mjs",
+    "src/merchant/*",
+    "tests/ecom_selection*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Select existing products; merchant overrides; draft preview"
+  },
+  {
+   "id": "ECOM-14",
+   "module": "Payment and earnings",
+   "owner_pool": "DEV-03/05",
+   "reconciled_dependencies": [
+    "ECOM-02",
+    "ECOM-04",
+    "ECOM-11"
+   ],
+   "dependency_layer": 1,
+   "writer_lock_paths": [
+    "server/ecom/payments.mjs",
+    "server/ecom/margin.mjs",
+    "tests/ecom_payment*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX only; live payment gated on owner + gateway merchant terms",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Immutable financial events and price snapshots"
+  },
+  {
+   "id": "ECOM-15",
+   "module": "Supplier management",
+   "owner_pool": "DEV-03/05",
+   "reconciled_dependencies": [
+    "ECOM-04"
+   ],
+   "dependency_layer": 1,
+   "writer_lock_paths": [
+    "server/ecom/suppliers.mjs",
+    "tests/ecom_suppliers*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Approved direct-ship contracts and SKU mappings"
+  },
+  {
+   "id": "ECOM-16",
+   "module": "Stock synchronization",
+   "owner_pool": "DEV-05/06",
+   "reconciled_dependencies": [
+    "ECOM-15"
+   ],
+   "dependency_layer": 2,
+   "writer_lock_paths": [
+    "server/ecom/inventory.mjs",
+    "tests/ecom_inventory*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Atomic reservation, expiry and stale-stock hold"
+  },
+  {
+   "id": "ECOM-17",
+   "module": "Supplier order routing",
+   "owner_pool": "DEV-03/06",
+   "reconciled_dependencies": [
+    "ECOM-06",
+    "ECOM-15"
+   ],
+   "dependency_layer": 4,
+   "writer_lock_paths": [
+    "server/ecom/outbox.mjs",
+    "tests/ecom_routing*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Outbox, split orders and idempotent acknowledgment"
+  },
+  {
+   "id": "ECOM-18",
+   "module": "Shipment tracking",
+   "owner_pool": "DEV-06",
+   "reconciled_dependencies": [
+    "ECOM-17"
+   ],
+   "dependency_layer": 5,
+   "writer_lock_paths": [
+    "server/ecom/fulfillment.mjs",
+    "tests/ecom_fulfillment*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Tracking and delivery proof; sandbox adapter"
+  },
+  {
+   "id": "ECOM-19",
+   "module": "Returns and refunds",
+   "owner_pool": "DEV-03/05",
+   "reconciled_dependencies": [
+    "ECOM-06",
+    "ECOM-18"
+   ],
+   "dependency_layer": 6,
+   "writer_lock_paths": [
+    "server/ecom/returns.mjs",
+    "tests/ecom_returns*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; LIVE requires owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Partial refunds and reversals"
+  },
+  {
+   "id": "ECOM-20",
+   "module": "Settlements",
+   "owner_pool": "DEV-03/05/11",
+   "reconciled_dependencies": [
+    "ECOM-14",
+    "ECOM-19"
+   ],
+   "dependency_layer": 7,
+   "writer_lock_paths": [
+    "server/ecom/settlement.mjs",
+    "tests/ecom_settlement*"
+   ],
+   "execution_status_confirmed": "NOT STARTED (pack CSV agrees; no prior ECOM state in ledger or loop backlog seed)",
+   "independent_verification": "DEV-11 re-run of cited tests + acceptance probes; verdict appended to loop-log.jsonl; builder persona may not self-accept",
+   "connector_mode_gate": "MOCK/SANDBOX; real payouts NEVER without owner authorization",
+   "budget_note": "bounded retry: diagnose->fix->retest max 2 cycles per wake; leases 90 min; one item per worker wake (factory standing rules)",
+   "acceptance": "Reconciled payable, atomic payout and approval"
+  }
+ ],
+ "dependency_layers": {
+  "0": [
+   "ECOM-01",
+   "ECOM-02",
+   "ECOM-04",
+   "ECOM-11"
+  ],
+  "1": [
+   "ECOM-03",
+   "ECOM-13",
+   "ECOM-14",
+   "ECOM-15"
+  ],
+  "2": [
+   "ECOM-05",
+   "ECOM-07",
+   "ECOM-09",
+   "ECOM-16"
+  ],
+  "3": [
+   "ECOM-06",
+   "ECOM-08"
+  ],
+  "4": [
+   "ECOM-17"
+  ],
+  "5": [
+   "ECOM-18"
+  ],
+  "6": [
+   "ECOM-10",
+   "ECOM-19"
+  ],
+  "7": [
+   "ECOM-20"
+  ],
+  "8": [
+   "ECOM-12"
+  ]
+ },
+ "blockers": [
+  "B1 CUSTODY: RESOLVED 2026-11-21 ~08:30Z \u2014 mount re-attached; head 559acc5 witnessed; re-attach codified into loop personas",
+  "B2 PROVIDER: no HASHMETA_API_TOKEN or live catalog export in pack; capability register 7/7 ops BLOCKED (official_endpoint/evidence null) -> live gates BLOCKED, sandbox/native work proceeds on restore",
+  "B3 LEGAL/OWNER: seller-of-record obligations, SG/MY PDPA processor terms, payment-gateway merchant account and payout terms = OWNER-CONFIRM prerequisites per docs 01/07 before any LIVE mode",
+  "B4 PUBLISH: disabled until owner approval; V41 live + V42 preserved by additive-path-only plan"
+ ],
+ "verification_ticks": [
+  {
+   "at": "2026-11-21T03:14Z",
+   "who": "worker tick (manual, pre-fix)",
+   "result": "RUN BLOCKED \u2014 REPO MOUNT ABSENT"
+  },
+  {
+   "at": "2026-11-21T08:24Z",
+   "who": "worker tick run-once (pre-fix)",
+   "result": "RUN BLOCKED \u2014 same pattern; prompted the fix"
+  },
+  {
+   "at": "2026-11-21T08:42:52+00:00",
+   "who": "controller session 3a382a65",
+   "result": "OPEN OK: repo mounted at canonical path, head 559acc5, lease V43-REG granted, registration landing"
+  }
+ ]
+}

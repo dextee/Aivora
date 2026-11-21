@@ -1,0 +1,2 @@
+{"ts": "2026-11-21T08:42:52+00:00", "actor": "V43-REG", "event": "MOUNT RESTORED", "evidence": {"method": "page_repo prepare+open", "page_id": "app-1fe44043-4ed153f9", "head": "559acc55a5ff7831b40571a80606e47a0611cc39", "session": "3a382a65"}}
+{"ts": "2026-11-21T08:42:52+00:00", "actor": "V43-REG", "event": "V43 BACKLOG REGISTERED", "evidence": {"registry": "odai/dev_docs/v43_phase0_ecom_registry.json", "items_in_loop_state": 31, "v43_orders": 20, "v42_board_status": "FROZEN:559acc5 + residuals pending", "lease": "V43-REG"}}

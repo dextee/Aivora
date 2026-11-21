@@ -75,6 +75,42 @@
     "revoked_reason": "UI-01B SHIPPED (staged, NO publish; files: src/RoleGate.tsx NEW, src/TalkView.tsx, src/styles.css, tests/objectives.test.mjs; no server changes; AGENTS.md not updated — outside lease; suite 118/118)",
     "revoked_at": "2026-11-20T17:40:01Z"
   },
+  "V43-REG": {
+    "issued_at": "2026-11-21T08:41:44Z",
+    "expires_at": "2026-11-21T09:26:44Z",
+    "minutes": 45,
+    "paths": [
+      "odai/dev_docs"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": false
+  },
+  "V43-REG2": {
+    "issued_at": "2026-11-21T08:54:21Z",
+    "expires_at": "2026-11-21T10:24:21Z",
+    "minutes": 90,
+    "paths": [
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 12,
+    "single_use": false,
+    "used_by_op": {
+      "check": 1
+    },
+    "revoked": false
+  },
   "WO-09A": {
     "issued_at": "2026-11-20T12:20:44Z",
     "expires_at": "2026-11-20T13:50:44Z",
@@ -315,7 +351,9 @@
     "budget": 12,
     "single_use": false,
     "used_by_op": {},
-    "revoked": false
+    "revoked": true,
+    "revoked_reason": "WO-V42PREP SHIPPED (state sync only, no source changes; no publish)",
+    "revoked_at": "2026-11-21T06:19:33Z"
   },
   "ZZZ-V4-BYP": {
     "issued_at": "2026-11-21T02:29:56Z",
