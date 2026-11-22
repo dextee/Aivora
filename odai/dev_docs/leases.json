@@ -1348,6 +1348,37 @@
     "revoked_reason": "Menu branding updated; no commit requested",
     "revoked_at": "2026-11-22T15:43:07Z"
   },
+  "WO-CHECKPOINT": {
+    "issued_at": "2026-11-22T19:56:15Z",
+    "expires_at": "2026-11-22T21:56:15Z",
+    "minutes": 120,
+    "paths": [
+      "server.mjs",
+      "server/",
+      "src/",
+      "tests/",
+      "package.json",
+      "package-lock.json",
+      ".gitignore",
+      "index.html",
+      "Dockerfile",
+      ".dockerignore",
+      "cloudbuild.yaml",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 80,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 39
+    },
+    "revoked": true,
+    "revoked_reason": "Checkpoint 2557c4d committed; revoke after commit",
+    "revoked_at": "2026-11-22T19:57:21Z"
+  },
   "WO-CUSTOMER-BI": {
     "issued_at": "2026-11-22T15:32:29Z",
     "expires_at": "2026-11-22T18:32:29Z",
