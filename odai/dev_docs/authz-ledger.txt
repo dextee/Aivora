@@ -334,3 +334,5 @@
 2026-11-22T12:30:04Z|REVOKE|WO-ECOMGOALS|reason=My Goals parity + GoalsView committed a1c293f; revoke after commit
 2026-11-22T12:30:05Z|HOOK_ALLOW|WO-ECOMGOALS|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-22T12:43:13Z|ISSUE|WO-OMNIUI|ops=check,commit|paths=src/,odai/dev_docs/|minutes=120|budget=20|single_use=0|expires_at=2026-11-22T14:43:13Z
+2026-11-22T12:43:14Z|HOOK_ALLOW|WO-OMNIUI|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+src/TalkView.tsx+src/styles.css
+2026-11-22T12:43:15Z|REVOKE|WO-OMNIUI|reason=livestream button shipped; live audio needs DASHSCOPE_API_KEY+mic (not verifiable here); revoke after commit
