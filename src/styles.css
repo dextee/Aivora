@@ -455,20 +455,3 @@ button { font-family: inherit; }
 .admin-registry li span { overflow-wrap: anywhere; color: #374151; }
 .admin-registry li b { color: #0b6b46; }
 .admin-version { margin: 6px 0 0; font: 600 10.5px var(--font); color: #3c4f43; }
-
-/* Green livestream button — activates qwen3.8-omni-flash-realtime live voice (Talk to AIVORA) */
-.live-btn { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; padding: 9px 16px; border: 0; border-radius: 999px; background: var(--wa-green); color: #0b3d2a; font: 800 13px var(--font); cursor: pointer; box-shadow: 0 2px 10px rgba(37,211,102,.35); }
-.live-btn:hover { filter: brightness(1.05); }
-.live-btn.on { background: radial-gradient(circle at 32% 28%, #ff7a70, #e23b34 55%, #b23029); color: #fff; animation: livePulse 1.4s ease-in-out infinite; }
-.live-btn.wait { opacity: .7; }
-@keyframes livePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(226,59,52,.5);} 50% { box-shadow: 0 0 0 8px rgba(226,59,52,0);} }
-
-/* Test connection — Model Studio gate check before going live */
-.net-test { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; margin-left: 10px; padding: 9px 14px; border: 1px solid var(--line,#2a2f45); border-radius: 999px; background: transparent; color: var(--ink1,#e9edf5); font: 700 12.5px var(--font); cursor: pointer; }
-.net-test:hover { border-color: var(--wa-green); color: var(--wa-green); }
-.net-test:disabled { opacity: .6; cursor: default; }
-.net-result { max-width: 720px; margin: 10px auto 0; padding: 10px 14px; border-radius: 10px; font: 600 12.5px var(--font); text-align: center; }
-.net-result.ok { background: rgba(37,211,102,.14); color: #3fb37f; }
-.net-result.err { background: rgba(226,59,52,.14); color: #e0655f; }
-.net-result.warn { background: rgba(224,162,58,.14); color: #e0a23a; }
-.net-result.wait { background: rgba(120,130,160,.14); color: var(--ink2,#9aa3b8); }
