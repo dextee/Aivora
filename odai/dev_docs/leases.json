@@ -2257,8 +2257,12 @@
     ],
     "budget": 40,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 7
+    },
+    "revoked": true,
+    "revoked_reason": "Trust layer shipped; revoke after commit",
+    "revoked_at": "2026-11-22T23:48:05Z"
   },
   "WO-UI01": {
     "issued_at": "2026-11-20T14:35:38Z",
