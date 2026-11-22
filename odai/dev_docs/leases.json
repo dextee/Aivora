@@ -1193,6 +1193,25 @@
     "revoked_reason": "composer attachments shipped fd55304; revoke after commit per convention; no further writes",
     "revoked_at": "2026-11-22T03:23:56Z"
   },
+  "WO-ECOMGOALS": {
+    "issued_at": "2026-11-22T12:29:40Z",
+    "expires_at": "2026-11-22T14:29:40Z",
+    "minutes": 120,
+    "paths": [
+      "server.mjs",
+      "server/",
+      "src/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 30,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-ECOMINT": {
     "issued_at": "2026-11-22T11:46:44Z",
     "expires_at": "2026-11-22T15:46:44Z",

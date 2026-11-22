@@ -1,9 +1,10 @@
 import type { ConnSource } from "./lib";
 
-export type View = "talk" | "launch" | "mystore" | "customers" | "leads" | "docs" | "store";
+export type View = "talk" | "goals" | "launch" | "mystore" | "customers" | "leads" | "docs" | "store";
 
 const NAV: { id: View; icon: string; label: string; sub: string }[] = [
   { id: "talk", icon: "🎙", label: "Talk to AIVORA", sub: "voice partner — interprets & routes itself" },
+  { id: "goals", icon: "🎯", label: "My Goals", sub: "tell a goal · plan · approve · report" },
   { id: "launch", icon: "🚀", label: "Launch Business", sub: "voice→plan→agents→artifacts" },
   { id: "mystore", icon: "🏪", label: "My Store", sub: "Hashmeta store · catalog · sync" },
   { id: "customers", icon: "👥", label: "My Customers", sub: "customers · history · AI insights" },

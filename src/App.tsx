@@ -8,6 +8,7 @@ import { PlanView } from "./PlanView";
 import { MyStoreView } from "./MyStoreView";
 import { CustomersView } from "./CustomersView";
 import { LeadsView } from "./LeadsView";
+import { GoalsView } from "./GoalsView";
 import { ManagementView } from "./ManagementView";
 import { SecurityView } from "./SecurityView";
 import type { StoreSpec } from "./lib";
@@ -19,6 +20,7 @@ const TITLES: Record<View, { t: string; s: string }> = {
   talk: { t: "AIVORA", s: "Objective-Driven Autonomous Intelligence" },
   docs: { t: "Document Translation", s: "text · photo · voice note" },
   store: { t: "Online Store Builder", s: "ecommerce catalog pages" },
+  goals: { t: "My Goals", s: "plan · approve · track · report" },
   launch: { t: "Launch Business", s: "voice→plan→agents→artifacts" },
   mystore: { t: "My Store", s: "Hashmeta store · catalog · sync status" },
   customers: { t: "My Customers", s: "customers · purchase history · AI insights" },
@@ -99,6 +101,7 @@ export function App() {
       {view === "mystore" && <MyStoreView />}
       {view === "customers" && <CustomersView />}
       {view === "leads" && <LeadsView />}
+      {view === "goals" && <GoalsView />}
       </>}
       {mode === "management" && <ManagementView />}
       {mode === "security" && <SecurityView />}

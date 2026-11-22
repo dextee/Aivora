@@ -18,7 +18,7 @@ import { chatQ4 } from "./server/qwen4.mjs";
 import { startRun, decideSpend, userView, managementView, securityView } from "./server/odai/workflow.mjs";
 import { modeAccess, POLICY_VERSION, UNAVAILABLE_RULE_SETS } from "./server/odai/policy.mjs";
 import { get, DEMO_TENANT } from "./server/odai/store.mjs";
-import { createObjective, approve, resume, finalReport, project, listObjectives, view as objView } from "./server/odai/objectives.mjs";
+import { createObjective, approve, resume, finalReport, project, listObjectives, view as objView, salesReport, setDemoSales, requestBoost, applyConstraint } from "./server/odai/objectives.mjs";
 import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
 import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
 import { runWithToken, supabaseConfigured, isOffline, putUpload, approveUpload, requestCtx } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
@@ -432,6 +432,10 @@ async function odaiRoute(url, request, response) {
     }
     if (request.method === "POST" && action === "resume") return json(await resume(tenant, oid));
     if (request.method === "POST" && action === "report") return json(finalReport(tenant, oid));
+    if (request.method === "GET" && action === "report") return json(salesReport(tenant, oid));
+    if (request.method === "POST" && action === "demo-sales") { let raw = ""; for await (const c of request) raw += c; return json(await setDemoSales(tenant, oid, JSON.parse(raw || "{}"))); }
+    if (request.method === "POST" && action === "boost") { let raw = ""; for await (const c of request) raw += c; const { amount } = JSON.parse(raw || "{}"); return json(await requestBoost(tenant, oid, { amount })); }
+    if (request.method === "POST" && action === "constraint") { let raw = ""; for await (const c of request) raw += c; const { organic_only } = JSON.parse(raw || "{}"); return json(await applyConstraint(tenant, oid, { organic_only })); }
     if (request.method === "GET" && !action) return json(await resume(tenant, oid));
   }
   if (path === "/modes") return json({ contract: "ui_modes_9_0", policy_version: POLICY_VERSION, unavailable_rule_sets: UNAVAILABLE_RULE_SETS, modes: ["user", "management", "security"], mode_change_grants_permission: false });

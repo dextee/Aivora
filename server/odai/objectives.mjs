@@ -299,3 +299,61 @@ export function listObjectives(tenantId) {
   for (const [k, o] of store) if (k.startsWith(tenantId + "/")) out.push({ objective_id: o.objective_id, tenant_id: o.tenant_id, statement: o.statement, criterion: o.criterion, state: o.state, created_at: o.created_at });
   return out.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
 }
+
+/* ---- ECOMMERCE-parity additive behaviours (Phase 2b): Augmented AI Report + governed boost guardrail.
+ * Purely additive — existing exports/signatures unchanged, so MAIN's registry/intents engine + tests are untouched.
+ * Operates defensively on MAIN's obj shape; never dispatches; external writes stay NEVER; sales are "waiting"
+ * until a real source is wired (demo figures labelled, never counted as verified). ---- */
+const SPEND_CEILING = 50; // S$ — owner-set paid-promotion ceiling
+function ensureGoalFields(obj) { obj.policy_constraints = obj.policy_constraints || { organic_only: false }; obj.spend_requests = obj.spend_requests || []; if (!("sales" in obj)) obj.sales = null; return obj; }
+
+export async function applyConstraint(tenantId, objective_id, { organic_only } = {}) {
+  const obj = store.get(tenantId + "/" + objective_id); if (!obj || obj.tenant_id !== tenantId) return { error: "objective not found for tenant" };
+  ensureGoalFields(obj); obj.policy_constraints.organic_only = !!organic_only;
+  logEvent(get(tenantId), { runId: obj.run_id, beat: "·", actor: "owner", kind: "POLICY_CONSTRAINT", decision: "ALLOW", note: `organic_only=${obj.policy_constraints.organic_only}` });
+  await persist(obj); return view(obj);
+}
+
+export async function requestBoost(tenantId, objective_id, { amount } = {}) {
+  const obj = store.get(tenantId + "/" + objective_id); if (!obj || obj.tenant_id !== tenantId) return { error: "objective not found for tenant" };
+  ensureGoalFields(obj); const amt = Number(amount); if (!Number.isFinite(amt) || amt <= 0) return { error: "amount must be a positive number" };
+  const ceiling_passed = amt <= SPEND_CEILING; const organic = !!obj.policy_constraints.organic_only;
+  let decision, blocked_by, rule;
+  if (!ceiling_passed) { decision = "BLOCKED"; blocked_by = "spend_ceiling"; rule = `S$${SPEND_CEILING} ceiling`; }
+  else if (organic) { decision = "BLOCKED"; blocked_by = "organic_only"; rule = "owner approved organic promotion only"; }
+  else { decision = "BLOCKED"; blocked_by = "external_writes_disabled"; rule = "9.0 connector_readiness: external writes NEVER"; }
+  const at = new Date().toISOString();
+  const rec = { at, amount: amt, currency: "SGD", decision, blocked_by, rule, ceiling_passed, organic_only: organic, provider_submissions: 0, spent: 0, side_effects: "DISABLED" };
+  obj.spend_requests.push(rec);
+  logEvent(get(tenantId), { runId: obj.run_id, beat: "·", actor: "guardrails", kind: "BOOST_REQUEST", decision: "BLOCK", note: `S$${amt} ceiling_passed=${ceiling_passed} organic_only=${organic} blocked_by=${blocked_by} provider_submissions=0 spent=0` });
+  await persist(obj);
+  const message = blocked_by === "organic_only" ? `S$${amt} is within the S$${SPEND_CEILING} budget, but you approved organic promotion only. The boost was blocked — no ad submitted, S$0 spent.`
+    : blocked_by === "spend_ceiling" ? `S$${amt} exceeds the S$${SPEND_CEILING} spend ceiling. Blocked — no ad submitted, S$0 spent.`
+    : `Paid/publish/messaging side effects are disabled; boost blocked before any provider call — S$0 spent.`;
+  return { objective_id, tenant_id: tenantId, ...rec, message };
+}
+
+export function salesReport(tenantId, objective_id) {
+  const obj = store.get(tenantId + "/" + objective_id); if (!obj || obj.tenant_id !== tenantId) return { error: "objective not found for tenant" };
+  ensureGoalFields(obj);
+  const c = obj.criterion || {}; const target = c.target_units || c.pct || c.cap_myr || 0;
+  const win = obj.goal_window || { days: 7, created_at: obj.created_at, timezone: "Asia/Singapore" };
+  const endMs = new Date(win.created_at).getTime() + (win.days || 7) * 86400000; const daysLeft = Math.max(0, Math.ceil((endMs - Date.now()) / 86400000));
+  const s = obj.sales || null; let cupsSold = null, orders = null, lastSync = null, status = "waiting", salesLabel = "verified";
+  if (s && typeof s.cups === "number") { cupsSold = s.cups; orders = (typeof s.orders === "number") ? s.orders : null; lastSync = s.at || null; status = "ok"; salesLabel = s.label || "verified"; }
+  const progress = (target > 0 && cupsSold != null) ? Math.min(100, Math.round(cupsSold / target * 100)) : null;
+  const remaining = cupsSold != null ? Math.max(0, target - cupsSold) : null;
+  const pace = (remaining != null && daysLeft > 0) ? Math.ceil(remaining / daysLeft) : (remaining || 0);
+  const organic = !!obj.policy_constraints.organic_only;
+  const spoken = status !== "ok" ? `Waiting for sales data. Your goal is ${target}, with ${daysLeft} days left. No verified sales yet.`
+    : `You've done ${cupsSold} of ${target}${salesLabel && /demo/i.test(salesLabel) ? " (demo, not verified)" : ""}. ${remaining} to go, ${daysLeft} days left — about ${pace} a day.` + (organic ? " Paid promotion is off (organic only)." : "");
+  return { objective_id, tenant_id: tenantId, state: obj.state, goal: { target_cups: target, window_days: win.days || 7, created_at: win.created_at, timezone: win.timezone, days_left: daysLeft }, sales: { status, label: salesLabel, cups_sold: cupsSold, orders, progress_pct: progress, cups_remaining: remaining, daily_pace_needed: pace, last_sync: lastSync }, briefing: spoken, spoken, sales_source: { available: false, note: "No authorized sales source wired to this objective — showing 'Waiting for sales data'. Demo figures labelled, never counted as verified." }, constraints: { organic_only: organic } };
+}
+
+export async function setDemoSales(tenantId, objective_id, { cups, orders, label } = {}) {
+  const obj = store.get(tenantId + "/" + objective_id); if (!obj || obj.tenant_id !== tenantId) return { error: "objective not found for tenant" };
+  ensureGoalFields(obj); const c = Number(cups); if (!Number.isFinite(c) || c < 0) return { error: "cups must be a non-negative number" };
+  obj.sales = { cups: c, orders: Number.isFinite(Number(orders)) ? Number(orders) : null, at: new Date().toISOString(), label: label ? String(label).slice(0, 40) : "DEMO — not verified", demo: true };
+  logEvent(get(tenantId), { runId: obj.run_id, beat: "·", actor: "owner", kind: "SALES_SYNC", decision: "ALLOW", note: `DEMO sales set cups=${c} (labeled, not verified)` });
+  await persist(obj); return salesReport(tenantId, objective_id);
+}
