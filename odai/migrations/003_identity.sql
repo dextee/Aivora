@@ -44,15 +44,18 @@ $$;
 
 -- Helpers must be callable by signed-in users (so the RLS policies can evaluate them)
 -- and by the service role (admin), but NOT by anon. Revoke the default PUBLIC grant,
--- then explicitly allow authenticated + service_role.
-DO $$
-DECLARE fn text;
-BEGIN
-  FOREACH fn IN ARRAY ARRAY['odai_is_member','odai_can_write','odai_is_any_member','odai_is_admin_any','odai_is_admin_member'] LOOP
-    EXECUTE format('REVOKE ALL ON FUNCTION public.%I(text) FROM PUBLIC', fn);
-    EXECUTE format('GRANT EXECUTE ON FUNCTION public.%I(text) TO authenticated, service_role', fn);
-  END LOOP;
-END $$;
+-- then explicitly allow authenticated + service_role. Signatures differ: the *_any
+-- predicates take no argument.
+REVOKE ALL ON FUNCTION public.odai_is_member(text)        FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION public.odai_is_member(text)    TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.odai_can_write(text)        FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION public.odai_can_write(text)    TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.odai_is_any_member()        FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION public.odai_is_any_member()    TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.odai_is_admin_any()         FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION public.odai_is_admin_any()     TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.odai_is_admin_member(text)  FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION public.odai_is_admin_member(text) TO authenticated, service_role;
 
 -- Membership table: a user can read their own row; an owner/admin of a tenant can manage that tenant's members.
 ALTER TABLE odai_workspace_member ENABLE ROW LEVEL SECURITY;
