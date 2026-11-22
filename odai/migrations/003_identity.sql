@@ -7,36 +7,37 @@ CREATE TABLE IF NOT EXISTS odai_workspace_member (
   PRIMARY KEY (tenant_id, user_id)
 );
 
--- Helper predicates. SECURITY INVOKER + fixed search_path so they evaluate under the
--- caller's own RLS context (they read odai_workspace_member, which exposes only the
--- caller's own membership row to non-service roles). Never exposed via the API schema.
+-- Helper predicates. SECURITY DEFINER (owned by a privileged role) so they read
+-- odai_workspace_member WITHOUT re-triggering its own RLS policies (which would
+-- recurse). They return only a boolean and never leak row data; EXECUTE is granted
+-- to authenticated + service_role and revoked from anon/PUBLIC.
 CREATE OR REPLACE FUNCTION odai_is_member(p_tenant text) RETURNS boolean
-LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public AS $$
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT EXISTS (SELECT 1 FROM odai_workspace_member m
                  WHERE m.user_id = auth.uid() AND m.tenant_id = p_tenant
                    AND m.role IN ('owner','admin','member'));
 $$;
 
 CREATE OR REPLACE FUNCTION odai_can_write(p_tenant text) RETURNS boolean
-LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public AS $$
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT EXISTS (SELECT 1 FROM odai_workspace_member m
                  WHERE m.user_id = auth.uid() AND m.tenant_id = p_tenant
                    AND m.role IN ('owner','admin'));
 $$;
 
 CREATE OR REPLACE FUNCTION odai_is_any_member() RETURNS boolean
-LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public AS $$
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT EXISTS (SELECT 1 FROM odai_workspace_member m WHERE m.user_id = auth.uid());
 $$;
 
 CREATE OR REPLACE FUNCTION odai_is_admin_any() RETURNS boolean
-LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public AS $$
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT EXISTS (SELECT 1 FROM odai_workspace_member m
                  WHERE m.user_id = auth.uid() AND m.role IN ('owner','admin'));
 $$;
 
 CREATE OR REPLACE FUNCTION odai_is_admin_member(p_tenant text) RETURNS boolean
-LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public AS $$
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT EXISTS (SELECT 1 FROM odai_workspace_member m
                  WHERE m.user_id = auth.uid() AND m.tenant_id = p_tenant
                    AND m.role IN ('owner','admin'));
