@@ -584,9 +584,12 @@ async function odaiRoute(url, request, response) {
       }
       const inboxMatch = inboxIntent(statement);
       if (inboxMatch) {
-        if (!isOffline()) return json({ error: "Online inbox blocked: auth membership and schema integration required" }, 503);
-        if (tenant !== DEMO_TENANT) return json({ error: "Offline inbox tenant denied" }, 403);
-        return json({ inbox: true, category: inboxMatch.category, ...listInbox(tenant, inboxMatch) });
+        if (tenant !== DEMO_TENANT && isOffline()) return json({ error: "Offline inbox tenant denied" }, 403);
+        try {
+          const ctx = await validateInboxMembership({ workspaceId: isOffline() ? tenant : (tenant || DEMO_TENANT), requiredPermission: "read" });
+          const listed = await nbList(ctx, inboxMatch);
+          return json({ inbox: true, category: inboxMatch.category, ...listed });
+        } catch (e) { return json({ error: e.message, ...(e.code ? { code: e.code } : {}) }, e.status || 503); }
       }
       if (objective_id == null && /remind me .*before .*(meeting|appointment)/i.test(statement)) {
         if (!isOffline()) return json({ error: "Online appointments blocked", code: "APPOINTMENTS_ONLINE_BLOCKED" }, 503);

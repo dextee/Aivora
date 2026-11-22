@@ -421,3 +421,5 @@
 2026-11-22T22:54:34Z|ISSUE|WO-INBOXONLINE|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/migrations/,odai/dev_docs/|minutes=120|budget=40|single_use=0|expires_at=2026-11-23T00:54:34Z
 2026-11-22T22:55:02Z|HOOK_ALLOW|WO-INBOXONLINE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/migrations/009_inbox_persistence.sql+package.json+server.mjs+server/odai/db.mjs+server/odai/notifications.mjs+src/InboxView.tsx+src/styles.css+tests/inbox_online.test.mjs
 2026-11-22T22:56:15Z|REVOKE|WO-INBOXONLINE|reason=Online inbox shipped 8d65d92; revoke after commit
+2026-11-22T22:56:16Z|HOOK_ALLOW|WO-INBOXONLINE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T23:00:51Z|ISSUE|WO-INBOXONLINE2|ops=check,commit|paths=server.mjs,odai/dev_docs/|minutes=60|budget=10|single_use=0|expires_at=2026-11-23T00:00:51Z
