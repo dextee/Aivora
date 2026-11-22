@@ -1577,8 +1577,12 @@
     ],
     "budget": 40,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 8
+    },
+    "revoked": true,
+    "revoked_reason": "Online inbox shipped 8d65d92; revoke after commit",
+    "revoked_at": "2026-11-22T22:56:15Z"
   },
   "WO-MAILVOICE": {
     "issued_at": "2026-11-22T19:20:17Z",
