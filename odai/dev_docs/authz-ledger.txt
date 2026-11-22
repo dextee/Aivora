@@ -287,3 +287,7 @@
 2026-11-21T16:54:35Z|ISSUE|WO-WIN-PORT|ops=check,commit|paths=server/odai/,tests/,odai/dev_docs/|minutes=180|budget=60|single_use=0|expires_at=2026-11-21T19:54:35Z
 2026-11-21T18:07:27Z|HOOK_ALLOW|WO-WIN-PORT|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server/odai/db.mjs+server/odai/objectives.mjs+server/odai/registry.mjs+tests/awa_scenarios.test.mjs+tests/objectives.test.mjs+tests/odai.test.mjs+tests/policy_registry.test.mjs+tests/q4.test.mjs+tests/registry.test.mjs+tests/runtime.test.mjs
 2026-11-21T18:08:18Z|REVOKE|WO-WIN-PORT|reason=Windows portability fix shipped db4a656; revoke after commit per convention; no further writes
+2026-11-21T18:08:41Z|HOOK_ALLOW|WO-WIN-PORT|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T03:08:47Z|ISSUE|WO-ATTACH|ops=check,commit|paths=server.mjs,server/,src/,tests/|minutes=180|budget=40|single_use=0|expires_at=2026-11-22T06:08:47Z
+2026-11-22T03:14:38Z|ISSUE|WO-ATTACH|ops=check,commit|paths=server.mjs,server/,src/,tests/,.gitignore|minutes=180|budget=40|single_use=0|expires_at=2026-11-22T06:14:38Z
+2026-11-22T03:15:49Z|ISSUE|WO-ATTACH|ops=check,commit|paths=server.mjs,server/,src/,tests/,.gitignore,package.json|minutes=180|budget=40|single_use=0|expires_at=2026-11-22T06:15:49Z

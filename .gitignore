@@ -8,3 +8,5 @@ coverage/
 *.log
 .DS_Store
 tools/__pycache__/
+# feat/composer-attachments: local per-instance upload mirror (never committed)
+odai/uploads/

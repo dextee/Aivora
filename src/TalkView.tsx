@@ -14,8 +14,13 @@ import { AdminPanel, parseRegistrySummary, sessionRole, type RegistrySummaryView
  * goals arrive as log_call cards. If the engine ever rejects the session
  * tools, rtc.ts degrades once and TalkView keywords keep routing (toollessRef). */
 
+/* feat/composer-attachments — a stored file shown as a chip in the composer and
+ * echoed on the sent message. `attach` is the rendered (ready) subset. */
+type AttachView = { id: string; name: string; kind: string; size: number; analyzable: boolean };
+type AttachItem = AttachView & { key: string; mime: string; status: "uploading" | "ready" | "error"; error?: string };
+
 type Row =
-  | { who: "me" | "ai" | "sys" | "err"; text: string; label?: string }
+  | { who: "me" | "ai" | "sys" | "err"; text: string; label?: string; attach?: AttachView[] }
   | { who: "biz" }
   | { who: "intents"; items: IntentItem[] }
   | { who: "objective"; label: string; obj: ObjView }
@@ -59,6 +64,11 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
   const [q4text, setQ4text] = useState("");
   const q4busy = useRef(false);
   const q4hist = useRef<{ role: string; content: string }[]>([]); // rolling context, last 12 exchanges
+
+  /* feat/composer-attachments — files staged in the composer via the "+" button */
+  const MAX_UPLOAD = 25 * 1024 * 1024;
+  const [files, setFiles] = useState<AttachItem[]>([]);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   /* UI-01B — the client-side demo role decides which surfaces exist at all.
    * Intent chips + the registry summary are fetched ONLY when role is ADMIN
@@ -302,10 +312,59 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     connect("omni");
   }
 
+  /* feat/composer-attachments helpers */
+  const fmtSize = (n: number) => n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(0)} KB` : `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  const kindIcon = (k: string) => k === "image" ? "🖼️" : k === "video" ? "🎬" : k === "audio" ? "🎵" : k === "pdf" ? "📕" : k === "docx" ? "📄" : "📃";
+
+  function readFileBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => { const s = String(fr.result || ""); resolve(s.slice(s.indexOf(",") + 1)); };
+      fr.onerror = () => reject(fr.error);
+      fr.readAsDataURL(file);
+    });
+  }
+
+  async function uploadOne(file: File, key: string) {
+    if (file.size > MAX_UPLOAD) {
+      setFiles((prev) => prev.map((f) => f.key === key ? { ...f, status: "error", error: `too large (${fmtSize(file.size)} > ${fmtSize(MAX_UPLOAD)})` } : f));
+      return;
+    }
+    try {
+      const data = await readFileBase64(file);
+      const res = await api("/api/uploads", { method: "POST", body: JSON.stringify({ name: file.name, mime: file.type, data }) });
+      const j = (await res.json().catch(() => null)) as { ok?: boolean; file?: AttachView; error?: string } | null;
+      if (!res.ok || !j?.ok || !j.file) {
+        setFiles((prev) => prev.map((f) => f.key === key ? { ...f, status: "error", error: j?.error || `upload failed (HTTP ${res.status})` } : f));
+        return;
+      }
+      setFiles((prev) => prev.map((f) => f.key === key ? { ...f, ...j.file!, status: "ready" } : f));
+    } catch (e) {
+      setFiles((prev) => prev.map((f) => f.key === key ? { ...f, status: "error", error: e instanceof Error ? e.message : String(e) } : f));
+    }
+  }
+
+  function pickFiles(list: FileList | null) {
+    if (!list || !list.length) return;
+    const chosen = Array.from(list);
+    const staged: AttachItem[] = chosen.map((file) => ({
+      key: (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`),
+      id: "", name: file.name, mime: file.type, kind: "", size: file.size, analyzable: false, status: "uploading",
+    }));
+    setFiles((prev) => [...prev, ...staged]);
+    staged.forEach((s, i) => void uploadOne(chosen[i], s.key));
+  }
+
+  function removeFile(key: string) { setFiles((prev) => prev.filter((f) => f.key !== key)); }
+
   async function askQ4(forced?: string) {
     const text = String(forced ?? q4text).trim();
     if (!text || q4busy.current) return;
     setQ4text("");
+    /* feat/composer-attachments: capture ready uploads now; they are sent as ids
+     * with this turn and cleared once the request is dispatched. */
+    const ready = files.filter((f) => f.status === "ready" && f.id);
+    const attachView: AttachView[] = ready.map((f) => ({ id: f.id, name: f.name, kind: f.kind, size: f.size, analyzable: f.analyzable }));
     /* UI-01B: the chip bubble is the ADMIN role surface's answer only. For
      * the default USER role the same question falls through to the engine
      * match below (registry scoring — e.g. "what can you run for me" scores
@@ -319,9 +378,10 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
       void askIntentsList();
       return;
     }
-    setRows((r) => [...r, { who: "me", text }]);
+    setRows((r) => [...r, { who: "me", text, ...(attachView.length ? { attach: attachView } : {}) }]);
     if (await tryIntentMatch(text)) return;
     q4busy.current = true;
+    setFiles([]);
     q4hist.current = [...q4hist.current, { role: "user", content: text }].slice(-24);
     setRows((r) => [...r, { who: "ai", text: "", label: "Qwen4-Max" }]);
     let acc = "";
@@ -335,7 +395,7 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
       const res = await fetch(`/api/q4/chat?_t=${Date.now()}`, {
         method: "POST",
         headers: { "content-type": "application/json", ...(cfg?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(cfg)) } : {}) },
-        body: JSON.stringify({ messages: q4hist.current }),
+        body: JSON.stringify({ messages: q4hist.current, ...(ready.length ? { attachments: ready.map((f) => f.id) } : {}) }),
         signal: AbortSignal.timeout(180_000),
       });
       if (!res.ok) {
@@ -409,7 +469,12 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
                 </div>
               )
               : <div className="bub"><span className="tag">{r.label ?? (r.who === "me" ? "You" : "AIVORA")}</span>
-                  <div className="btxt">{r.text || "…"}</div><time>{fmt(secs)}</time></div>}
+                  <div className="btxt">{r.text || "…"}</div>
+                  {r.attach && r.attach.length > 0 && <div className="attachrow">{r.attach.map((a) => (
+                    <span key={a.id} className="attchip" title={a.analyzable ? "text attached to the model" : "stored, not analyzed by the text model"}>
+                      {kindIcon(a.kind)} {a.name} · {fmtSize(a.size)}{a.analyzable ? "" : " · not analyzed"}
+                    </span>))}</div>}
+                  <time>{fmt(secs)}</time></div>}
           </div>
         ))}
       </div>
@@ -431,7 +496,25 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
         </button>
       </div>
 
+      {files.length > 0 && (
+        <div className="attach-tray">
+          {files.map((f) => (
+            <span key={f.key} className={`attchip ${f.status}`} title={f.error || `${f.name} · ${fmtSize(f.size)}`}>
+              {f.status === "uploading" ? "⏳" : f.status === "error" ? "⚠️" : kindIcon(f.kind)} {f.name} · {fmtSize(f.size)}
+              {f.status === "error" && ` — ${f.error}`}
+              <button type="button" className="att-x" aria-label={`Remove ${f.name}`} onClick={() => removeFile(f.key)}>×</button>
+            </span>
+          ))}
+        </div>
+      )}
       <form className="q4bar" onSubmit={(e) => { e.preventDefault(); void askQ4(); }}>
+        <button type="button" className="q4attach" aria-label="Attach a file"
+          onClick={() => fileRef.current?.click()}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+        </button>
+        <input ref={fileRef} type="file" multiple className="hidden-file"
+          accept="video/mp4,audio/mpeg,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,.mp4,.mp3,.png,.jpg,.jpeg,.gif,.webp,.pdf,.docx,.txt,.md"
+          onChange={(e) => { pickFiles(e.target.files); e.target.value = ""; }} />
         <input value={q4text} onChange={(e) => setQ4text(e.target.value)} placeholder="Ask Qwen4-Max anything..."
           aria-label="Ask Qwen4-Max anything" autoComplete="off" />
         <button type="submit" className="q4send" aria-label="Send to Qwen4-Max">

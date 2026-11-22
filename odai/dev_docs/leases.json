@@ -1168,6 +1168,27 @@
     "revoked_reason": "WO-A2 SHIPPED (staged, NO publish; files: tests/policy_registry.test.mjs NEW 19 probes, tests/policy_gaps.txt NEW SEC-05 honest-red, package.json test-chain wiring; AGENTS.md not updated — outside lea",
     "revoked_at": "2026-11-20T15:42:21Z"
   },
+  "WO-ATTACH": {
+    "issued_at": "2026-11-22T03:15:49Z",
+    "expires_at": "2026-11-22T06:15:49Z",
+    "minutes": 180,
+    "paths": [
+      "server.mjs",
+      "server/",
+      "src/",
+      "tests/",
+      ".gitignore",
+      "package.json"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 40,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-SEC05": {
     "issued_at": "2026-11-20T17:50:15Z",
     "expires_at": "2026-11-20T19:20:15Z",

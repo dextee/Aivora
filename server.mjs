@@ -21,6 +21,7 @@ import { get, DEMO_TENANT } from "./server/odai/store.mjs";
 import { createObjective, approve, resume, finalReport, project, listObjectives, view as objView } from "./server/odai/objectives.mjs";
 import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
 import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
+import { storeUpload, getUploadMeta, publicMeta, contextForAttachments, MAX_BYTES } from "./server/uploads.mjs"; // feat/composer-attachments: local upload sink
 
 const host = process.env.HOST;
 const port = Number(process.env.PORT);
@@ -121,6 +122,12 @@ const server = createServer(async (request, response) => {
     if (url.pathname === "/api/q4/chat" && request.method === "POST")
       return q4Chat(request, response);
 
+    if (url.pathname === "/api/uploads" && request.method === "POST")
+      return uploadReceive(request, response);
+
+    if (url.pathname.startsWith("/api/uploads/") && request.method === "GET")
+      return uploadMeta(request, response, url);
+
     if (url.pathname.startsWith("/api/odai/")) return odaiRoute(url, request, response);
 
     if (url.pathname === "/api/store/diag")
@@ -218,8 +225,9 @@ async function q4Chat(request, response) {
     raw += c;
     if (raw.length > 65_536) return send(response, 413, JSON.stringify({ error: "payload too large" }), "application/json; charset=utf-8");
   }
-  let msgIn;
-  try { msgIn = JSON.parse(raw || "{}").messages; } catch { return send(response, 400, JSON.stringify({ error: "bad json" }), "application/json; charset=utf-8"); }
+  let parsed;
+  try { parsed = JSON.parse(raw || "{}"); } catch { return send(response, 400, JSON.stringify({ error: "bad json" }), "application/json; charset=utf-8"); }
+  const msgIn = parsed.messages;
   if (!Array.isArray(msgIn)) return send(response, 400, JSON.stringify({ error: "messages[] required" }), "application/json; charset=utf-8");
 
   const cleaned = msgIn
@@ -227,6 +235,17 @@ async function q4Chat(request, response) {
     .slice(-30);
   if (!cleaned.some((m) => m.role === "user"))
     return send(response, 400, JSON.stringify({ error: "at least one user message required" }), "application/json; charset=utf-8");
+
+  /* feat/composer-attachments: fold any stored attachment context into the last
+   * user turn. Text-extractable files contribute real content; others contribute
+   * an honest "stored, not analyzed" note. Context is built server-side from
+   * ids, so it does not count against the request payload cap above. */
+  const attachCtx = contextForAttachments(parsed.attachments);
+  if (attachCtx) {
+    for (let i = cleaned.length - 1; i >= 0; i--) {
+      if (cleaned[i].role === "user") { cleaned[i] = { ...cleaned[i], content: cleaned[i].content + "\n\n" + attachCtx }; break; }
+    }
+  }
 
   const sys = { role: "system", content: [{ text: "You are AIVORA's Qwen4-Max text brain. Be concise and helpful. Reply in the users language." }] };
   const nativeMsgs = [sys, ...cleaned.map((m) => ({ role: m.role, content: [{ text: m.content }] }))];
@@ -249,6 +268,32 @@ async function q4Chat(request, response) {
     clearInterval(hb);
     try { response.write("data: [DONE]\n\n"); response.end(); } catch { /* closed */ }
   }
+}
+
+/* POST /api/uploads — receive one base64 file (feat/composer-attachments).
+ * Body {name, mime, data:base64}. Validates type + size, stores locally, returns
+ * metadata. No model key required (storing is local). base64 inflates ~4/3, so the
+ * body cap allows a MAX_BYTES file plus JSON wrapper. */
+async function uploadReceive(request, response) {
+  const maxBody = Math.ceil(MAX_BYTES * 1.4) + 65_536;
+  let raw = "";
+  for await (const c of request) {
+    raw += c;
+    if (raw.length > maxBody) return send(response, 413, JSON.stringify({ error: "payload too large" }), "application/json; charset=utf-8");
+  }
+  let body;
+  try { body = JSON.parse(raw || "{}"); } catch { return send(response, 400, JSON.stringify({ error: "bad json" }), "application/json; charset=utf-8"); }
+  const r = storeUpload({ name: body.name, mime: body.mime, data: body.data });
+  if (!r.ok) return send(response, r.status, JSON.stringify({ error: r.error }), "application/json; charset=utf-8");
+  return send(response, 200, JSON.stringify({ ok: true, file: r.meta }), "application/json; charset=utf-8");
+}
+
+/* GET /api/uploads/:id — metadata for a stored attachment (never bytes or full text). */
+function uploadMeta(request, response, url) {
+  const id = decodeURIComponent(url.pathname.slice("/api/uploads/".length));
+  const meta = getUploadMeta(id);
+  if (!meta) return send(response, 404, JSON.stringify({ error: "not found" }), "application/json; charset=utf-8");
+  return send(response, 200, JSON.stringify({ file: publicMeta(meta) }), "application/json; charset=utf-8");
 }
 
 async function storeStream(request, response) {

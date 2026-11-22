@@ -374,6 +374,19 @@ button { font-family: inherit; }
 .q4send:active { transform: scale(.92); }
 .usermode .q4bar { background: #f6faf6; border-top-color: #d8e6db; }
 .usermode .q4bar input { background: #fbfdfb; border-color: #d9e6dd; color: #000; }
+/* feat/composer-attachments — "+" button, staged tray, message chips.
+   The hidden file input also lives in .q4bar, so keep it out of the flex flow. */
+.q4bar input[type=file] { position: absolute; flex: 0 0 auto; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; pointer-events: none; }
+.q4attach { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; border: 1px solid #d3e0d6; background: #eef4f0; color: #374151; display: grid; place-items: center; cursor: pointer; transition: transform .12s ease; }
+.q4attach:active { transform: scale(.92); }
+.usermode .q4attach { background: #eef4f0; border-color: #d3e0d6; color: #374151; }
+.attach-tray { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px 0; background: #f6faf6; }
+.attchip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; font: 600 12px var(--font); color: #243b2c; background: #eef4f0; border: 1px solid #d3e0d6; border-radius: 999px; padding: 4px 6px 4px 10px; }
+.attchip.uploading { opacity: .7; }
+.attchip.error { color: #8a1f1f; background: #fbeceb; border-color: #f0c9c6; }
+.attchip .att-x { border: 0; background: transparent; color: inherit; font-size: 15px; line-height: 1; cursor: pointer; padding: 0 2px; }
+.attachrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.attachrow .attchip { background: rgba(0,0,0,.05); border-color: rgba(0,0,0,.08); }
 
 /* ============ WO-10 — minimal USER: ONE subtle intent affordance (chip wall removed) ============
    UI-01 (2026-11-20): the affordance EXPANDED into ten engine-fetched chips.
