@@ -1348,8 +1348,12 @@
     ],
     "budget": 30,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 8
+    },
+    "revoked": true,
+    "revoked_reason": "Business Action shipped; revoke after commit",
+    "revoked_at": "2026-11-22T23:26:32Z"
   },
   "WO-BIZLAB": {
     "issued_at": "2026-11-22T20:43:27Z",

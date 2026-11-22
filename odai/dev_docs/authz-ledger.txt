@@ -430,3 +430,5 @@
 2026-11-22T23:07:13Z|REVOKE|WO-MENUBOTTOM|reason=menu reorder committed
 2026-11-22T23:08:19Z|HOOK_ALLOW|WO-MENUBOTTOM|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-22T23:26:08Z|ISSUE|WO-BIZACTION|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/dev_docs/|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T00:56:08Z
+2026-11-22T23:26:28Z|HOOK_ALLOW|WO-BIZACTION|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package.json+server.mjs+server/odai/business_action.mjs+src/App.tsx+src/BusinessActionView.tsx+src/Menu.tsx+src/styles.css+tests/business_action.test.mjs
+2026-11-22T23:26:32Z|REVOKE|WO-BIZACTION|reason=Business Action shipped; revoke after commit
