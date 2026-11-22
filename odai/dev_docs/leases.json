@@ -1370,8 +1370,12 @@
     ],
     "budget": 20,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 3
+    },
+    "revoked": true,
+    "revoked_reason": "Per-case reports shipped 502aef0; revoke after commit",
+    "revoked_at": "2026-11-22T22:20:59Z"
   },
   "WO-BRAND-MENU": {
     "issued_at": "2026-11-22T15:42:29Z",
