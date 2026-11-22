@@ -411,3 +411,5 @@
 2026-11-22T21:39:59Z|REVOKE|WO-BIZLAB|reason=Business test lab shipped e842d86; revoke after commit per convention
 2026-11-22T21:40:00Z|HOOK_ALLOW|WO-BIZLAB|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-22T22:02:01Z|ISSUE|WO-STORYBOARD|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/dev_docs/|minutes=120|budget=40|single_use=0|expires_at=2026-11-23T00:02:01Z
+2026-11-22T22:02:20Z|HOOK_ALLOW|WO-STORYBOARD|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package.json+server.mjs+server/odai/inbox.mjs+server/odai/storyboard.mjs+src/App.tsx+src/Menu.tsx+src/StoryboardView.tsx+src/styles.css+tests/storyboard.test.mjs
+2026-11-22T22:04:08Z|REVOKE|WO-STORYBOARD|reason=Storyboard shipped 625ceff; revoke after commit

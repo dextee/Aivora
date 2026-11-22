@@ -1941,8 +1941,12 @@
     ],
     "budget": 40,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 9
+    },
+    "revoked": true,
+    "revoked_reason": "Storyboard shipped 625ceff; revoke after commit",
+    "revoked_at": "2026-11-22T22:04:08Z"
   },
   "WO-SUPA-007": {
     "issued_at": "2026-11-22T05:50:39Z",
