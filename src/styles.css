@@ -812,3 +812,20 @@ button { font-family: inherit; }
 .ba-cust-grid dd{margin:0;font-size:13px;font-weight:600;text-align:right}
 .ba-cust-grid div{display:flex;justify-content:space-between;gap:8px}
 .ba-creason{font-size:12px;color:var(--ink2);margin:4px 0 0}
+
+/* Neurosymbolic Trust Layer tab */
+.sh-toptabs{margin:0 0 12px}
+.tl-ver{font-size:12px;color:var(--muted)}
+.tl-ok{color:#067647;font-size:13px}
+.tl-bad{color:#b42318;font-size:13px}
+.tl-msg{font-size:12px;color:var(--muted)}
+.tl-rules{overflow:auto;border:1px solid var(--line);border-radius:10px;margin:8px 0}
+.tl-rules table{width:100%;border-collapse:collapse;font-size:12px}
+.tl-rules th,.tl-rules td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.tl-rules th{background:var(--panel)}
+.tl-propose{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.tl-propose input{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12px;flex:1;min-width:120px}
+.tl-propose button{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;background:#fff;cursor:pointer}
+.tl-log{max-height:220px;overflow:auto;font-size:12px}
+.tl-log p{margin:0 0 6px}
+

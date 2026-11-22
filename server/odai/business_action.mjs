@@ -10,6 +10,7 @@ import { businessView, inventoryMath, deriveInvInput, procurementGuard, purchase
 import { dropshipList } from "./shop_setup.mjs";
 import { composeNew } from "./mail.mjs";
 import { ingestEvent } from "./inbox.mjs";
+import { verifyProcurement, verifyDiscount, verifyCustomerContact } from "./trust_layer.mjs";
 
 const hash = v => createHash("sha256").update(JSON.stringify(v)).digest("hex");
 const cents = v => Math.round(v * 100);
@@ -196,6 +197,13 @@ export function preparePurchaseOrder(tenant, decision_id, { reference } = {}) {
   const v = businessView(tenant, reference);
   const inv = v.inventory.find(i => i.product_id === d.product_ids[0]);
   const cfg = { supplier_id: d.supplier, supplier_verified: true, unit_cost: d.unit_cost, budget: Number(inv?.source_row?.["Max Auto Order (SGD)"]) || 5000, currency: "SGD", costs_complete: true };
+  /* Neurosymbolic Trust Layer gate: deterministic, independent of any LLM proposal. */
+  const approvedSuppliers = [...new Set(v.inventory.map(i => i.source_row?.["Supplier ID"]).filter(Boolean))];
+  const openCommit = v.orders?.filter(o => !["REJECTED", "CANCELLED"].includes(o.status)).reduce((s, o) => s + Math.round(o.total * 100), 0) || 0;
+  const trust = verifyProcurement({ quantity: d.exact_recommended_quantity, unit_cost: d.unit_cost, currency: "SGD", supplier_id: d.supplier, product_exists: !!inv, approved_suppliers: approvedSuppliers, committed_cents: openCommit, budget_cents: Math.round(cfg.budget * 100) });
+  if (["DENY", "QUARANTINE_REQUIRED", "BLOCKED_MISSING_EVIDENCE"].includes(trust.decision)) {
+    throw Object.assign(new Error(`Trust layer ${trust.decision}: ${trust.decision_reason}`), { status: 409, trust });
+  }
   const order = purchaseOrderAction(tenant, { action: "prepare", product_id: d.product_ids[0], config: cfg, reference_date: v.analysis?.reference_date });
   ingestEvent(tenant, { kind: "PROCUREMENT_RECOMMENDED", event_id: randomUUID(), ts: new Date().toISOString(), actor: "ai-ceo", objective_id: d.decision_id, note: `Business Action ${d.decision_id} prepared PO for ${d.product_ids[0]}` });
   return { decision_id, order_id: order.id, deduped: !!order.deduped, quantity: order.quantity, total: order.total, status: order.status };
@@ -204,13 +212,22 @@ export function preparePurchaseOrder(tenant, decision_id, { reference } = {}) {
 /* §16 prepare personalized email drafts (never sends). */
 export function prepareCustomerEmails(tenant, customer_ids, { reference } = {}) {
   const list = customerContactList(tenant, { segment: "ALL", limit: 1000, reference }).filter(c => customer_ids.includes(c.customer_id));
+  /* Trust layer: consent + recipient-count gates before any draft is prepared. */
+  const contactGate = verifyCustomerContact({ recipient_count: list.length, all_recipients_consented: list.every(c => c.consent) });
+  if (["DENY", "QUARANTINE_REQUIRED", "BLOCKED_MISSING_EVIDENCE"].includes(contactGate.decision)) {
+    return { prepared: 0, skipped: list.length, drafts: [], sent: 0, trust: contactGate.decision, trust_reason: contactGate.decision_reason, note: "blocked by Neurosymbolic Trust Layer before any draft" };
+  }
   const drafts = [];
   for (const c of list) {
     if (!c.consent) { drafts.push({ customer_id: c.customer_id, skipped: true, reason: "marketing consent not verified" }); continue; }
     if (!c.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) { drafts.push({ customer_id: c.customer_id, skipped: true, reason: "no valid email on record" }); continue; }
+    const catalog = dropshipList();
+    const prod = catalog.find(p => p.product_id === (c.favorite_product_id || null)) || catalog.find(p => p.name === c.favorite_product);
+    const disc = verifyDiscount({ percent: c.proposed_discount_percent, price: prod?.approved_selling_price ?? null, cost: prod?.supplier_unit_cost ?? null });
+    if (["DENY", "BLOCKED_MISSING_EVIDENCE"].includes(disc.decision)) { drafts.push({ customer_id: c.customer_id, skipped: true, reason: `discount failed trust layer: ${disc.decision_reason}` }); continue; }
     try {
       const d = composeNew(tenant, { to: c.email, subject: `A special offer on ${c.favorite_product || "your favourite coffee"}`, body: `Dear ${c.name}, thank you for your continued support. As one of our valued customers we'd like to offer ${c.proposed_discount_percent}% off ${c.favorite_product || "your favourite coffee"} on your next order of about ${c.suggested_quantity || 1} packs. This offer is a policy-based proposal pending owner approval.` });
-      drafts.push({ customer_id: c.customer_id, draft_id: d.draft_id || d.id, skipped: false });
+      drafts.push({ customer_id: c.customer_id, draft_id: d.draft_id || d.id, skipped: false, trust: disc.decision });
     } catch (e) { drafts.push({ customer_id: c.customer_id, skipped: true, reason: e.message }); }
   }
   ingestEvent(tenant, { kind: "EMAIL_DRAFT_PREPARED", event_id: randomUUID(), ts: new Date().toISOString(), actor: "ai-cmo", objective_id: "BUSINESS_ACTION", note: `${drafts.filter(x => !x.skipped).length} personalized drafts prepared; ${drafts.filter(x => x.skipped).length} skipped (consent)` });

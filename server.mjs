@@ -28,6 +28,7 @@ import { reportPdf, reportXlsx } from "./server/odai/testlab_report.mjs";
 import { listCases as bizLabCases, runCase as bizRunCase, runModule as bizRunModule, runAll as bizRunAll, dev11Verify as bizDev11, consolidate as bizConsolidate, storeReport as bizStore, getReport as bizGetReport, getCaseReport as bizGetCaseReport, newRunId as bizNewRunId } from "./server/odai/business_testlab.mjs";
 import { listScenes as sbScenes, runScene as sbRunScene, runStoryboard as sbRunAll } from "./server/odai/storyboard.mjs";
 import { actionPlan, customerContactList, preparePurchaseOrder, prepareCustomerEmails, contactListCsv, DISCOUNT_POLICY } from "./server/odai/business_action.mjs";
+import { listRules as trustRules, trustStats, evaluateAction as trustEvaluate, proposeRuleChange, approveRuleChange, rollbackRule, listChanges as trustChanges, simulateRule, dualLlmFailureTest, evaluationLog as trustLog, verifyOutboundLink } from "./server/odai/trust_layer.mjs";
 import { validateInboxMembership, listNotifications as nbList, getNotification as nbGet, getUnreadCount as nbUnread, markAsRead as nbMarkRead, markAllAsRead as nbMarkAll, archiveNotification as nbArchive, resolveApproval as nbResolve, healthCheck as nbHealth } from "./server/odai/notifications.mjs";
 import { appointmentIntent, extractAppointment, listAppointments, saveAppointment, confirmAppointment, calendarStatus, appointmentIcs, getAppointment, rescheduleAppointment, cancelAppointment, reconcileAppointment, deliverDueReminders, recordAppointmentSecurityIncident, requestReminder, findAppointmentByObjective } from "./server/odai/appointments.mjs";
 import { connectionStatus, resolveAudience, correctAppointment, checkAvailability, prepareInvitations, authorizeAndDispatch, attemptAudienceExpansion, recordRsvp, attendanceReport } from "./server/odai/appt_workflow.mjs";
@@ -510,6 +511,22 @@ async function odaiRoute(url, request, response) {
         }
         return json({ error: "Unsupported action route" }, 404);
       } catch (e) { return json({ error: e.message }, e.status || 503); }
+    }
+    if (path === "/trust" || path.startsWith("/trust/")) {
+      const rd = async () => { let raw = ""; for await (const c of request) { raw += c; if (raw.length > 65536) throw Object.assign(new Error("Body too large"), { status: 413 }); } try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      try {
+        if (path === "/trust" && request.method === "GET") return json({ stats: trustStats(), rules: trustRules() });
+        if (path === "/trust/log" && request.method === "GET") return json({ evaluations: trustLog(Number(url.searchParams.get("limit")) || 50) });
+        if (path === "/trust/changes" && request.method === "GET") return json({ changes: trustChanges() });
+        if (path === "/trust/dual-llm-test" && request.method === "POST") return json(dualLlmFailureTest());
+        if (path === "/trust/evaluate" && request.method === "POST") { const b = await rd(); return json(trustEvaluate(b.request || {}, b.facts || {}, b.opts || {})); }
+        if (path === "/trust/simulate" && request.method === "POST") { const b = await rd(); return json({ rule_id: b.rule_id, evaluations: simulateRule(b.rule_id, b.fixtures || {}) }); }
+        if (path === "/trust/verify-link" && request.method === "POST") { const b = await rd(); return json(verifyOutboundLink(b.url)); }
+        if (path === "/trust/propose" && request.method === "POST") { const b = await rd(); return json(proposeRuleChange(b.actor || {}, b.rule_id, b.patch || {}, b.rationale)); }
+        if (path === "/trust/approve" && request.method === "POST") { const b = await rd(); return json(approveRuleChange(b.actor || {}, b.change_id)); }
+        if (path === "/trust/rollback" && request.method === "POST") { const b = await rd(); return json(rollbackRule(b.actor || {}, b.rule_id, b.to_version)); }
+        return json({ error: "Unsupported trust route" }, 404);
+      } catch (e) { return json({ error: e.message, ...(e.code ? { code: e.code } : {}) }, e.status || 503); }
     }
     if (path === "/mail" || path.startsWith("/mail/")) {
       if (!isOffline()) return json({ error: "Online mail blocked: validated auth membership and Gmail persistence schema are not integrated; no memory fallback", code: "MAIL_ONLINE_BLOCKED" }, 503);

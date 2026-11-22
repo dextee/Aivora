@@ -2239,6 +2239,27 @@
     "used_by_op": {},
     "revoked": false
   },
+  "WO-TRUST": {
+    "issued_at": "2026-11-22T23:47:43Z",
+    "expires_at": "2026-11-23T01:47:43Z",
+    "minutes": 120,
+    "paths": [
+      "server.mjs",
+      "server/odai/",
+      "src/",
+      "tests/",
+      "package.json",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 40,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-UI01": {
     "issued_at": "2026-11-20T14:35:38Z",
     "expires_at": "2026-11-20T15:35:38Z",

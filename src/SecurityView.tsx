@@ -51,11 +51,56 @@ const ALERTS: Alert[] = [
   { id: "A3", sev: "High", title: "Abnormal purchase quantity detected", agent: "AI Watching AI", status: "Reviewing" },
 ];
 
+/* Neurosymbolic Trust Layer tab — real registry/evaluations from /api/odai/trust. */
+function TrustPanel() {
+  const [data, setData] = useState<{ stats: any; rules: any[] } | null>(null);
+  const [log, setLog] = useState<any[]>([]);
+  const [dual, setDual] = useState<any>(null);
+  const [msg, setMsg] = useState("");
+  const [propose, setPropose] = useState({ rule_id: "", threshold_value: "", rationale: "" });
+  const load = () => { fetch("/api/odai/trust").then(r => r.json()).then(setData).catch(e => setMsg(e.message)); fetch("/api/odai/trust/log?limit=12").then(r => r.json()).then(j => setLog(j.evaluations || [])).catch(() => setLog([])); };
+  useEffect(load, []);
+  const act = async (path: string, body: any) => { try { const r = await fetch("/api/odai/trust/" + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); const j = await r.json(); if (!r.ok) throw new Error(j.error); setMsg(`${path}: ok`); load(); return j; } catch (e) { setMsg(`${path}: ${(e as Error).message}`); return null; } };
+  if (!data) return <p className="sh-empty">Loading trust layer…</p>;
+  const s = data.stats;
+  return (
+    <div className="tl">
+      <div className="sh-grid">
+        {[["Active rules", s.active_rules, "#2f7a3e"], ["Evaluated", s.evaluated, "#101828"], ["Allowed", s.allowed, "#2f7a3e"], ["Denied", s.denied, "#b42318"], ["Require approval", s.require_approval, "#b54708"], ["Missing evidence", s.missing_evidence, "#b54708"], ["Quarantines", s.quarantine, "#b42318"], ["Financial violations prevented", s.financial_violations_prevented, "#b42318"]].map(([l, n, c]) => (
+          <div key={String(l)} className="sh-m"><b style={{ color: String(c) }}>{String(n)}</b><label>{String(l)}</label></div>
+        ))}
+      </div>
+      <p className="tl-ver">Trust version {s.trust_version} · LLM assessments are recorded separately and can never override these decisions.</p>
+      <div className="sh-tabs">
+        <button onClick={() => { const r = act("dual-llm-test", {}).then(setDual); void r; }}>Run dual-LLM failure test</button>
+      </div>
+      {dual && <p className={dual.blocked_despite_llm_approval ? "tl-ok" : "tl-bad"}>Both LLMs approved a prohibited S$60,000 PO → Trust layer: <b>{dual.trust_decision}</b> via {dual.denied_by.join(", ")} · side effects {dual.side_effects}</p>}
+      <h4 className="seclabel">Guardrail Control Centre (owner-only changes)</h4>
+      <div className="tl-rules">
+        <table><thead><tr><th>Rule</th><th>Category</th><th>Type</th><th>Op</th><th>Threshold</th><th>Severity</th><th>Enforce</th><th>v</th></tr></thead>
+          <tbody>{data.rules.map(r => <tr key={r.rule_id}><td title={r.description}>{r.rule_id}</td><td>{r.rule_category}</td><td>{r.rule_type}</td><td>{r.comparison_operator}</td><td>{Array.isArray(r.threshold_value) ? r.threshold_value.length + " allowlisted" : r.threshold_value}</td><td>{r.severity}</td><td>{r.enforcement_action}</td><td>{r.rule_version}</td></tr>)}</tbody>
+        </table>
+      </div>
+      <div className="tl-propose">
+        <input placeholder="rule_id (e.g. GR-FIN-001)" value={propose.rule_id} onChange={e => setPropose({ ...propose, rule_id: e.target.value })} />
+        <input placeholder="new threshold" value={propose.threshold_value} onChange={e => setPropose({ ...propose, threshold_value: e.target.value })} />
+        <input placeholder="rationale" value={propose.rationale} onChange={e => setPropose({ ...propose, rationale: e.target.value })} />
+        <button onClick={() => { const num = Number(propose.threshold_value); void act("propose", { actor: { role: "owner", id: "owner" }, rule_id: propose.rule_id, patch: { threshold_value: Number.isFinite(num) ? num : propose.threshold_value }, rationale: propose.rationale }); }}>Propose change</button>
+        <button onClick={() => { const id = prompt("change_id to approve"); if (id) void act("approve", { actor: { role: "owner", id: "owner" }, change_id: id }); }}>Approve change</button>
+      </div>
+      {msg && <p className="tl-msg">{msg}</p>}
+      <h4 className="seclabel">Recent deterministic evaluations</h4>
+      <div className="tl-log">{log.map(e => <p key={e.decision_id}><b style={{ color: e.decision === "ALLOW" ? "#2f7a3e" : "#b42318" }}>{e.decision}</b> {e.decision_reason} · rules {e.evaluated_rule_ids?.length} · llm(exec={e.llm_assessments?.execution_llm}, sup={e.llm_assessments?.supervising_llm})</p>)}</div>
+    </div>
+  );
+}
+
 export function SecurityView() {
   const [v, setV] = useState<SView | null>(null);
   const [infra, setInfra] = useState<Infra | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [filter, setFilter] = useState<"All" | "Rogue" | "Privacy" | "Anomaly">("All");
+  const [secTab, setSecTab] = useState<"shield" | "trust">("shield");
   const [incidentOpen, setIncidentOpen] = useState(false);
   const [conIdx, setConIdx] = useState(0);
   const timer = useRef<number | null>(null);
@@ -96,6 +141,11 @@ export function SecurityView() {
 
   return (
     <div className="shield">
+      <div className="sh-tabs sh-toptabs">
+        <button className={secTab === "shield" ? "on" : ""} onClick={() => setSecTab("shield")}>Shield</button>
+        <button className={secTab === "trust" ? "on" : ""} onClick={() => setSecTab("trust")}>Neurosymbolic Trust Layer</button>
+      </div>
+      {secTab === "trust" ? <TrustPanel /> : <>
       <div className="sh-pillars">
         <div className="sh-pillars-head">
           <svg viewBox="0 0 64 64" width="56" height="56" aria-hidden>
@@ -257,6 +307,7 @@ export function SecurityView() {
         )}
       </div>
       {err && <p className="mstat bad">✕ {err}</p>}
+      </>}
     </div>
   );
 }
