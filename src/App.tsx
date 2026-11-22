@@ -8,6 +8,8 @@ import { ManagementView } from "./ManagementView";
 import { SecurityView } from "./SecurityView";
 import type { StoreSpec } from "./lib";
 import { probeKey, type ConnSource } from "./lib";
+import { initAuth, isSupabaseConfigured, getAccessToken, onAuth, signOut } from "./auth";
+import { Login } from "./Login";
 
 const TITLES: Record<View, { t: string; s: string }> = {
   talk: { t: "AIVORA", s: "Objective-Driven Autonomous Intelligence" },
@@ -24,12 +26,26 @@ export function App() {
   const [settings, setSettings] = useState(false);
   const [about, setAbout] = useState(false);
   const [conn, setConn] = useState<ConnSource>("checking");
+  const [supaOn, setSupaOn] = useState(false);
+  const [authed, setAuthed] = useState(true); // when Supabase is unconfigured the offline demo is treated as signed-in
+
+  useEffect(() => {
+    let un: () => void = () => {};
+    void initAuth().then((c) => {
+      const on = !!(c.configured);
+      setSupaOn(on);
+      setAuthed(!on || !!getAccessToken());
+      un = onAuth((s) => setAuthed(!!s));
+    });
+    return () => un();
+  }, []);
 
   const refreshConn = () => { void probeKey().then(setConn); };
   async function switchMode(m: "user" | "management" | "security") {
     if (m === mode) { setView("talk"); return; }
     try {
-      const r = await fetch(`/api/odai/view?mode=${m}&_t=${Date.now()}`);
+      const tok = getAccessToken();
+      const r = await fetch(`/api/odai/view?mode=${m}&_t=${Date.now()}`, { headers: tok ? { Authorization: `Bearer ${tok}` } : {} });
       if (!r.ok) { const j = await r.json().catch(() => ({})); setModeErr(j.error || "mode denied by server"); return; }
       setModeErr(null); setMode(m); if (m === "user") setView("talk");
     } catch { setModeErr("cannot reach authorization endpoint"); }
@@ -41,6 +57,9 @@ export function App() {
   const connLine = conn === "env" ? "connected via server"
     : conn === "browser" ? "browser key ✓"
     : conn === "none" ? "add a key to go live" : "connecting…";
+
+  // Supabase configured but no session → show the sign-in gate (offline demo skips this).
+  if (supaOn && !authed) return <Login />;
 
   return (
     <div className={`app${mode === "user" && view === "talk" ? " usermode" : ""}${mode === "management" ? " darkchrome" : ""}${mode === "security" ? " darkchrome-s" : ""}`}>
@@ -61,6 +80,7 @@ export function App() {
           <button className={mode === "management" ? "on p" : ""} onClick={() => switchMode("management")}>MGMT</button>
           <button className={mode === "security" ? "on s" : ""} onClick={() => switchMode("security")}>SHIELD</button>
         </nav>
+        {supaOn && <button className="tb-btn signout" onClick={() => void signOut()} aria-label="Sign out">Sign out</button>}
       </header>
 
       {mode === "user" && <>

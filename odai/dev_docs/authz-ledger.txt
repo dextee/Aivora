@@ -304,3 +304,5 @@
 2026-11-22T04:27:10Z|HOOK_ALLOW|WO-SUPA-RLS2|odai/migrations/003_identity.sql
 2026-11-22T04:31:21Z|HOOK_ALLOW|WO-SUPA-RLS2|odai/migrations/003_identity.sql
 2026-11-22T04:34:34Z|REVOKE|WO-SUPA-RLS2|reason=hosted staging migrations 003-005 applied + RLS verified; revoke after commit
+2026-11-22T04:34:35Z|HOOK_ALLOW|WO-SUPA-RLS2|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T04:44:04Z|ISSUE|WO-SUPA-AUTH|ops=check,commit|paths=src/,server.mjs,tests/,package.json,odai/dev_docs/|minutes=120|budget=30|single_use=0|expires_at=2026-11-22T06:44:04Z

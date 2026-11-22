@@ -3,6 +3,7 @@ import { openRealtimeRtc, type RtcHandle } from "./rtc";
 import { loadConfig, type LiveEvent } from "./lib";
 import { IntentChips, ObjectivePlanCard, objectiveCreateOutcome, parseIntentsResponse, type IntentItem, type ObjView } from "./IntentChips";
 import { AdminPanel, parseRegistrySummary, sessionRole, type RegistrySummaryView, type Role } from "./RoleGate";
+import { getAccessToken } from "./auth";
 
 /* Talk to AIVORA — one big green button, continuous WebRTC session.
  * The partner engine IS qwen-audio-3.1-realtime-flash (rtc.ts PARTNER_MODEL):
@@ -105,9 +106,10 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
 
   async function api(path: string, init?: RequestInit) {
     const c = loadConfig();
+    const tok = getAccessToken();
     return fetch(`${path}${path.includes("?") ? "&" : "?"}_t=${Date.now()}`, {
       ...init,
-      headers: { "content-type": "application/json", ...(c?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}), ...(init?.headers || {}) },
+      headers: { "content-type": "application/json", ...(c?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {}), ...(tok ? { Authorization: `Bearer ${tok}` } : {}), ...(init?.headers || {}) },
     });
   }
 

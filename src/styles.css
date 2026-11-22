@@ -387,6 +387,18 @@ button { font-family: inherit; }
 .attchip .att-x { border: 0; background: transparent; color: inherit; font-size: 15px; line-height: 1; cursor: pointer; padding: 0 2px; }
 .attachrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .attachrow .attchip { background: rgba(0,0,0,.05); border-color: rgba(0,0,0,.08); }
+/* feat: Supabase Auth sign-in gate + header sign-out */
+.login-wrap { min-height: 100dvh; display: grid; place-items: center; background: #f6faf6; padding: 24px; }
+.login-card { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 10px; background: #fff; border: 1px solid #d8e6db; border-radius: 18px; padding: 22px; box-shadow: 0 8px 28px rgba(7,94,84,.06); }
+.login-card h3 { margin: 0 0 4px; font: 800 18px var(--display); color: #0b3d2e; }
+.login-card input { border: 1.5px solid #d9e6dd; border-radius: 12px; padding: 11px 12px; font: 600 14px var(--font); outline: none; }
+.login-card input:focus { border-color: var(--wa-teal); box-shadow: 0 0 0 3px rgba(7,94,84,.08); }
+.login-card .gobtn { margin-top: 4px; }
+.login-card button:disabled { opacity: .55; cursor: default; }
+.login-err { color: #8a1f1f; font: 600 12px var(--font); margin: 0; }
+.login-note { color: var(--wa-teal); font: 600 12px var(--font); margin: 0; }
+.login-alt { border: 0; background: transparent; color: var(--wa-teal); font: 600 13px var(--font); cursor: pointer; }
+.signout { font: 700 12px var(--font); }
 
 /* ============ WO-10 — minimal USER: ONE subtle intent affordance (chip wall removed) ============
    UI-01 (2026-11-20): the affordance EXPANDED into ten engine-fetched chips.

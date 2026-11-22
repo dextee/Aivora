@@ -21,7 +21,7 @@ import { get, DEMO_TENANT } from "./server/odai/store.mjs";
 import { createObjective, approve, resume, finalReport, project, listObjectives, view as objView } from "./server/odai/objectives.mjs";
 import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
 import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
-import { runWithToken, supabaseConfigured, isOffline, putUpload } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
+import { runWithToken, supabaseConfigured, isOffline, putUpload, requestCtx } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
 import { storeUpload, getUploadMeta, publicMeta, contextForAttachments, MAX_BYTES } from "./server/uploads.mjs"; // feat/composer-attachments: local upload sink
 
 const host = process.env.HOST;
@@ -116,6 +116,14 @@ const server = createServer((request, response) => {
 
     if (url.pathname === "/api/keyinfo" && request.method === "GET")
       return send(response, 200, JSON.stringify({ source: KEY() ? "env" : "none" }), "application/json; charset=utf-8");
+
+    // feat: client-safe Supabase auth bootstrap. Publishable key + URL are designed for
+    // clients; the service-role key is NEVER exposed here. When Supabase isn't configured
+    // the app keeps its existing offline/owner-key behavior.
+    if (url.pathname === "/api/config/supabase" && request.method === "GET")
+      return send(response, 200, JSON.stringify(supabaseConfigured()
+        ? { configured: true, url: process.env.SUPABASE_URL, publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY, instanceId: process.env.SUPABASE_INSTANCE_ID }
+        : { configured: false }), "application/json; charset=utf-8");
 
     if (url.pathname === "/api/analyze" && request.method === "POST")
       return analyze(request, response);
@@ -337,6 +345,10 @@ async function odaiRoute(url, request, response) {
   const tenant = url.searchParams.get("tenant") || DEMO_TENANT;
   const json = (obj, status = 200) => send(response, status, JSON.stringify(obj), "application/json; charset=utf-8");
   const path = url.pathname.replace("/api/odai", "");
+  // Supabase mode: every ODAI request must be scoped to a signed-in user (bearer).
+  // Offline / no-env keeps the existing unauthenticated demo behavior.
+  if (supabaseConfigured() && !isOffline() && !requestCtx.getStore()?.token)
+    return json({ error: "A signed-in user is required in Supabase mode", code: "AUTH_REQUIRED" }, 401);
   try {
     if (path === "/company") { const { COMPANY } = await import("./server/odai/store.mjs"); return json({ tenant_id: tenant, company: COMPANY, note: "synthetic demo brand standing in for TGDO per owner instruction; swap odai/config/company_profile.json when real data arrives" }); }
     if (path === "/objectives") {
