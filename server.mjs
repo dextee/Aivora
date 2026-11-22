@@ -29,6 +29,7 @@ import { listLeads, addLead, draftFollowup } from "./server/odai/leads.mjs";
 import { createCampaign as mktCreate, attachAsset as mktAttach, getCampaign as mktGet, latestCampaign as mktLatest } from "./server/odai/marketing.mjs";
 import { createCampaign as hmCreate, uploadCreative as hmUpload, preparePublication as hmPrepare, approvePublication as hmApprove, submit as hmSubmit, getCampaignStatus as hmStatus, getCampaignMetrics as hmMetrics, getRecord as hmRecord } from "./server/odai/hashmeta_adapter.mjs";
 import { seedMock as custSeed, createCustomer, updateCustomer, getCustomer, searchCustomers, importCustomers, addPurchase, getPurchaseHistory, identifyRepeatBuyers, identifyInactiveBuyers, analyzePurchasePatterns, recommendProducts, prepareFollowup, scheduleFollowup, listFollowups, savePurchaseHealed, registerAgent, exportCustomers, generateReport, getThresholds, setThresholds } from "./server/odai/customers.mjs";
+import { runShop, getShop, attemptPriceChange } from "./server/odai/shop_setup.mjs";
 import { storeUpload, getUploadMeta, publicMeta, contextForAttachments, MAX_BYTES } from "./server/uploads.mjs"; // feat/composer-attachments: local upload sink
 
 const host = process.env.HOST;
@@ -365,6 +366,7 @@ async function odaiRoute(url, request, response) {
       if (!statement.trim()) return json({ error: "empty submission" }, 400);
       if (objective_id == null && (hasStoreSession(tenant) || storeIntent(statement))) return json(await storeSetup(tenant, { text: statement, request_id, source }));
       if (objective_id == null && /launch .*coffee business|start .*coffee business|coffee business/i.test(statement)) return json(await submitCoffeePlan(tenant, statement, request_id));
+      if (objective_id == null && /set up my online (coffee )?shop|help me set up .*shop|online coffee shop|set up my shop|my online shop/i.test(statement)) return json(await runShop(tenant, { name: "AIVORA Coffee", language: "English", objective_id: request_id }));
       if (objective_id == null && /best customers|most valuable|lifetime value|not purchased recently|inactive|likely to purchase|repeat buyer|popular product|purchase together|which products|monthly customer report|recommend .*campaign/i.test(statement)) {
         if (/best customers|most valuable|lifetime value/i.test(statement)) return json({ objective: "OBJ-CUSTOMER-001/007", report: generateReport(tenant), top_customers: identifyRepeatBuyers(tenant).sort((a, b) => b.total_purchase_amount - a.total_purchase_amount).slice(0, 5) });
         if (/not purchased recently|inactive/i.test(statement)) return json({ objective: "OBJ-CUSTOMER-002", inactive_customers: identifyInactiveBuyers(tenant) });
@@ -415,6 +417,13 @@ async function odaiRoute(url, request, response) {
       if (path.startsWith("/customers/") && request.method === "PATCH") { const id = decodeURIComponent(path.split("/")[2]); return json(updateCustomer(tenant, id, await body())); }
       if (path.startsWith("/customers/") && request.method === "GET") return json(getCustomer(tenant, decodeURIComponent(path.split("/")[2])));
       return json({ error: "unknown customers route" }, 404); }
+    if (path.startsWith("/shop")) {
+      const rd = async () => { let raw = ""; for await (const c of request) raw += c; try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      if (path === "/shop" && request.method === "POST") return json(await runShop(tenant, await rd()));
+      if (path === "/shop" && request.method === "GET") return json(getShop(tenant));
+      if (path === "/shop/price-test" && request.method === "POST") return json(attemptPriceChange(tenant, await rd()));
+      return json({ error: "unknown shop route" }, 404);
+    }
     if (path === "/company") { const { COMPANY } = await import("./server/odai/store.mjs"); return json({ tenant_id: tenant, company: COMPANY, note: "synthetic demo brand standing in for TGDO per owner instruction; swap odai/config/company_profile.json when real data arrives" }); }
     if (path === "/objectives") {
     if (request.method === "GET") return json({ tenant_id: tenant, objectives: listObjectives(tenant) }); // WO-10R restore list
