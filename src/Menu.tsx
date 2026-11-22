@@ -2,7 +2,7 @@ import type { ConnSource } from "./lib";
 import { useEffect, useState } from "react";
 import { getAccessToken } from "./auth";
 
-export type View = "appointment" | "talk" | "myshop" | "leads" | "docs" | "inbox" | "contacts" | "purchases" | "orders" | "intelligence" | "testlab" | "bizlab";
+export type View = "appointment" | "talk" | "myshop" | "leads" | "docs" | "inbox" | "contacts" | "purchases" | "orders" | "intelligence" | "testlab" | "bizlab" | "storyboard";
 
 const NAV: { id: View; icon: string; label: string; sub: string; children?: { id: View; label: string; sub: string }[] }[] = [
   { id: "talk", icon: "🎙", label: "Talk to AIVORA", sub: "voice partner — interprets & routes itself" },
@@ -16,6 +16,7 @@ const NAV: { id: View; icon: string; label: string; sub: string; children?: { id
   { id: "intelligence", icon: "AI", label: "Business Intelligence", sub: "validated 30-day comparisons" },
   { id: "testlab", icon: "🧪", label: "Inbox Test Lab", sub: "MGMT · 20-case acceptance testing" },
   { id: "bizlab", icon: "📊", label: "Business Test Lab", sub: "MGMT · 45-case BI/PO/customer integration" },
+  { id: "storyboard", icon: "🎬", label: "Storyboard", sub: "judge demo · 14 scenes in order" },
   { id: "docs", icon: "📄", label: "Document Translation", sub: "text, photos & voice notes" },
 ];
 

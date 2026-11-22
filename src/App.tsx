@@ -10,6 +10,7 @@ import { InboxView } from "./InboxView";
 import { BusinessView, type BusinessPage } from "./BusinessView";
 import { TestLabView } from "./TestLabView";
 import { BusinessTestLabView } from "./BusinessTestLabView";
+import { StoryboardView } from "./StoryboardView";
 import { ManagementView } from "./ManagementView";
 import { SecurityView } from "./SecurityView";
 import { probeKey, type ConnSource } from "./lib";
@@ -29,6 +30,7 @@ const TITLES: Record<View, { t: string; s: string }> = {
   inbox: { t: "My Inbox", s: "AIVORA ODAI V0.9BETA" },
   testlab: { t: "Inbox Test Lab", s: "MGMT · acceptance testing" },
   bizlab: { t: "Business Test Lab", s: "MGMT · 45-case integration verification" },
+  storyboard: { t: "Storyboard", s: "judge demo · 14 scenes in order" },
 };
 
 export function App() {
@@ -108,6 +110,7 @@ export function App() {
       {view === "inbox" && <InboxView onSpeak={() => { setTalkAutoStart(true); setTalkNonce((n) => n + 1); setView("talk"); }} onOpen={(target) => { if (target === "security" || target === "management") void switchMode(target); else if (target === "myshop" || target === "talk") goFeature(target); }} />}
         {view === "testlab" && <TestLabView />}
         {view === "bizlab" && <BusinessTestLabView />}
+        {view === "storyboard" && <StoryboardView />}
       </>}
       {mode === "management" && <ManagementView />}
       {mode === "security" && <SecurityView />}

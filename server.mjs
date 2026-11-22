@@ -26,6 +26,7 @@ import { gmailStatus, seedDemo as mailSeed, listEmails, briefing as mailBriefing
 import { listCases as labCases, runCase as labRunCase, runAll as labRunAll, dev11Verify, consolidate as labConsolidate, storeReport as labStore, getReport as labGetReport, newRunId, sandboxTenant } from "./server/odai/inbox_testlab.mjs";
 import { reportPdf, reportXlsx } from "./server/odai/testlab_report.mjs";
 import { listCases as bizLabCases, runCase as bizRunCase, runModule as bizRunModule, runAll as bizRunAll, dev11Verify as bizDev11, consolidate as bizConsolidate, storeReport as bizStore, getReport as bizGetReport, newRunId as bizNewRunId } from "./server/odai/business_testlab.mjs";
+import { listScenes as sbScenes, runScene as sbRunScene, runStoryboard as sbRunAll } from "./server/odai/storyboard.mjs";
 import { appointmentIntent, extractAppointment, listAppointments, saveAppointment, confirmAppointment, calendarStatus, appointmentIcs, getAppointment, rescheduleAppointment, cancelAppointment, reconcileAppointment, deliverDueReminders, recordAppointmentSecurityIncident, requestReminder, findAppointmentByObjective } from "./server/odai/appointments.mjs";
 import { connectionStatus, resolveAudience, correctAppointment, checkAvailability, prepareInvitations, authorizeAndDispatch, attemptAudienceExpansion, recordRsvp, attendanceReport } from "./server/odai/appt_workflow.mjs";
 import { businessScope, businessView, importBatch, runAnalysis, purchaseOrderAction } from "./server/odai/business.mjs";
@@ -465,6 +466,19 @@ async function odaiRoute(url, request, response) {
           response.end(buf); return;
         }
         return json({ error: "Unsupported bizlab route" }, 404);
+      } catch (e) { return json({ error: e.message }, e.status || 503); }
+    }
+    if (path === "/storyboard" || path.startsWith("/storyboard/")) {
+      if (!isOffline()) return json({ error: "Storyboard demo requires offline sandbox mode" }, 503);
+      const rd = async () => { let raw = ""; for await (const c of request) { raw += c; if (raw.length > 65536) throw Object.assign(new Error("Body too large"), { status: 413 }); } try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      try {
+        if (path === "/storyboard/scenes" && request.method === "GET") return json({ scenes: sbScenes() });
+        if (path === "/storyboard/run" && request.method === "POST") {
+          const b = await rd();
+          if (b.scene) return json(await sbRunScene(Number(b.scene)));
+          return json(await sbRunAll());
+        }
+        return json({ error: "Unsupported storyboard route" }, 404);
       } catch (e) { return json({ error: e.message }, e.status || 503); }
     }
     if (path === "/mail" || path.startsWith("/mail/")) {

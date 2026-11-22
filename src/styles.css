@@ -718,3 +718,31 @@ button { font-family: inherit; }
 .btn-ghost{border:1px solid var(--line);border-radius:8px;padding:8px 14px;text-decoration:none;color:var(--ink);font-size:13px}
 .btn-small{border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;background:none;cursor:pointer}
 
+
+/* Competition Storyboard */
+.sb{padding:16px;max-width:860px;margin:0 auto}
+.sb-head h2{margin:0 0 4px}
+.sb-sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+.sb-actions{margin-bottom:10px}
+.sb-summary{display:flex;gap:14px;font-weight:700;flex-wrap:wrap;align-items:center}
+.sb-ready{font-weight:500;color:var(--muted);font-size:13px}
+.sb-note{font-size:12px;color:var(--muted);margin:6px 0 0}
+.sb-error{background:#fef3f2;color:#b42318;padding:10px;border-radius:8px;margin-bottom:10px}
+.sb-list{list-style:none;margin:0;padding:0;counter-reset:sb}
+.sb-scene{border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.sb-scene.running{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 20%,transparent)}
+.sb-row{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.sb-num{width:26px;height:26px;border-radius:50%;background:var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.sb-main{flex:1;display:flex;flex-direction:column}
+.sb-main b{font-size:14px}
+.sb-judge{font-size:12px;color:var(--muted)}
+.sb-status{color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700}
+.sb-detail{border-top:1px solid var(--line);padding:10px 14px;font-size:12px;background:var(--panel)}
+.sb-observed{margin-bottom:8px}
+.sb-exec{margin:6px 0}
+.sb-exec-line{padding:2px 0;font-size:12px}
+.sb-agent{font-weight:700;color:var(--accent)}
+.sb-exec-line em{color:var(--muted);font-style:normal;font-size:11px}
+.sb-audio{color:#b54708;font-size:12px;margin:6px 0}
+.sb-detail pre{background:#0b1220;color:#d6e2ff;padding:8px;border-radius:8px;overflow:auto;max-height:200px;font-size:11px;margin:8px 0 0}
+
