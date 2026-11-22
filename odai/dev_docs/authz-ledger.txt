@@ -298,3 +298,9 @@
 2026-11-22T03:53:39Z|HOOK_ALLOW|WO-SUPA-DB|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/migrations/002_seed_catalog.sql+odai/migrations/003_identity.sql+odai/migrations/004_rls.sql+odai/migrations/005_upload.sql+tools/supa_verify.sql
 2026-11-22T03:58:24Z|HOOK_ALLOW|WO-SUPA-DB|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server.mjs+server/odai/db.mjs+server/odai/objectives.mjs+server/odai/workflow.mjs
 2026-11-22T03:58:47Z|REVOKE|WO-SUPA-DB|reason=Supabase migrations + request-scoped code committed ff323ce/12743b9; offline verified; revoke after commit
+2026-11-22T03:58:48Z|HOOK_ALLOW|WO-SUPA-DB|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T04:26:00Z|ISSUE|WO-SUPA-RLS2|ops=check,commit|paths=odai/migrations/,odai/dev_docs/|minutes=120|budget=20|single_use=0|expires_at=2026-11-22T06:26:00Z
+2026-11-22T04:26:12Z|HOOK_ALLOW|WO-SUPA-RLS2|odai/migrations/003_identity.sql
+2026-11-22T04:27:10Z|HOOK_ALLOW|WO-SUPA-RLS2|odai/migrations/003_identity.sql
+2026-11-22T04:31:21Z|HOOK_ALLOW|WO-SUPA-RLS2|odai/migrations/003_identity.sql
+2026-11-22T04:34:34Z|REVOKE|WO-SUPA-RLS2|reason=hosted staging migrations 003-005 applied + RLS verified; revoke after commit

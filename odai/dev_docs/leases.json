@@ -1242,6 +1242,27 @@
     "revoked_reason": "Supabase migrations + request-scoped code committed ff323ce/12743b9; offline verified; revoke after commit",
     "revoked_at": "2026-11-22T03:58:47Z"
   },
+  "WO-SUPA-RLS2": {
+    "issued_at": "2026-11-22T04:26:00Z",
+    "expires_at": "2026-11-22T06:26:00Z",
+    "minutes": 120,
+    "paths": [
+      "odai/migrations/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 20,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 3
+    },
+    "revoked": true,
+    "revoked_reason": "hosted staging migrations 003-005 applied + RLS verified; revoke after commit",
+    "revoked_at": "2026-11-22T04:34:34Z"
+  },
   "WO-UI01": {
     "issued_at": "2026-11-20T14:35:38Z",
     "expires_at": "2026-11-20T15:35:38Z",
