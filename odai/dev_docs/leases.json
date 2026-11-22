@@ -1233,8 +1233,12 @@
     ],
     "budget": 30,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 4
+    },
+    "revoked": true,
+    "revoked_reason": "upload approval gate committed 409d5ee; offline verified; kept draft (not applied to staging/production); revoke after commit",
+    "revoked_at": "2026-11-22T04:58:13Z"
   },
   "WO-SUPA-AUTH": {
     "issued_at": "2026-11-22T04:44:04Z",
