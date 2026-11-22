@@ -146,6 +146,14 @@ export async function putUpload({ tenantId, uploadId, filename, body, contentTyp
   await op(currentClient(), "insert_receipt", (s) => s.storage.from(UPLOAD_BUCKET).upload(path, body, { contentType, upsert: false }));
   await op(currentClient(), "insert_run", (s) => s.from("odai_upload").insert({
     tenant_id: tenantId, upload_id: uploadId, storage_bucket: UPLOAD_BUCKET, storage_path: path,
-    name: filename, mime: contentType, size: body?.byteLength ?? (body?.length ?? 0) }));
+    name: filename, mime: contentType, size: body?.byteLength ?? (body?.length ?? 0), approved: false }));
   return { bucket: UPLOAD_BUCKET, path };
+}
+
+/** Approve a private upload (owner/admin only — enforced by the odai_approve_upload RPC). */
+export async function approveUpload(tenantId, uploadId) {
+  const s = currentClient();
+  const { data, error } = await s.rpc("odai_approve_upload", { p_tenant: tenantId, p_upload_id: uploadId });
+  if (error) throw new DbOp(error, "approve_upload");
+  return { approved: !!data };
 }

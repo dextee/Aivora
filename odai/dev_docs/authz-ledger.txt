@@ -308,3 +308,5 @@
 2026-11-22T04:44:04Z|ISSUE|WO-SUPA-AUTH|ops=check,commit|paths=src/,server.mjs,tests/,package.json,odai/dev_docs/|minutes=120|budget=30|single_use=0|expires_at=2026-11-22T06:44:04Z
 2026-11-22T04:44:29Z|HOOK_ALLOW|WO-SUPA-AUTH|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package.json+server.mjs+src/App.tsx+src/Login.tsx+src/TalkView.tsx+src/auth.ts+src/styles.css+tests/auth_wiring.test.mjs
 2026-11-22T04:44:42Z|REVOKE|WO-SUPA-AUTH|reason=Supabase Auth login + app wiring committed 1d7338f; offline verified; revoke after commit
+2026-11-22T04:44:43Z|HOOK_ALLOW|WO-SUPA-AUTH|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T04:57:36Z|ISSUE|WO-SUPA-APPROVE|ops=check,commit|paths=odai/migrations/,server.mjs,server/,tests/,odai/dev_docs/|minutes=120|budget=30|single_use=0|expires_at=2026-11-22T06:57:36Z

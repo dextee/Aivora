@@ -142,3 +142,13 @@ test("POST /api/uploads with a disallowed type → 415 JSON error", async () => 
   const j = await res.json();
   assert.equal(typeof j.error, "string");
 });
+
+test("POST /api/odai/uploads/approve → 501 when Supabase not configured (offline)", async () => {
+  const res = await fetch(`${base}/api/odai/uploads/approve?_t=${Date.now()}`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ upload_id: "00000000-0000-0000-0000-000000000001" }),
+  });
+  assert.equal(res.status, 501);
+  const j = await res.json();
+  assert.equal(j.code, "SUPABASE_NOT_CONFIGURED");
+});

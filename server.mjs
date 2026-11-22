@@ -21,7 +21,7 @@ import { get, DEMO_TENANT } from "./server/odai/store.mjs";
 import { createObjective, approve, resume, finalReport, project, listObjectives, view as objView } from "./server/odai/objectives.mjs";
 import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
 import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
-import { runWithToken, supabaseConfigured, isOffline, putUpload, requestCtx } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
+import { runWithToken, supabaseConfigured, isOffline, putUpload, approveUpload, requestCtx } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
 import { storeUpload, getUploadMeta, publicMeta, contextForAttachments, MAX_BYTES } from "./server/uploads.mjs"; // feat/composer-attachments: local upload sink
 
 const host = process.env.HOST;
@@ -405,6 +405,15 @@ async function odaiRoute(url, request, response) {
       return json(await decideSpend(tenant, String(runId), !!approve, Number(cap) || 200));
     }
     if (path === "/catalog") return json({ tenant_id: tenant, review_mode: "QUARANTINE_REVIEW_REQUIRED", products: get(tenant).products.map((p) => ({ id: p.id, name: p.name, currency: p.currency, price: p.website_price, price_type: p.price_type, reseller_authorized: p.reseller_authorized, regulatory: p.regulatory_review_status, review_state: p.review_state })) });
+    if (path === "/uploads/approve" && request.method === "POST") {
+      if (!supabaseConfigured()) return json({ error: "upload approval requires Supabase mode", code: "SUPABASE_NOT_CONFIGURED" }, 501);
+      let raw = ""; for await (const c of request) raw += c;
+      let body; try { body = JSON.parse(raw || "{}"); } catch { return json({ error: "bad json" }, 400); }
+      const uploadId = String(body.upload_id || "");
+      if (!/^[0-9a-fA-F-]{36}$/.test(uploadId)) return json({ error: "upload_id (uuid) required" }, 400);
+      try { return json({ tenant_id: tenant, ...await approveUpload(tenant, uploadId) }); }
+      catch (e) { const m = String(e?.message || e); return json({ error: m }, /42501|not authorized/i.test(m) ? 403 : 400); }
+    }
     return json({ error: "unknown odai path" }, 404);
   } catch (e) { return json({ error: String(e?.message || e) }, 400); }
 }
