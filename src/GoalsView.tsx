@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { authHeader } from "./lib";
 
 /* My Goals — Augmented AI Report for MAIN-FIX. Uses MAIN's shapes: GET /objectives returns an array;
  * the report is salesReport (GET /objectives/:id/report); governed boost + organic-only via the
@@ -22,14 +23,14 @@ export function GoalsView() {
   useEffect(() => { if (!sel) { setRep(null); setDetail(null); return; } (async () => { try { const [r, d] = await Promise.all([fetch(`/api/odai/objectives/${sel}/report?_t=${Date.now()}`), fetch(`/api/odai/objectives/${sel}?_t=${Date.now()}`)]); setRep(await r.json()); setDetail(await d.json()); } catch { /* ignore */ } })(); }, [sel]);
 
   async function createGoal() { if (!text.trim() || busy) return; setBusy(true); setMsg(null);
-    try { const j = await (await fetch(`/api/odai/submit?_t=${Date.now()}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, request_id: `goal:${Date.now()}`, source: "typed" }) })).json();
+    try { const j = await (await fetch(`/api/odai/submit?_t=${Date.now()}`, { method: "POST", headers: { "content-type": "application/json", ...authHeader() }, body: JSON.stringify({ text, request_id: `goal:${Date.now()}`, source: "typed" }) })).json();
       if (j.error) setMsg(j.error); else if (j.objective_id) { setSel(j.objective_id); await refresh(); }
     } catch { setMsg("engine unreachable"); } finally { setText(""); setBusy(false); } }
 
   async function boost() { if (!sel) return; setBusy(true);
-    try { const j = await (await fetch(`/api/odai/objectives/${sel}/boost`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ amount: Number(boostAmt) }) })).json(); setMsg(j.message || (j.error || "boosted")); } finally { setBusy(false); } }
+    try { const j = await (await fetch(`/api/odai/objectives/${sel}/boost`, { method: "POST", headers: { "content-type": "application/json", ...authHeader() }, body: JSON.stringify({ amount: Number(boostAmt) }) })).json(); setMsg(j.message || (j.error || "boosted")); } finally { setBusy(false); } }
   async function organic() { if (!sel) return; setBusy(true);
-    try { await fetch(`/api/odai/objectives/${sel}/constraint`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ organic_only: true }) }); const r = await (await fetch(`/api/odai/objectives/${sel}/report?_t=${Date.now()}`)).json(); setRep(r); setMsg("Organic-only set on this goal."); } finally { setBusy(false); } }
+    try { await fetch(`/api/odai/objectives/${sel}/constraint`, { method: "POST", headers: { "content-type": "application/json", ...authHeader() }, body: JSON.stringify({ organic_only: true }) }); const r = await (await fetch(`/api/odai/objectives/${sel}/report?_t=${Date.now()}`)).json(); setRep(r); setMsg("Organic-only set on this goal."); } finally { setBusy(false); } }
 
   const card: React.CSSProperties = { border: "1px solid var(--line,#2a2f45)", borderRadius: 14, padding: 14 };
   return (

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { authHeader } from "./lib";
 
 /* My Store — the guided "create an online store" flow + the store record.
  * The interview (name → language → confirm) and every follow-up go through the SAME unified
@@ -39,7 +40,7 @@ export function MyStoreView() {
     if (!text.trim() || busy) return;
     setBusy(true); setErr(null);
     try {
-      const j = await (await fetch(`/api/odai/submit?_t=${Date.now()}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, request_id: `store:${Date.now()}`, source: "typed" }) })).json();
+      const j = await (await fetch(`/api/odai/submit?_t=${Date.now()}`, { method: "POST", headers: { "content-type": "application/json", ...authHeader() }, body: JSON.stringify({ text, request_id: `store:${Date.now()}`, source: "typed" }) })).json();
       if (j && (j.catalog || j.store_name)) { setRec(j as StoreRecord); setStep(null); }
       else if (j.error) { setErr(j.error); setStep(j); }
       else setStep(j);
@@ -51,8 +52,8 @@ export function MyStoreView() {
   async function action(kind: "sync" | "regenerate" | "reset") {
     setBusy(true);
     try {
-      if (kind === "reset") { await fetch(`/api/odai/store`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "reset" }) }); setRec(null); setStep(null); await loadLog(); }
-      else { const j = await (await fetch(`/api/odai/store`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: kind }) })).json(); if (j && j.catalog) setRec(j); await loadLog(); }
+      if (kind === "reset") { await fetch(`/api/odai/store`, { method: "POST", headers: { "content-type": "application/json", ...authHeader() }, body: JSON.stringify({ action: "reset" }) }); setRec(null); setStep(null); await loadLog(); }
+      else { const j = await (await fetch(`/api/odai/store`, { method: "POST", headers: { "content-type": "application/json", ...authHeader() }, body: JSON.stringify({ action: kind }) })).json(); if (j && j.catalog) setRec(j); await loadLog(); }
     } catch { setErr("action failed"); } finally { setBusy(false); }
   }
 

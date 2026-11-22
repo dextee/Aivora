@@ -1,0 +1,35 @@
+# Keep the build context lean and secret-free.
+node_modules
+.git
+.githooks
+dist
+.qw-pages
+tests
+tools
+backups
+logs
+workflow
+artefacts
+docs
+DB
+GuideBook
+"Ecommerce store"
+*.log
+*.bak*
+.probe*
+.env
+.env.*
+*.key
+*.pem
+*.pem.*
+odai/appointments
+odai/inbox
+odai/campaigns
+odai/uploads
+odai/dev_docs
+odai/docs
+odai/migrations
+odai/data/business
+Dockerfile
+.dockerignore
+cloudbuild.yaml

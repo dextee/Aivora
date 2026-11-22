@@ -10,7 +10,8 @@
  */
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
-import { extname, resolve, sep } from "node:path";
+import { readFileSync } from "node:fs";
+import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
 import { storeRun, storeDiag, BUILD } from "./server/hashmeta.mjs";
@@ -20,6 +21,11 @@ import { modeAccess, POLICY_VERSION, UNAVAILABLE_RULE_SETS } from "./server/odai
 import { get, DEMO_TENANT } from "./server/odai/store.mjs";
 import { createObjective, approve, resume, finalReport, project, listObjectives, view as objView, salesReport, setDemoSales, requestBoost, applyConstraint } from "./server/odai/objectives.mjs";
 import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
+import { listInbox, updateInbox, inboxIntent } from "./server/odai/inbox.mjs";
+import { gmailStatus, seedDemo as mailSeed, listEmails, briefing as mailBriefing, navigate as mailNavigate, composeReply as mailReply, composeNew as mailComposeNew, amend as mailAmend, prepareDocument as mailDocument, draftFingerprint as mailFingerprint, confirmDispatch as mailDispatch, scanEmail as mailScan, mailContext, resetContext as mailReset, mailIntent, handleMail } from "./server/odai/mail.mjs";
+import { appointmentIntent, extractAppointment, listAppointments, saveAppointment, confirmAppointment, calendarStatus, appointmentIcs, getAppointment, rescheduleAppointment, cancelAppointment, reconcileAppointment, deliverDueReminders, recordAppointmentSecurityIncident, requestReminder, findAppointmentByObjective } from "./server/odai/appointments.mjs";
+import { connectionStatus, resolveAudience, correctAppointment, checkAvailability, prepareInvitations, authorizeAndDispatch, attemptAudienceExpansion, recordRsvp, attendanceReport } from "./server/odai/appt_workflow.mjs";
+import { businessScope, businessView, importBatch, runAnalysis, purchaseOrderAction } from "./server/odai/business.mjs";
 import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
 import { runWithToken, supabaseConfigured, isOffline, putUpload, approveUpload, requestCtx } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
 // ECOMMERCE (V43) coffee-storyboard modules — integrated additively into MAIN's existing dispatcher (no second dispatcher).
@@ -29,7 +35,7 @@ import { listLeads, addLead, draftFollowup } from "./server/odai/leads.mjs";
 import { createCampaign as mktCreate, attachAsset as mktAttach, getCampaign as mktGet, latestCampaign as mktLatest } from "./server/odai/marketing.mjs";
 import { createCampaign as hmCreate, uploadCreative as hmUpload, preparePublication as hmPrepare, approvePublication as hmApprove, submit as hmSubmit, getCampaignStatus as hmStatus, getCampaignMetrics as hmMetrics, getRecord as hmRecord } from "./server/odai/hashmeta_adapter.mjs";
 import { seedMock as custSeed, createCustomer, updateCustomer, getCustomer, searchCustomers, importCustomers, addPurchase, getPurchaseHistory, identifyRepeatBuyers, identifyInactiveBuyers, analyzePurchasePatterns, recommendProducts, prepareFollowup, scheduleFollowup, listFollowups, savePurchaseHealed, registerAgent, exportCustomers, generateReport, getThresholds, setThresholds } from "./server/odai/customers.mjs";
-import { runShop, getShop, attemptPriceChange, dropshipList, addProducts, removeProduct } from "./server/odai/shop_setup.mjs";
+import { runShop, getShop, attemptPriceChange, dropshipList, addProducts, removeProduct, shopQr } from "./server/odai/shop_setup.mjs";
 import { storeUpload, getUploadMeta, publicMeta, contextForAttachments, MAX_BYTES } from "./server/uploads.mjs"; // feat/composer-attachments: local upload sink
 
 const host = process.env.HOST;
@@ -44,6 +50,8 @@ const MODELS = { omni: "qwen3.8-omni-flash-realtime", translate: "qwen3.8-livetr
 
 /* ---------------- static (scaffold) ---------------- */
 const clientRoot = fileURLToPath(new URL("./dist/", import.meta.url));
+const ROOT_DIR = fileURLToPath(new URL("./", import.meta.url));
+
 const clientRootPrefix = clientRoot.endsWith(sep) ? clientRoot : `${clientRoot}${sep}`;
 const indexPath = resolve(clientRoot, "index.html");
 const contentTypes = new Map([
@@ -121,6 +129,16 @@ const server = createServer((request, response) => {
 
     if (url.pathname === "/api/build")
       return send(response, 200, JSON.stringify({ build: BUILD }), "application/json; charset=utf-8");
+
+    // Infrastructure Guardian status (read-only; watchdog writes this file)
+    if (url.pathname === "/api/infra" && request.method === "GET") {
+      try {
+        const st = readFileSync(join(ROOT_DIR, "logs", "guardian_status.json"), "utf8");
+        return send(response, 200, st, "application/json; charset=utf-8");
+      } catch {
+        return send(response, 200, JSON.stringify({ guardian: "not_running" }), "application/json; charset=utf-8");
+      }
+    }
 
     if (url.pathname === "/api/keyinfo" && request.method === "GET")
       return send(response, 200, JSON.stringify({ source: KEY() ? "env" : "none" }), "application/json; charset=utf-8");
@@ -353,17 +371,150 @@ async function odaiRoute(url, request, response) {
   const tenant = url.searchParams.get("tenant") || DEMO_TENANT;
   const json = (obj, status = 200) => send(response, status, JSON.stringify(obj), "application/json; charset=utf-8");
   const path = url.pathname.replace("/api/odai", "");
+  let browserAuth = null;
+  try { browserAuth = JSON.parse(decodeURIComponent(request.headers["x-aivora-auth"] || "null")); } catch { /* optional */ }
+  const provider = {
+    key: KEY() || (typeof browserAuth?.key === "string" ? browserAuth.key : null),
+    ws: process.env.WORKSPACE_ID || browserAuth?.ws || WORKSPACE(),
+    q4ws: process.env.Q4_WORKSPACE_ID || process.env.WORKSPACE_ID || browserAuth?.ws || undefined,
+    region: process.env.QWEN_REGION || browserAuth?.region || REGION(),
+  };
   // Supabase mode: every ODAI request must be scoped to a signed-in user (bearer).
   // Offline / no-env keeps the existing unauthenticated demo behavior.
   if (supabaseConfigured() && !isOffline() && !requestCtx.getStore()?.token)
     return json({ error: "A signed-in user is required in Supabase mode", code: "AUTH_REQUIRED" }, 401);
   try {
+    if (path === "/business" || path.startsWith("/business/") || path === "/customers" || path.startsWith("/customers/")) {
+      businessScope(tenant);
+      if (path === "/business" && request.method === "GET") return json(businessView(tenant, url.searchParams.get("reference_date") || undefined));
+      if (path.startsWith("/business/") && request.method === "POST") {
+        let raw = ""; for await (const c of request) { raw += c; if (raw.length > 2000000) return json({ error: "Import body too large" }, 413); }
+        const body = JSON.parse(raw || "{}");
+        try {
+          if (path === "/business/import") return json(importBatch(tenant, body));
+          if (path === "/business/orders") return json(purchaseOrderAction(tenant, body));
+          return json({ error: "Unsupported business action" }, 400);
+        } catch (e) { return json({ error: e.message }, e.status || 503); }
+      }
+    }
+    if (path === "/mail" || path.startsWith("/mail/")) {
+      if (!isOffline()) return json({ error: "Online mail blocked: validated auth membership and Gmail persistence schema are not integrated; no memory fallback", code: "MAIL_ONLINE_BLOCKED" }, 503);
+      if (tenant !== DEMO_TENANT) return json({ error: "Offline mail tenant denied" }, 403);
+      const rd = async () => { let raw = ""; for await (const c of request) { raw += c; if (raw.length > 65536) throw Object.assign(new Error("Body too large"), { status: 413 }); } try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      try {
+        if (path === "/mail" && request.method === "GET") return json(listEmails(tenant));
+        if (path === "/mail/gmail-status" && request.method === "GET") return json(gmailStatus());
+        if (path === "/mail/seed" && request.method === "POST") return json(mailSeed(tenant));
+        if (path === "/mail/briefing" && request.method === "GET") return json(mailBriefing(tenant));
+        if (path === "/mail/context" && request.method === "GET") return json(mailContext(tenant));
+        if (path === "/mail/reset" && request.method === "POST") return json(mailReset(tenant));
+        if (path === "/mail/fingerprint" && request.method === "GET") return json(mailFingerprint(tenant));
+        if (path === "/mail/handle" && request.method === "POST") { const b = await rd(); return json(await handleMail(tenant, String(b.text || ""))); }
+        if (path === "/mail/navigate" && request.method === "POST") { const b = await rd(); return json(mailNavigate(tenant, String(b.text || ""))); }
+        if (path === "/mail/reply" && request.method === "POST") { const b = await rd(); return json(mailReply(tenant, String(b.text || ""))); }
+        if (path === "/mail/compose-new" && request.method === "POST") { const b = await rd(); return json(mailComposeNew(tenant, { to: b.to, subject: b.subject, body: b.body })); }
+        if (path === "/mail/amend" && request.method === "POST") { const b = await rd(); return json(mailAmend(tenant, String(b.text || ""))); }
+        if (path === "/mail/document" && request.method === "POST") { const b = await rd(); return json(mailDocument(tenant, String(b.type || "quotation"), { payment_verified: b.payment_verified === true, items: b.items })); }
+        if (path === "/mail/scan" && request.method === "POST") { const b = await rd(); return json(mailScan(tenant, b.message_id)); }
+        if (path === "/mail/dispatch" && request.method === "POST") { const b = await rd(); return json(await mailDispatch(tenant, { approved: b.approved === true, expected_fingerprint: b.expected_fingerprint, actor: b.actor || "owner" })); }
+        return json({ error: "Unsupported mail route" }, 404);
+      } catch (e) { return json({ error: e.message, ...(e.code ? { code: e.code } : {}), ...(e.current_fingerprint ? { current_fingerprint: e.current_fingerprint } : {}) }, e.status || 503); }
+    }
+    if (path === "/inbox" || path.startsWith("/inbox/")) {
+      if (!isOffline()) return json({ error: "Online inbox blocked: validated membership and notification persistence schema are not integrated; no memory fallback", code: "INBOX_ONLINE_BLOCKED" }, 503);
+      if (tenant !== DEMO_TENANT) return json({ error: "Offline inbox tenant denied" }, 403);
+      if (get(tenant).inbox_persistence_failed) return json({ error: "Inbox event persistence failed; completeness cannot be verified" }, 503);
+      if (request.method === "GET" && path === "/inbox") return json(listInbox(tenant, Object.fromEntries(url.searchParams)));
+      if (request.method === "POST") {
+        let raw = ""; for await (const c of request) { raw += c; if (raw.length > 4096) return json({ error: "Body too large" }, 413); }
+        const body = JSON.parse(raw || "{}");
+        try { return json(updateInbox(tenant, path.split("/")[2], body.action)); }
+        catch (e) { return json({ error: e.message }, e.status || 503); }
+      }
+      return json({ error: "Unsupported inbox method" }, 405);
+    }
+    if (path === "/appointments" || path.startsWith("/appointments/")) {
+      if (!isOffline()) return json({ error: "Online appointments blocked: validated membership and calendar persistence schema are not integrated; no memory fallback", code: "APPOINTMENTS_ONLINE_BLOCKED" }, 503);
+      if (tenant !== DEMO_TENANT) { recordAppointmentSecurityIncident(tenant, { action: request.method + " " + path, agent_id: request.headers["x-aivora-agent-id"] || "unknown" }); return json({ error: "Offline appointments tenant denied" }, 403); }
+      const rd = async () => { let raw = ""; for await (const c of request) { raw += c; if (raw.length > 65536) throw Object.assign(new Error("Body too large"), { status: 413 }); } try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      try {
+        if (path === "/appointments" && request.method === "GET") return json(listAppointments(tenant));
+        if (path === "/appointments" && request.method === "POST") { const b = await rd(); return json(saveAppointment(tenant, b, { inject_failure: b.inject_failure })); }
+        if (path === "/appointments/extract" && request.method === "POST") { const b = await rd(); return json(extractAppointment(String(b.text || ""), b.reference_now ? new Date(b.reference_now) : new Date(), { tenant, objective_id: b.objective_id })); }
+        if (path === "/appointments/reconcile" && request.method === "POST") return json(reconcileAppointment(tenant, await rd()));
+        if (path === "/appointments/reminders/tick" && request.method === "POST") { const b = await rd(); return json(deliverDueReminders(tenant, b.now)); }
+        if (path === "/appointments/calendar-status" && request.method === "GET") return json(calendarStatus());
+        if (path === "/appointments/connections" && request.method === "GET") return json(connectionStatus());
+        if (path === "/appointments/audience" && request.method === "POST") { const b = await rd(); return json(resolveAudience(tenant, String(b.text || ""))); }
+        const seg = path.split("/");
+        if (seg[2] && seg[3] === "correct" && request.method === "POST") { const b = await rd(); return json(correctAppointment(tenant, decodeURIComponent(seg[2]), String(b.text || ""))); }
+        if (seg[2] && seg[3] === "availability" && request.method === "GET") return json(checkAvailability(tenant, decodeURIComponent(seg[2])));
+        if (seg[2] && seg[3] === "prepare-invitations" && request.method === "POST") { const b = await rd(); return json(prepareInvitations(tenant, decodeURIComponent(seg[2]), b.audience_text ? String(b.audience_text) : null)); }
+        if (seg[2] && seg[3] === "dispatch" && request.method === "POST") { const b = await rd(); return json(await authorizeAndDispatch(tenant, decodeURIComponent(seg[2]), { approved: b.approved === true, expected_fingerprint: b.expected_fingerprint, actor: b.actor || "owner" })); }
+        if (seg[2] && seg[3] === "expansion-test" && request.method === "POST") { const b = await rd(); return json(attemptAudienceExpansion(tenant, decodeURIComponent(seg[2]), String(b.agent_id || "rogue-test-agent"))); }
+        if (seg[2] && seg[3] === "rsvp" && request.method === "POST") { const b = await rd(); return json(recordRsvp(tenant, decodeURIComponent(seg[2]), b)); }
+        if (seg[2] && seg[3] === "attendance" && request.method === "GET") return json(attendanceReport(tenant, decodeURIComponent(seg[2])));
+        if (seg[2] && !seg[3] && request.method === "GET") return json(getAppointment(tenant, decodeURIComponent(seg[2])));
+        if (seg[2] && seg[3] === "confirm" && request.method === "POST") return json(await confirmAppointment(tenant, decodeURIComponent(seg[2])));
+        if (seg[2] && seg[3] === "reschedule" && request.method === "POST") return json(rescheduleAppointment(tenant, decodeURIComponent(seg[2]), await rd()));
+        if (seg[2] && seg[3] === "cancel" && request.method === "POST") return json(cancelAppointment(tenant, decodeURIComponent(seg[2])));
+        if (seg[2] && seg[3] === "ics" && request.method === "GET") {
+          const ics = appointmentIcs(tenant, decodeURIComponent(seg[2]));
+          response.writeHead(200, { "content-type": "text/calendar; charset=utf-8", "content-disposition": `attachment; filename="${ics.filename}"`, "x-content-type-options": "nosniff" });
+          response.end(ics.content);
+          return;
+        }
+        return json({ error: "Unsupported appointments route" }, 404);
+      } catch (e) { return json({ error: e.message, ...(e.code ? { code: e.code } : {}), ...(e.conflicting_appointment ? { conflicting_appointment: e.conflicting_appointment } : {}), ...(e.alternatives ? { alternatives: e.alternatives } : {}), ...(e.appointment_id ? { appointment_id: e.appointment_id } : {}) }, e.status || 503); }
+    }
     /* ---- ECOMMERCE (V43) coffee-storyboard integration — additive routes on MAIN's dispatcher ---- */
     if (path === "/submit" && request.method === "POST") {
       let raw = ""; for await (const c of request) raw += c;
       const { text, request_id, source, objective_id } = JSON.parse(raw || "{}");
       const statement = String(text || "").slice(0, 300);
       if (!statement.trim()) return json({ error: "empty submission" }, 400);
+      if (/how is my business doing|analy[sz]e .*business|business intelligence|customer contacts|purchase history|purchase orders/i.test(statement)) {
+        try { businessScope(tenant); return json(runAnalysis(tenant, JSON.parse(raw || "{}").reference_date)); }
+        catch (e) { return json({ error: e.message }, e.status || 503); }
+      }
+      if (mailIntent(statement) || /^(yes|proceed|go ahead|confirm|approve|yes send)\b/i.test(statement)) {
+        if (!isOffline()) return json({ error: "Online mail blocked: auth membership and Gmail schema integration required", code: "MAIL_ONLINE_BLOCKED" }, 503);
+        if (tenant !== DEMO_TENANT) return json({ error: "Offline mail tenant denied" }, 403);
+        try { return json({ mail: true, ...(await handleMail(tenant, statement)) }); }
+        catch (e) { return json({ error: e.message, ...(e.current_fingerprint ? { current_fingerprint: e.current_fingerprint } : {}) }, e.status || 503); }
+      }
+      const inboxMatch = inboxIntent(statement);
+      if (inboxMatch) {
+        if (!isOffline()) return json({ error: "Online inbox blocked: auth membership and schema integration required" }, 503);
+        if (tenant !== DEMO_TENANT) return json({ error: "Offline inbox tenant denied" }, 403);
+        return json({ inbox: true, category: inboxMatch.category, ...listInbox(tenant, inboxMatch) });
+      }
+      if (objective_id == null && /remind me .*before .*(meeting|appointment)/i.test(statement)) {
+        if (!isOffline()) return json({ error: "Online appointments blocked", code: "APPOINTMENTS_ONLINE_BLOCKED" }, 503);
+        if (tenant !== DEMO_TENANT) { recordAppointmentSecurityIncident(tenant, { action: "submit reminder" }); return json({ error: "Offline appointments tenant denied" }, 403); }
+        try { return json({ reminder_request: true, ...requestReminder(tenant, statement) }); }
+        catch (e) { return json({ error: e.message }, e.status || 503); }
+      }
+      /* Voice corrections stay on the SAME appointment objective (no new draft).
+       * Only genuine correction/cancel utterances route here — a new request that
+       * happens to reuse an old objective ID still goes through extraction. */
+      if (objective_id != null && isOffline() && tenant === DEMO_TENANT
+        && /\b(change|move|reschedule|cancel|add|remove|make|remind|invite)\b/i.test(statement)) {
+        let existingAppt = null;
+        try { existingAppt = findAppointmentByObjective(tenant, String(objective_id)); } catch { /* scope */ }
+        if (existingAppt) {
+          try {
+            if (/\bcancel\b/i.test(statement)) return json({ appointment_cancelled: true, ...cancelAppointment(tenant, existingAppt.id) });
+            return json({ appointment_correction: true, ...correctAppointment(tenant, existingAppt.id, statement) });
+          } catch (e) { return json({ error: e.message, ...(e.alternatives ? { alternatives: e.alternatives } : {}) }, e.status || 503); }
+        }
+      }
+      if (appointmentIntent(statement)) {
+        if (!isOffline()) return json({ error: "Online appointments blocked: auth membership and calendar persistence schema are not integrated", code: "APPOINTMENTS_ONLINE_BLOCKED" }, 503);
+        if (tenant !== DEMO_TENANT) { recordAppointmentSecurityIncident(tenant, { action: "submit appointment", agent_id: request.headers["x-aivora-agent-id"] || "unknown" }); return json({ error: "Offline appointments tenant denied" }, 403); }
+        const sb = JSON.parse(raw || "{}");
+        return json({ appointment: true, ...extractAppointment(statement, sb.reference_now ? new Date(sb.reference_now) : new Date(), { tenant, objective_id: objective_id || request_id || sb.objective_id }) });
+      }
       if (objective_id == null && (hasStoreSession(tenant) || storeIntent(statement))) return json(await storeSetup(tenant, { text: statement, request_id, source }));
       if (objective_id == null && /launch .*coffee business|start .*coffee business|coffee business/i.test(statement)) return json(await submitCoffeePlan(tenant, statement, request_id));
       if (objective_id == null && /set up my online (coffee )?shop|help me (set up|open) .*shop|open (an?|my|another) (online )?shop|online coffee shop|set up my shop|my online shop/i.test(statement)) return json(await runShop(tenant, { name: "AIVORA Coffee", language: "English", objective_id: request_id }));
@@ -374,7 +525,7 @@ async function odaiRoute(url, request, response) {
         if (/popular product|purchase together|which products/i.test(statement)) return json({ objective: "OBJ-CUSTOMER-008/009", patterns: analyzePurchasePatterns(tenant) });
         return json({ objective: "OBJ-CUSTOMER-008", report: generateReport(tenant) });
       }
-      return json(await createObjective(tenant, statement)); // MAIN's own objective engine for other goals
+      return json(await createObjective(tenant, statement, provider)); // MAIN's own objective engine for other goals
     }
     if (path === "/plan" && request.method === "POST") { let raw = ""; for await (const c of request) raw += c; const { statement, request_id } = JSON.parse(raw || "{}"); return json(await submitCoffeePlan(tenant, String(statement || "Launch my RM4 coffee business"), request_id)); }
     if (path.startsWith("/plan/") && request.method === "GET") return json(getPlanById(tenant, decodeURIComponent(path.split("/")[2])));
@@ -425,6 +576,7 @@ async function odaiRoute(url, request, response) {
       if (path === "/shop/add" && request.method === "POST") { const b = await rd(); return json(addProducts(tenant, b.product_ids || [])); }
       if (path === "/shop/remove" && request.method === "POST") { const b = await rd(); return json(removeProduct(tenant, String(b.product_id || ""))); }
       if (path === "/shop/price-test" && request.method === "POST") return json(attemptPriceChange(tenant, await rd()));
+      if (path === "/shop/qr" && request.method === "GET") return json(await shopQr());
       return json({ error: "unknown shop route" }, 404);
     }
     if (path === "/company") { const { COMPANY } = await import("./server/odai/store.mjs"); return json({ tenant_id: tenant, company: COMPANY, note: "synthetic demo brand standing in for TGDO per owner instruction; swap odai/config/company_profile.json when real data arrives" }); }
@@ -433,7 +585,7 @@ async function odaiRoute(url, request, response) {
     let raw = ""; for await (const c of request) raw += c;
     const body = JSON.parse(raw || "{}");
     const statement = body.statement || body.text || body.objective || body.utterance; // WO-10R restore V38 body fields
-    return json(await createObjective(tenant, String(statement || "").slice(0, 300)));
+    return json(await createObjective(tenant, String(statement || "").slice(0, 300), provider));
   }
   if (path.startsWith("/objectives/")) {
     const seg = path.split("/"); const oid = seg[2], action = seg[3];
@@ -463,7 +615,7 @@ async function odaiRoute(url, request, response) {
       const match = matchIntent(utterance);
       const autocreate = url.searchParams.get("autocreate"); // owner gate WO-09: only "true" launches, else side-effect-free match
       if (autocreate === "true" && match.intent && match.intent.engine === "objective" && match.intent.objective_template) {
-        const created = await createObjective(tenant, match.intent.objective_template);
+        const created = await createObjective(tenant, match.intent.objective_template, provider);
         return json({ tenant_id: tenant, launch: "autocreate", intent: match.intent, score: match.score, objective: created });
       }
       return json({ tenant_id: tenant, launch: "match-only", intent: match.intent, score: match.score });
@@ -496,7 +648,7 @@ async function odaiRoute(url, request, response) {
       catch (e) { const m = String(e?.message || e); return json({ error: m }, /42501|not authorized/i.test(m) ? 403 : 400); }
     }
     return json({ error: "unknown odai path" }, 404);
-  } catch (e) { return json({ error: String(e?.message || e) }, 400); }
+  } catch (e) { return json({ error: String(e?.message || e) }, e.status || 400); }
 }
 
 /* glue for the Hashmeta bridge: read body, build env, send module response */

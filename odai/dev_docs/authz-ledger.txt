@@ -356,3 +356,48 @@
 2026-11-22T13:56:09Z|ISSUE|WO-MYSHOP2|ops=check,commit|paths=server.mjs,server/,src/,tests/,odai/dev_docs/|minutes=240|budget=40|single_use=0|expires_at=2026-11-22T17:56:09Z
 2026-11-22T13:56:10Z|HOOK_ALLOW|WO-MYSHOP2|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server.mjs+server/odai/shop_setup.mjs+src/App.tsx+src/Menu.tsx+src/MyShopView.tsx+tests/shop_setup.test.mjs
 2026-11-22T13:56:14Z|REVOKE|WO-MYSHOP2|reason=My Shop dropshipping integration shipped; external sync/verify honestly pending; revoke after commit
+2026-11-22T13:56:15Z|HOOK_ALLOW|WO-MYSHOP2|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T14:52:54Z|ISSUE|WO-SHOPANIM|ops=check,commit|paths=server.mjs,server/,src/,tests/,package.json,package-lock.json,odai/dev_docs/|minutes=240|budget=60|single_use=0|expires_at=2026-11-22T18:52:54Z
+2026-11-22T14:53:11Z|HOOK_ALLOW|WO-SHOPANIM|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package-lock.json+package.json+server.mjs+server/odai/shop_setup.mjs+src/MyShopView.tsx+tests/shop_setup.test.mjs
+2026-11-22T14:55:37Z|HOOK_ALLOW|WO-SHOPANIM|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package-lock.json+package.json+server.mjs+server/odai/shop_setup.mjs+src/MyShopView.tsx+tests/shop_setup.test.mjs
+2026-11-22T15:05:52Z|HOOK_ALLOW|WO-SHOPANIM|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package-lock.json+package.json+server.mjs+server/odai/shop_setup.mjs+src/App.tsx+src/Menu.tsx+src/MyShopView.tsx+tests/shop_setup.test.mjs
+2026-11-22T15:10:36Z|ISSUE|WO-APPOINTMENT|ops=check|paths=server.mjs,server/odai/,src/,tests/,package.json|minutes=180|budget=80|single_use=0|expires_at=2026-11-22T18:10:36Z
+2026-11-22T15:16:47Z|ISSUE|WO-BETA-BRAND|ops=check,commit|paths=src/,index.html|minutes=60|budget=10|single_use=0|expires_at=2026-11-22T16:16:47Z
+2026-11-22T15:18:14Z|REVOKE|WO-BETA-BRAND|reason=Branding edit completed; no commit requested
+2026-11-22T15:19:49Z|ISSUE|WO-MYDOCUMENTS|ops=check|paths=server.mjs,server/odai/documents.mjs,src/,tests/documents.test.mjs,package.json,package-lock.json|minutes=180|budget=80|single_use=0|expires_at=2026-11-22T18:19:49Z
+2026-11-22T15:22:38Z|ISSUE|WO-MYINBOX|ops=check|paths=server.mjs,server/odai/store.mjs,server/odai/inbox.mjs,src/App.tsx,src/Menu.tsx,src/TalkView.tsx,src/InboxView.tsx,src/styles.css,tests/inbox.test.mjs|minutes=180|budget=40|single_use=0|expires_at=2026-11-22T18:22:38Z
+2026-11-22T15:32:29Z|ISSUE|WO-CUSTOMER-BI|ops=check|paths=server.mjs,server/odai/,src/,tests/|minutes=180|budget=100|single_use=0|expires_at=2026-11-22T18:32:29Z
+2026-11-22T15:42:29Z|ISSUE|WO-BRAND-MENU|ops=check,commit|paths=src/|minutes=30|budget=10|single_use=0|expires_at=2026-11-22T16:12:29Z
+2026-11-22T15:43:07Z|REVOKE|WO-BRAND-MENU|reason=Menu branding updated; no commit requested
+2026-11-22T16:37:22Z|ISSUE|WO-OBJECTIVE-AUTH|ops=edit,test|paths=server.mjs,server/odai/objectives.mjs,server/qwen4.mjs,src/,tests/|minutes=90|budget=50|single_use=0|expires_at=2026-11-22T18:07:22Z
+2026-11-22T16:46:24Z|ISSUE|WO-REMOVE-V441|ops=check,commit|paths=src/,server.mjs,tools/livestream.py|minutes=60|budget=20|single_use=0|expires_at=2026-11-22T17:46:24Z
+2026-11-22T16:49:01Z|REVOKE|WO-REMOVE-V441|reason=V44.1 removed locally; no commit requested
+2026-11-22T16:51:10Z|ISSUE|WO-ROGUE-20261123|ops=edit,check|paths=server/odai/,server.mjs,src/SecurityView.tsx,tests/|minutes=120|budget=100|single_use=0|expires_at=2026-11-22T18:51:10Z
+2026-11-22T16:54:19Z|REVOKE|WO-ROGUE-20261123|reason=IMPLEMENTATION_BLOCKED_EDITOR_UNAVAILABLE
+2026-11-22T17:07:06Z|ISSUE|WO-EXCELIMPORT|ops=check,commit|paths=src/,server/odai/,package.json,package-lock.json|minutes=60|budget=20|single_use=0|expires_at=2026-11-22T18:07:06Z
+2026-11-22T17:08:52Z|REVOKE|WO-EXCELIMPORT|reason=Excel preview and import implemented; no commit requested
+2026-11-22T17:12:44Z|ISSUE|WO-CUSTOMER-UI|ops=check,commit|paths=src/|minutes=60|budget=20|single_use=0|expires_at=2026-11-22T18:12:44Z
+2026-11-22T17:16:06Z|REVOKE|WO-CUSTOMER-UI|reason=Customer interface updated locally
+2026-11-22T17:16:18Z|ISSUE|WO-CUSTOMER-UI|ops=check,commit|paths=src/|minutes=30|budget=10|single_use=0|expires_at=2026-11-22T17:46:18Z
+2026-11-22T17:17:08Z|REVOKE|WO-CUSTOMER-UI|reason=Customer UI build verified
+2026-11-22T17:18:21Z|ISSUE|WO-SHOP-COMPLETION|ops=check,commit|paths=src/|minutes=60|budget=20|single_use=0|expires_at=2026-11-22T18:18:21Z
+2026-11-22T17:21:06Z|REVOKE|WO-SHOP-COMPLETION|reason=Local completion UI updated; no commit requested
+2026-11-22T17:23:49Z|ISSUE|WO-APPOINTMENTUI|ops=check,commit|paths=src/|minutes=60|budget=20|single_use=0|expires_at=2026-11-22T18:23:49Z
+2026-11-22T17:26:19Z|REVOKE|WO-APPOINTMENTUI|reason=Native appointment UI compiled; no commit requested
+2026-11-22T17:28:40Z|ISSUE|WO-SHOP-LAYOUT|ops=check,commit|paths=src/|minutes=30|budget=10|single_use=0|expires_at=2026-11-22T17:58:40Z
+2026-11-22T17:30:01Z|REVOKE|WO-SHOP-LAYOUT|reason=Terminal reduced and fixed store link built
+2026-11-22T17:31:16Z|ISSUE|WO-TERMINAL-CLICK|ops=check,commit|paths=src/|minutes=30|budget=10|single_use=0|expires_at=2026-11-22T18:01:16Z
+2026-11-22T17:32:34Z|REVOKE|WO-TERMINAL-CLICK|reason=Terminal shown only by prepare click
+2026-11-22T17:34:47Z|ISSUE|WO-STORE-IFRAME|ops=check,commit|paths=src/|minutes=30|budget=10|single_use=0|expires_at=2026-11-22T18:04:47Z
+2026-11-22T17:36:11Z|REVOKE|WO-STORE-IFRAME|reason=In-app storefront frame implemented
+2026-11-22T17:38:44Z|ISSUE|WO-SHOP-REVEAL|ops=check,commit|paths=src/|minutes=30|budget=10|single_use=0|expires_at=2026-11-22T18:08:44Z
+2026-11-22T17:41:43Z|REVOKE|WO-SHOP-REVEAL|reason=Staged UI reveal implemented without fabricated events
+2026-11-22T17:44:13Z|ISSUE|WO-APPOINTMENT-ENTRY|ops=check,commit|paths=src/|minutes=30|budget=10|single_use=0|expires_at=2026-11-22T18:14:13Z
+2026-11-22T17:45:41Z|REVOKE|WO-APPOINTMENT-ENTRY|reason=Appointment empty-state interface updated
+2026-11-22T17:55:27Z|ISSUE|WO-APPOINTMENT-SPEAK|ops=check,commit|paths=src/|minutes=30|budget=10|single_use=0|expires_at=2026-11-22T18:25:27Z
+2026-11-22T17:56:17Z|REVOKE|WO-APPOINTMENT-SPEAK|reason=Speak button reuses existing voice button sizing; calendar wiring pending authorization design
+2026-11-22T18:25:49Z|ISSUE|WO-APTEST|ops=check,commit|paths=server.mjs,server/odai/,tests/,package.json,odai/dev_docs/|minutes=240|budget=60|single_use=0|expires_at=2026-11-22T22:25:49Z
+2026-11-22T18:44:29Z|ISSUE|WO-APPT-WA|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/dev_docs/|minutes=240|budget=60|single_use=0|expires_at=2026-11-22T22:44:29Z
+2026-11-22T19:09:08Z|REVOKE|WO-APPT-WA|reason=Voice->calendar->WhatsApp appointment workflow implemented and verified; no commit requested
+2026-11-22T19:20:17Z|ISSUE|WO-MAILVOICE|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/dev_docs/|minutes=240|budget=60|single_use=0|expires_at=2026-11-22T23:20:17Z
+2026-11-22T19:51:37Z|REVOKE|WO-MAILVOICE|reason=Voice inbox + voice-to-email + translate clarification + anomaly reasons implemented and verified; no commit requested

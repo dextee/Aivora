@@ -4,6 +4,9 @@
  * isolation enforced by explicit tenantId on every accessor.
  */
 import { readFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { ingestEvent } from "./inbox.mjs";
+import { isOffline } from "./db.mjs";
 import { fileURLToPath } from "node:url";
 
 const load = (p) => JSON.parse(readFileSync(fileURLToPath(new URL(p, import.meta.url)), "utf8"));
@@ -34,7 +37,12 @@ export function get(id) {
 }
 
 export function logEvent(t, e) {
-  t.trace.push({ ts: new Date().toISOString(), ...e });
+  const event = { ts: new Date().toISOString(), ...e, event_id: e.event_id || randomUUID() };
+  t.trace.push(event);
+  if (isOffline()) {
+    try { ingestEvent(t.id, event); }
+    catch { t.inbox_persistence_failed = true; }
+  }
   if (t.trace.length > 400) t.trace.shift();
   return t.trace[t.trace.length - 1];
 }

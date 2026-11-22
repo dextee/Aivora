@@ -10,3 +10,15 @@ coverage/
 tools/__pycache__/
 # feat/composer-attachments: local per-instance upload mirror (never committed)
 odai/uploads/
+# appointment workflow: runtime records (never committed)
+odai/appointments/
+# voice inbox / mail / business / campaign runtime stores (never committed)
+odai/inbox/
+odai/mail/
+odai/campaigns/
+odai/data/business/
+odai/data/shop_*.json
+logs/
+# local backups and probe artifacts
+*.bak*
+.probe*

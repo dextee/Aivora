@@ -47,7 +47,9 @@ const LNAME: Record<string, string> = { en: "English", zh: "中文", yue: "廣�
 
 type UState = { objective: string | null; tasks_done?: string; whats_done: string[]; awaiting: string | null; company?: { name: string; synthetic?: boolean } };
 
-export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOpenStore(seed: { storeName?: string; products?: string; market?: string; language?: string }): void }) {
+export type AppointmentDraft = { title: string; contact: string; phone: string; email: string; date: string; start: string; end: string; type: string; location: string; agenda: string; reminder: string; question?: string | null; objective_id?: string };
+
+export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness, onOpenAppointment, autoStart }: { onOpenBusiness(): void; onOpenInbox(): void; onOpenDocs(): void; onOpenStore(seed: { storeName?: string; products?: string; market?: string; language?: string }): void; onOpenAppointment?(draft: AppointmentDraft): void; autoStart?: boolean }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"idle" | "connecting" | "partner" | "interpreter">("idle");
   const [target, setTarget] = useState("en");
@@ -60,6 +62,11 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
   const [odaiU, setOdaiU] = useState<{ objective: string | null; tasks_done?: string; whats_done: string[]; awaiting: string | null; company?: { name: string; synthetic?: boolean } } | null>(null);
   const pairOpen = useRef(false);
   const toollessRef = useRef(false);
+  /* voice-to-translate clarification + voice-to-email dictation */
+  const [pendingTranslate, setPendingTranslate] = useState(false);
+  const [emailComposeMode, setEmailComposeMode] = useState(false);
+  const emailBuf = useRef<string[]>([]);
+  const emailTo = useRef<string>("");
 
   /* V31 — Qwen4-Max text composer (independent of the voice session) */
   const [q4text, setQ4text] = useState("");
@@ -173,6 +180,76 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
    * restate hint is shown VERBATIM. Either way the objective stops at its
    * awaiting-owner gates — the client never approves anything (WO-09 stays). */
   async function tryIntentMatch(utterance: string): Promise<boolean> {
+    /* voice-to-translate: resolve the voice/document clarification */
+    if (pendingTranslate) {
+      if (/\b(voice|speak|spoken|live|口译|语音|口语)\b/i.test(utterance)) { resolveTranslate("voice"); return true; }
+      if (/\b(document|file|upload|paper|文档|文件)\b/i.test(utterance)) { resolveTranslate("document"); return true; }
+    }
+    /* voice-to-email: begin dictation conversation */
+    if (/\b(write|compose|draft) (an? |the )?email\b|\bnew email\b|\bi want to (write|send) (an? )?email\b|写邮件|寫郵件|发电邮/i.test(utterance)) {
+      setEmailComposeMode(true); emailBuf.current = []; emailTo.current = "";
+      setRows((r) => [...r, { who: "sys", text: "✉️ Email mode. Tell me who to send it to and dictate the message. Say “send it” when ready — I’ll open Inbox for your confirmation." }]);
+      if (state === "idle") connect("omni");
+      return true;
+    }
+    /* voice-to-email: confirm send -> prepare draft -> Inbox confirmation */
+    if (emailComposeMode && /\b(send it|send the email|confirm send|yes send|send now|send email|发送|寄出)\b/i.test(utterance)) {
+      const body = emailBuf.current.join("\n").trim();
+      const to = emailTo.current || (utterance.match(/[\w.+-]+@[\w-]+\.[\w.]+/) || [])[0] || "";
+      try {
+        const res = await api("/api/odai/mail/compose-new", { method: "POST", body: JSON.stringify({ to, subject: "Voice email", body }) });
+        const j = await res.json();
+        if (res.ok) { setRows((r) => [...r, { who: "ai", text: j.spoken }]); setEmailComposeMode(false); emailBuf.current = []; try { engRef.current?.stop(); } catch { /* handoff */ } setState("idle"); window.setTimeout(onOpenInbox, 500); }
+        else setRows((r) => [...r, { who: "err", text: j.error || "Could not prepare the email." }]);
+      } catch { setRows((r) => [...r, { who: "err", text: "Mail service unreachable; nothing was sent." }]); }
+      return true;
+    }
+    if (emailComposeMode && /\b(cancel email|stop email|exit email)\b/i.test(utterance)) { setEmailComposeMode(false); emailBuf.current = []; setRows((r) => [...r, { who: "sys", text: "Email mode cancelled." }]); return true; }
+    /* accumulate dictated email content (recipient or body) */
+    if (emailComposeMode) {
+      const m = utterance.match(/(?:to|send to|recipient)\s+([\w.+-]+@[\w-]+\.[\w.]+)/i);
+      if (m) emailTo.current = m[1];
+      else emailBuf.current.push(utterance);
+      return true;
+    }
+    if (/\b(read my email|read my mails|next email|go back|read that again|skip this|summarize it|who sent|reply to (this|the|him|her)|make it (more )?(professional|friendlier|shorter)|prepare (a |the )?(quotation|invoice|receipt)|send (him |her |the )?(invoice|reply)|arrange a meeting with (this|the) customer|brief me on (my )?email)\b/i.test(utterance) || /读.*邮件|回复.*客户/.test(utterance)) {
+      try {
+        const res = await api("/api/odai/submit", { method: "POST", body: JSON.stringify({ text: utterance, source: "voice" }) });
+        const j = await res.json();
+        setRows((r) => [...r, { who: "ai", text: j.spoken || j.error || "Inbox action processed." }]);
+        if (res.ok && j.mail) onOpenInbox();
+      } catch { setRows((r) => [...r, { who: "err", text: "Mail service unreachable; nothing was sent." }]); }
+      return true;
+    }
+    if (/\b(appointment|schedule (a |an |my )?(meeting|call|appointment)|arrange (a |an )?(meeting|call)|book (a |an )?(meeting|call|appointment)|set up (a |an )?(meeting|call)|meet(ing)? with|meet (my|the|our) |remind me to meet)\b/i.test(utterance) || /(安排|预约|预订).{0,12}(会议|见面)/.test(utterance) || /\b(change|reschedule|move|cancel)\b.*\b(meeting|appointment)\b/i.test(utterance)) {
+      try {
+        const res = await api("/api/odai/appointments/extract", { method: "POST", body: JSON.stringify({ text: utterance }) });
+        const j = await res.json();
+        if (res.ok && j.draft) {
+          setRows((r) => [...r, { who: "sys", text: j.question ? `📅 Appointment draft ready — one detail needed: ${j.question}` : "📅 Appointment draft ready — opening Appointment for your review." }]);
+          try { engRef.current?.stop(); } catch { /* handoff */ }
+          setState("idle");
+          window.setTimeout(() => onOpenAppointment?.({ ...j.draft, objective_id: j.objective_id }), 500);
+        } else setRows((r) => [...r, { who: "err", text: j.error || "Appointment extraction unavailable; nothing was invented." }]);
+      } catch { setRows((r) => [...r, { who: "err", text: "Appointment service unreachable; nothing was invented." }]); }
+      return true;
+    }
+    if (/how is my business doing|business intelligence|analy[sz]e .*business/i.test(utterance)) {
+      try {
+        await api("/api/odai/submit", { method: "POST", body: JSON.stringify({ text: utterance, source: "universal-entry" }) });
+        onOpenBusiness();
+      } catch { setRows(r => [...r, { who: "err", text: "Business analysis unavailable; no results invented." }]); }
+      return true;
+    }
+    if (/\b(inbox|latest messages|needs my approval|security problems|anything important today|brief me)\b/i.test(utterance)) {
+      try {
+        const res = await api("/api/odai/submit", { method: "POST", body: JSON.stringify({ text: utterance, source: "universal-entry" }) });
+        const j = await res.json();
+        setRows((r) => [...r, { who: "sys", text: j.error || j.summary || "Opening stored messages. Voice playback blocked: not integrated." }]);
+        if (res.ok && j.inbox) onOpenInbox();
+      } catch { setRows((r) => [...r, { who: "sys", text: "Inbox unavailable; no summary was invented." }]); }
+      return true;
+    }
     try {
       const res = await api("/api/odai/intents/match", { method: "POST", body: JSON.stringify({ utterance }) });
       if (!res.ok) return false;
@@ -196,6 +273,13 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     } catch { return false; }
   }
   useEffect(() => () => { try { engRef.current?.stop(); } catch { /* unmount */ } }, []);
+  /* Appointment handoff: the green mic on the Appointment page starts the same
+   * Qwen audio realtime voice agent here — no second voice engine. */
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (autoStart && !autoStarted.current) { autoStarted.current = true; press(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart]);
   useEffect(() => {
     if (state !== "partner" && state !== "interpreter") return;
     const t = window.setInterval(() => setSecs((s) => s + 1), 1000);
@@ -206,12 +290,34 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   /* keyword router — only active if the audio engine rejected the routing tools */
+  function resolveTranslate(choice: "voice" | "document") {
+    setPendingTranslate(false);
+    if (choice === "document") {
+      setRows((r) => [...r, { who: "sys", text: "📄 Opening Document Translation…" }]);
+      try { engRef.current?.stop(); } catch { /* handoff */ }
+      setState("idle");
+      window.setTimeout(onOpenDocs, 400);
+    } else {
+      setRows((r) => [...r, { who: "sys", text: `🎧 Voice interpreter engaged → ${LNAME[target] ?? target}. Speak; AIVORA voices the translation. Press the button to stop.` }]);
+      try { engRef.current?.stop(); } catch { /* swap */ }
+      window.setTimeout(() => connect("translate"), 350);
+    }
+  }
+
   function keywordRoute(text: string) {
     if (!toollessRef.current) return false;
     const tg = /廣東話|粤|cantonese/i.test(text) ? "yue" : /英文|english/i.test(text) ? "en"
       : /中文|普通话|mandarin|chinese/i.test(text) ? "zh" : /马来|melayu|malay|malaysia| malaysia/i.test(text) ? "ms"
       : /tamil|தமிழ்|泰米尔/i.test(text) ? "ta" : "en";
-    if (/interpret|interpreter|翻译|翻譯|speaks? .{0,12}(language|english|chinese)|另一.?种语言/i.test(text)) {
+    /* Translation: never assume document. Ask voice vs document when ambiguous. */
+    if (/translat|翻译|翻譯/i.test(text)) {
+      if (/document|contract|invoice|paper|文件|合约|合約|合同|照片|单据|upload/i.test(text)) { setTarget(tg); resolveTranslate("document"); return true; }
+      if (/voice|spoken|live|interpret|口译|口语|语音/i.test(text)) { setTarget(tg); resolveTranslate("voice"); return true; }
+      setTarget(tg); setPendingTranslate(true);
+      setRows((r) => [...r, { who: "sys", text: "🌐 Do you want VOICE translation (speak and hear it translated live) or DOCUMENT translation (translate a file)? Say “voice” or “document”, or tap a button below." }]);
+      return true;
+    }
+    if (/interpret|interpreter|speaks? .{0,12}(language|english|chinese)|另一.?种语言/i.test(text)) {
       setTarget(tg);
       setRows((r) => [...r, { who: "sys", text: `🎧 Interpreter engaged → ${LNAME[tg] ?? tg}. Speak; AIVORA voices the translation. Press the button to stop.` }]);
       try { engRef.current?.stop(); } catch { /* swap */ }
@@ -480,6 +586,25 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
           </div>
         ))}
       </div>
+
+      {pendingTranslate && (
+        <div className="inbox-card translate-choice">
+          <p>🌐 Which kind of translation?</p>
+          <div className="inbox-actions">
+            <button className="inbox-primary" onClick={() => resolveTranslate("voice")}>🎧 Voice translation</button>
+            <button onClick={() => resolveTranslate("document")}>📄 Document translation</button>
+          </div>
+        </div>
+      )}
+      {emailComposeMode && (
+        <div className="inbox-card email-mode">
+          <p>✉️ Email mode — dictate the recipient and message, then say “send it”. {emailTo.current ? `To: ${emailTo.current}` : "Recipient not set yet."}</p>
+          <div className="inbox-actions">
+            <button className="inbox-primary" onClick={() => void tryIntentMatch("send it")}>Send it → Inbox</button>
+            <button onClick={() => void tryIntentMatch("cancel email")}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       <div className="talk-ctl">
         <div className={`talk-status${isOn ? " on" : ""}`}>

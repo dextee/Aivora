@@ -1,0 +1,38 @@
+# Google Cloud Build: build the AIVORA image and deploy to Cloud Run.
+# Usage:
+#   gcloud builds submit --config cloudbuild.yaml \
+#     --substitutions=_REGION=asia-southeast1,_SERVICE=aivora-main
+# Prereqs: Artifact Registry repo "aivora" exists in _REGION; Cloud Run + Cloud Build APIs enabled.
+substitutions:
+  _REGION: asia-southeast1
+  _SERVICE: aivora-main
+  _REPO: aivora
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
+      - .
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=8080
+      - --set-env-vars=HOST=0.0.0.0,AIVORA_MEMORY_MODE=1,NODE_ENV=production
+      # Add secrets via Secret Manager (recommended) or --set-secrets, e.g.:
+      # --set-secrets=DASHSCOPE_API_KEY=DASHSCOPE_API_KEY:latest,WORKSPACE_ID=WORKSPACE_ID:latest
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -89,7 +89,7 @@ export async function blobsToWav(parts: Blob[]): Promise<Blob> {
 export type StoreSpec = { storeName: string; products: string; market?: string; language?: string };
 export type StoreResult = { mode?: string; tool?: string; result?: string; note?: string; error?: string };
 
-const authHeader = (): Record<string, string> => {
+export const authHeader = (): Record<string, string> => {
   const c = loadConfig();
   return c?.key ? { "x-aivora-auth": encodeURIComponent(JSON.stringify(c)) } : {};
 };

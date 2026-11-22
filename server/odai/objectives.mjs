@@ -5,6 +5,7 @@
  * handling per scope, recovery checkpoints (durable objective rows), classification.
  */
 import { get, logEvent } from "./store.mjs";
+import { chatQ4 } from "../qwen4.mjs";
 import * as wf from "./workflow.mjs";
 import * as db from "./db.mjs";
 import { spawnSync } from "node:child_process";
@@ -157,7 +158,7 @@ async function registryApprove(obj, scope, cap) {
 }
 
 /* create → validate → manifest → begin first execution phase (beats 1–5 incl. spend gate) */
-export async function createObjective(tenantId, statement) {
+export async function createObjective(tenantId, statement, provider = {}) {
   /* WO-110 router: deterministic lexical+template resolution to the business-plane
    * registry FIRST (no LLM). Unknown / below-threshold statements fall through to the
    * existing generic planner path below — unchanged, additive. */
@@ -169,11 +170,27 @@ export async function createObjective(tenantId, statement) {
       if (plan) return createRegistryObjective(tenantId, String(statement), match, plan);
     }
   } catch (e) { return { error: "registry router failure (fail closed, nothing dispatched): " + String((e && e.message) || e) }; }
-  const p = interpret(statement);
-  if (!p.valid) return { error: p.reason };
+  let p = interpret(statement);
+  let planning = { source: "native", provider_status: "not_configured", task_graph: "fixed_native" };
+  if (provider.key) {
+    try {
+      const answer = await chatQ4([
+        { role: "system", content: [{ text: "Interpret this business objective for the existing AIVORA planner. Return only a measurable objective statement, preserving the user's numbers, timeframe and catalog/brand. Do not invent targets. Supported criteria: units/products via FNYGlobal or Lumen/Good Doctor; growth percent over days. If insufficient, return NEEDS_INPUT. Do not claim execution or approval." }] },
+        { role: "user", content: [{ text: String(statement || "") }] },
+      ], provider, () => {});
+      // Provider output is validation input only; never persist raw model output or auth.
+      const safe = String(answer).split(provider.key).join("[credential]");
+      if (!p.valid) p = interpret(safe);
+      planning = { source: "qwen4_interpretation", provider_status: "responded", task_graph: "fixed_native" };
+    } catch {
+      return { error: "Objective interpretation provider unavailable; nothing dispatched", code: "PLANNER_UNAVAILABLE" };
+    }
+  }
+  if (!p.valid) return { error: p.reason, planning };
+  p.text = String(statement || "").trim();
   const objective_id = "OBJ-" + Date.now().toString(36);
   const start = await wf.startRun(tenantId, p.text);
-  const obj = { objective_id, tenant_id: tenantId, statement: p.text, criterion: p.criterion,
+  const obj = { objective_id, tenant_id: tenantId, statement: p.text, criterion: p.criterion, planning,
     run_id: start.runId, manifest: { tasks: TASKS, gates: GATES }, state: "AWAITING_SPEND_APPROVAL",
     approvals: [], created_at: new Date().toISOString(), completed_at: null, report: null };
   store.set(tenantId + "/" + objective_id, obj);
@@ -289,7 +306,7 @@ export function classify(obj) {
 }
 function beat_receipts_note() { return { manifest: "D03 tasks (fixed graph)", receipts: "D04 beats 1–10 (workflow.mjs)", policy: "D08 R01–R19 + connector gate", storage: "D10 odai_* tables (trace/receipt/run/approval)", simulated_boundary: "beat-9 order TEST_SIMULATED; supplier handoff PREPARED_NOT_SENT" }; }
 
-export function view(obj) { return { objective_id: obj.objective_id, tenant_id: obj.tenant_id, criterion: obj.criterion, state: obj.state, progress: obj.progress, ...(obj.plan_source ? { plan_source: obj.plan_source, registry_objective_id: obj.registry_objective_id, business_family: obj.business_family, router_score: obj.router_score, measurable_via: obj.measurable_via, registry_statement: obj.registry_statement } : {}), ...(obj.budget_scope ? { budget: reconcileBudget(obj.tenant_id, obj.budget_scope) } : {}), tasks: obj.tasks.map((x) => ({ id: x.id, state: x.state, specialist: x.specialist, deps: x.deps, step: x.step, evidence: x.evidence })), gates: obj.gates.map(({ id, scope, state, release_log }) => ({ id, scope, state, release_log })), report: obj.state === "REPORTED" ? classify(obj) : null }; }
+export function view(obj) { return { objective_id: obj.objective_id, tenant_id: obj.tenant_id, criterion: obj.criterion, state: obj.state, progress: obj.progress, ...(obj.planning ? { planning: obj.planning } : {}), ...(obj.plan_source ? { plan_source: obj.plan_source, registry_objective_id: obj.registry_objective_id, business_family: obj.business_family, router_score: obj.router_score, measurable_via: obj.measurable_via, registry_statement: obj.registry_statement } : {}), ...(obj.budget_scope ? { budget: reconcileBudget(obj.tenant_id, obj.budget_scope) } : {}), tasks: obj.tasks.map((x) => ({ id: x.id, state: x.state, specialist: x.specialist, deps: x.deps, step: x.step, evidence: x.evidence })), gates: obj.gates.map(({ id, scope, state, release_log }) => ({ id, scope, state, release_log })), report: obj.state === "REPORTED" ? classify(obj) : null }; }
 export function finalReport(tenantId, objective_id) { const obj = store.get(tenantId + "/" + objective_id); return obj ? classify(obj) : { error: "not found" }; }
 
 /* WO-10R: tenant-scoped objective list for GET /api/odai/objectives (summary projection;

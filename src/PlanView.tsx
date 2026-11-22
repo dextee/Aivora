@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { authHeader } from "./lib";
 
 /* Launch — the 7-panel Objective-to-Task execution interface for the coffee-business demo command.
  * Drives the SAME unified /submit entry the voice path uses (typed fallback here). Reuses the plan engine;
@@ -29,7 +30,7 @@ export function PlanView() {
     if (!cmd.trim() || busy) return;
     setBusy(true); setErr(null); setTranscript(cmd);
     try {
-      const j = await (await fetch(`/api/odai/submit?_t=${Date.now()}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: cmd, request_id: `typed:${cmd}`, source: "typed" }) })).json();
+      const j = await (await fetch(`/api/odai/submit?_t=${Date.now()}`, { method: "POST", headers: { "content-type": "application/json", ...authHeader() }, body: JSON.stringify({ text: cmd, request_id: `typed:${cmd}`, source: "typed" }) })).json();
       if (j.error) { setErr(j.error); } else { setPlan(j as Plan); startPoll(j.objective_id); }
     } catch { setErr("Can't reach the objective engine."); }
     finally { setBusy(false); }

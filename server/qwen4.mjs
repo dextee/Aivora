@@ -107,7 +107,7 @@ export async function chatQ4(messages, env, onDelta) {
       continue;
     }
     if (!res.ok || !res.body) {
-      const snip = scrub((await res.text().catch(() => "")).slice(0, 300), key);
+      const snip = scrub(await res.text().catch(() => ""), key).slice(0, 300);
       lastError = `${r.name}: ${res.status} ${snip}`.trim();
       continue;
     }
