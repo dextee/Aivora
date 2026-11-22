@@ -60,6 +60,8 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
   const [odaiU, setOdaiU] = useState<{ objective: string | null; tasks_done?: string; whats_done: string[]; awaiting: string | null; company?: { name: string; synthetic?: boolean } } | null>(null);
   const pairOpen = useRef(false);
   const toollessRef = useRef(false);
+  const [netTest, setNetTest] = useState<{ tone: string; text: string; status: number } | null>(null);
+  const [netBusy, setNetBusy] = useState(false);
 
   /* V31 — Qwen4-Max text composer (independent of the voice session) */
   const [q4text, setQ4text] = useState("");
@@ -314,6 +316,27 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
     connect("omni");
   }
 
+  /* Test connection — checks the Model Studio gate via /api/webrtc/sdp before going live.
+   * Uses the browser key (🔐) or the server env key. This verifies the KEY/GATE, not a full
+   * audio session (that needs the real mic after "Go live"). Honest result text per status. */
+  async function testConnection() {
+    setNetBusy(true); setNetTest({ tone: "wait", text: "Testing connection…", status: 0 });
+    try {
+      const c = loadConfig();
+      const headers: Record<string, string> = { "content-type": "application/sdp" };
+      if (c && c.key) headers["x-aivora-auth"] = encodeURIComponent(JSON.stringify(c));
+      const r = await fetch(`/api/webrtc/sdp?model=qwen3.8-omni-flash-realtime&_t=${Date.now()}`, { method: "POST", headers, body: "v=0\r\n" });
+      const t = (await r.text()).slice(0, 160);
+      let tone = "warn", text = `⚠️ ${r.status}: ${t}`;
+      if (r.status === 503) { tone = "err"; text = "🔑 No Model Studio key — add one under 🔐 (or set the server env). Gate is correctly closed; Go live will not connect yet."; }
+      else if (r.status === 400) { tone = "err"; text = "❌ Model not recognized by the server."; }
+      else if (r.status === 502) { tone = "ok"; text = "✅ Key accepted — request reached Model Studio (a live session completes once you press Go live and allow the mic)."; }
+      else if (r.status === 200) { tone = "ok"; text = "✅ Connected — Model Studio handshake OK. Ready to Go live."; }
+      setNetTest({ tone, text, status: r.status });
+    }     catch (e) { setNetTest({ tone: "err", text: "❌ Could not reach the server: " + String((e as { message?: string })?.message ?? e), status: 0 }); }
+    finally { setNetBusy(false); }
+  }
+
   /* feat/composer-attachments helpers */
   const fmtSize = (n: number) => n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(0)} KB` : `${(n / (1024 * 1024)).toFixed(1)} MB`;
   const kindIcon = (k: string) => k === "image" ? "🖼️" : k === "video" ? "🎬" : k === "audio" ? "🎵" : k === "pdf" ? "📕" : k === "docx" ? "📄" : "📃";
@@ -501,7 +524,9 @@ export function TalkView({ onOpenDocs, onOpenStore }: { onOpenDocs(): void; onOp
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="currentColor" /><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4M3.5 3.5a12 12 0 0 0 0 17M20.5 3.5a12 12 0 0 1 0 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
           <span>{state === "connecting" ? "connecting…" : isOn ? "LIVE" : "Go live"}</span>
         </button>
+        <button className="net-test" onClick={() => void testConnection()} disabled={netBusy} aria-label="Test Model Studio connection">🔌 {netBusy ? "Testing…" : "Test connection"}</button>
       </div>
+      {netTest && <div className={`net-result ${netTest.tone}`} role="status">{netTest.text}</div>}
 
       {files.length > 0 && (
         <div className="attach-tray">
