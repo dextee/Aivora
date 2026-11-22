@@ -1237,6 +1237,23 @@
     "revoked_reason": "migration 007 committed 897e7bd; revoke after commit; no further writes",
     "revoked_at": "2026-11-22T05:51:10Z"
   },
+  "WO-SUPA-008": {
+    "issued_at": "2026-11-22T10:34:09Z",
+    "expires_at": "2026-11-22T12:34:09Z",
+    "minutes": 120,
+    "paths": [
+      "odai/migrations/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 20,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-SUPA-APPROVE": {
     "issued_at": "2026-11-22T04:57:36Z",
     "expires_at": "2026-11-22T06:57:36Z",

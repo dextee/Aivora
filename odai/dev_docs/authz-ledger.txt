@@ -316,3 +316,5 @@
 2026-11-22T05:50:39Z|ISSUE|WO-SUPA-007|ops=check,commit|paths=odai/migrations/,odai/dev_docs/|minutes=120|budget=20|single_use=0|expires_at=2026-11-22T07:50:39Z
 2026-11-22T05:50:55Z|HOOK_ALLOW|WO-SUPA-007|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/migrations/007_revoke_anon_helper_exec.sql
 2026-11-22T05:51:10Z|REVOKE|WO-SUPA-007|reason=migration 007 committed 897e7bd; revoke after commit; no further writes
+2026-11-22T05:51:11Z|HOOK_ALLOW|WO-SUPA-007|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T10:34:09Z|ISSUE|WO-SUPA-008|ops=check,commit|paths=odai/migrations/,odai/dev_docs/|minutes=120|budget=20|single_use=0|expires_at=2026-11-22T12:34:09Z
