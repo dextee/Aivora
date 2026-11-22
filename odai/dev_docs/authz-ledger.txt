@@ -291,3 +291,5 @@
 2026-11-22T03:08:47Z|ISSUE|WO-ATTACH|ops=check,commit|paths=server.mjs,server/,src/,tests/|minutes=180|budget=40|single_use=0|expires_at=2026-11-22T06:08:47Z
 2026-11-22T03:14:38Z|ISSUE|WO-ATTACH|ops=check,commit|paths=server.mjs,server/,src/,tests/,.gitignore|minutes=180|budget=40|single_use=0|expires_at=2026-11-22T06:14:38Z
 2026-11-22T03:15:49Z|ISSUE|WO-ATTACH|ops=check,commit|paths=server.mjs,server/,src/,tests/,.gitignore,package.json|minutes=180|budget=40|single_use=0|expires_at=2026-11-22T06:15:49Z
+2026-11-22T03:23:17Z|HOOK_ALLOW|WO-ATTACH|.gitignore+odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package.json+server.mjs+server/uploads.mjs+src/TalkView.tsx+src/styles.css+tests/uploads.test.mjs
+2026-11-22T03:23:56Z|REVOKE|WO-ATTACH|reason=composer attachments shipped fd55304; revoke after commit per convention; no further writes
