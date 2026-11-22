@@ -42,12 +42,15 @@ LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public AS $$
                    AND m.role IN ('owner','admin'));
 $$;
 
--- Keep anonymous access denied: revoke helper EXECUTE from anon (only authenticated/service may call).
+-- Helpers must be callable by signed-in users (so the RLS policies can evaluate them)
+-- and by the service role (admin), but NOT by anon. Revoke the default PUBLIC grant,
+-- then explicitly allow authenticated + service_role.
 DO $$
 DECLARE fn text;
 BEGIN
   FOREACH fn IN ARRAY ARRAY['odai_is_member','odai_can_write','odai_is_any_member','odai_is_admin_any','odai_is_admin_member'] LOOP
-    EXECUTE format('REVOKE ALL ON FUNCTION public.%I(text) FROM PUBLIC, anon', fn);
+    EXECUTE format('REVOKE ALL ON FUNCTION public.%I(text) FROM PUBLIC', fn);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION public.%I(text) TO authenticated, service_role', fn);
   END LOOP;
 END $$;
 
