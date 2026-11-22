@@ -1209,8 +1209,12 @@
     ],
     "budget": 30,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 5
+    },
+    "revoked": true,
+    "revoked_reason": "My Goals parity + GoalsView committed a1c293f; revoke after commit",
+    "revoked_at": "2026-11-22T12:30:04Z"
   },
   "WO-ECOMINT": {
     "issued_at": "2026-11-22T11:46:44Z",

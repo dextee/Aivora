@@ -330,3 +330,5 @@
 2026-11-22T12:10:36Z|REVOKE|WO-ECOMUI|reason=coffee screens integrated into MAIN UI; GoalsView+engine reconciliation deferred; revoke after commit
 2026-11-22T12:10:37Z|HOOK_ALLOW|WO-ECOMUI|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-22T12:29:40Z|ISSUE|WO-ECOMGOALS|ops=check,commit|paths=server.mjs,server/,src/,odai/dev_docs/|minutes=120|budget=30|single_use=0|expires_at=2026-11-22T14:29:40Z
+2026-11-22T12:29:41Z|HOOK_ALLOW|WO-ECOMGOALS|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server.mjs+server/odai/objectives.mjs+src/App.tsx+src/GoalsView.tsx+src/Menu.tsx
+2026-11-22T12:30:04Z|REVOKE|WO-ECOMGOALS|reason=My Goals parity + GoalsView committed a1c293f; revoke after commit
