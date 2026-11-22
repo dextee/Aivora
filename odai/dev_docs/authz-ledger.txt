@@ -428,3 +428,5 @@
 2026-11-22T23:07:09Z|ISSUE|WO-MENUBOTTOM|ops=check,commit|paths=src/,odai/dev_docs/|minutes=30|budget=10|single_use=0|expires_at=2026-11-22T23:37:09Z
 2026-11-22T23:07:10Z|HOOK_ALLOW|WO-MENUBOTTOM|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+src/Menu.tsx
 2026-11-22T23:07:13Z|REVOKE|WO-MENUBOTTOM|reason=menu reorder committed
+2026-11-22T23:08:19Z|HOOK_ALLOW|WO-MENUBOTTOM|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T23:26:08Z|ISSUE|WO-BIZACTION|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/dev_docs/|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T00:56:08Z

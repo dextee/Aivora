@@ -11,6 +11,7 @@ import { BusinessView, type BusinessPage } from "./BusinessView";
 import { TestLabView } from "./TestLabView";
 import { BusinessTestLabView } from "./BusinessTestLabView";
 import { StoryboardView } from "./StoryboardView";
+import { BusinessActionView } from "./BusinessActionView";
 import { ManagementView } from "./ManagementView";
 import { SecurityView } from "./SecurityView";
 import { probeKey, type ConnSource } from "./lib";
@@ -23,6 +24,7 @@ const TITLES: Record<View, { t: string; s: string }> = {
   purchases: { t: "Purchase History", s: "AIVORA ODAI V0.9BETA" },
   orders: { t: "Purchase Orders", s: "AIVORA ODAI V0.9BETA" },
   intelligence: { t: "Business Intelligence", s: "AIVORA ODAI V0.9BETA" },
+  action: { t: "Business Action", s: "decision plan · who to contact" },
   talk: { t: "AIVORA ODAI V0.9BETA", s: "Objective-Driven Autonomous Intelligence" },
   docs: { t: "Document Translation", s: "text · photo · voice note" },
   myshop: { t: "My Shop", s: "dropshipping catalog · live setup" },
@@ -111,6 +113,7 @@ export function App() {
         {view === "testlab" && <TestLabView />}
         {view === "bizlab" && <BusinessTestLabView />}
         {view === "storyboard" && <StoryboardView />}
+        {view === "action" && <BusinessActionView />}
       </>}
       {mode === "management" && <ManagementView />}
       {mode === "security" && <SecurityView />}

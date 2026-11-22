@@ -27,6 +27,7 @@ import { listCases as labCases, runCase as labRunCase, runAll as labRunAll, dev1
 import { reportPdf, reportXlsx } from "./server/odai/testlab_report.mjs";
 import { listCases as bizLabCases, runCase as bizRunCase, runModule as bizRunModule, runAll as bizRunAll, dev11Verify as bizDev11, consolidate as bizConsolidate, storeReport as bizStore, getReport as bizGetReport, getCaseReport as bizGetCaseReport, newRunId as bizNewRunId } from "./server/odai/business_testlab.mjs";
 import { listScenes as sbScenes, runScene as sbRunScene, runStoryboard as sbRunAll } from "./server/odai/storyboard.mjs";
+import { actionPlan, customerContactList, preparePurchaseOrder, prepareCustomerEmails, contactListCsv, DISCOUNT_POLICY } from "./server/odai/business_action.mjs";
 import { validateInboxMembership, listNotifications as nbList, getNotification as nbGet, getUnreadCount as nbUnread, markAsRead as nbMarkRead, markAllAsRead as nbMarkAll, archiveNotification as nbArchive, resolveApproval as nbResolve, healthCheck as nbHealth } from "./server/odai/notifications.mjs";
 import { appointmentIntent, extractAppointment, listAppointments, saveAppointment, confirmAppointment, calendarStatus, appointmentIcs, getAppointment, rescheduleAppointment, cancelAppointment, reconcileAppointment, deliverDueReminders, recordAppointmentSecurityIncident, requestReminder, findAppointmentByObjective } from "./server/odai/appointments.mjs";
 import { connectionStatus, resolveAudience, correctAppointment, checkAvailability, prepareInvitations, authorizeAndDispatch, attemptAudienceExpansion, recordRsvp, attendanceReport } from "./server/odai/appt_workflow.mjs";
@@ -481,6 +482,33 @@ async function odaiRoute(url, request, response) {
           return json(await sbRunAll());
         }
         return json({ error: "Unsupported storyboard route" }, 404);
+      } catch (e) { return json({ error: e.message }, e.status || 503); }
+    }
+    if (path === "/action" || path.startsWith("/action/")) {
+      if (!isOffline()) return json({ error: "Business Action requires offline sandbox mode (validated membership + durable schema pending online)" }, 503);
+      if (tenant !== DEMO_TENANT) return json({ error: "Offline action tenant denied" }, 403);
+      const rd = async () => { let raw = ""; for await (const c of request) { raw += c; if (raw.length > 65536) throw Object.assign(new Error("Body too large"), { status: 413 }); } try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      try {
+        if (path === "/action" && request.method === "GET") return json(actionPlan(tenant, { topX: Number(url.searchParams.get("top")) || 5, reference: url.searchParams.get("reference") || undefined }));
+        if (path === "/action/customers" && request.method === "GET") return json({ customers: customerContactList(tenant, { segment: url.searchParams.get("segment") || "ALL", limit: Number(url.searchParams.get("limit")) || 5, reference: url.searchParams.get("reference") || undefined }), policy: DISCOUNT_POLICY });
+        if (path === "/action/prepare-po" && request.method === "POST") { const b = await rd(); return json(preparePurchaseOrder(tenant, b.decision_id, { reference: b.reference })); }
+        if (path === "/action/emails" && request.method === "POST") { const b = await rd(); return json(prepareCustomerEmails(tenant, Array.isArray(b.customer_ids) ? b.customer_ids : [], { reference: b.reference })); }
+        if (path === "/action/export.csv" && request.method === "GET") {
+          const csv = contactListCsv(tenant, { segment: url.searchParams.get("segment") || "ALL", limit: Number(url.searchParams.get("limit")) || 50 });
+          response.writeHead(200, { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="aivora-customer-actions.csv"`, "x-content-type-options": "nosniff" });
+          response.end(csv); return;
+        }
+        if (path === "/action/export.xlsx" && request.method === "GET") {
+          const ExcelJS = await import("exceljs");
+          const rows = customerContactList(tenant, { segment: url.searchParams.get("segment") || "ALL", limit: Number(url.searchParams.get("limit")) || 50 });
+          const wb = new ExcelJS.default.Workbook(); const ws = wb.addWorksheet("Customer Actions");
+          const head = ["customer_id", "name", "segment", "lifetime_sales", "days_since_last", "favorite_product", "suggested_quantity", "proposed_discount_percent", "final_offer_price", "reason", "channel", "consent"];
+          ws.addRow(head); rows.forEach(r => ws.addRow(head.map(h => r[h])));
+          const buf = await wb.xlsx.writeBuffer();
+          response.writeHead(200, { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="aivora-customer-actions.xlsx"`, "x-content-type-options": "nosniff" });
+          response.end(Buffer.from(buf)); return;
+        }
+        return json({ error: "Unsupported action route" }, 404);
       } catch (e) { return json({ error: e.message }, e.status || 503); }
     }
     if (path === "/mail" || path.startsWith("/mail/")) {

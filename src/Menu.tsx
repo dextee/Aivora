@@ -2,7 +2,7 @@ import type { ConnSource } from "./lib";
 import { useEffect, useState } from "react";
 import { getAccessToken } from "./auth";
 
-export type View = "appointment" | "talk" | "myshop" | "leads" | "docs" | "inbox" | "contacts" | "purchases" | "orders" | "intelligence" | "testlab" | "bizlab" | "storyboard";
+export type View = "appointment" | "talk" | "myshop" | "leads" | "docs" | "inbox" | "contacts" | "purchases" | "orders" | "intelligence" | "action" | "testlab" | "bizlab" | "storyboard";
 
 const NAV: { id: View; icon: string; label: string; sub: string; section?: string; children?: { id: View; label: string; sub: string }[] }[] = [
   { id: "talk", icon: "🎙", label: "Talk to AIVORA", sub: "voice partner — interprets & routes itself" },
@@ -13,7 +13,9 @@ const NAV: { id: View; icon: string; label: string; sub: string; section?: strin
   { id: "orders", icon: "AI", label: "Purchase Orders", sub: "sandbox procurement review", children: [
     { id: "purchases", label: "Purchase History", sub: "original records and validation" },
   ] },
-  { id: "intelligence", icon: "AI", label: "Business Intelligence", sub: "validated 30-day comparisons" },
+  { id: "intelligence", icon: "AI", label: "Business Intelligence", sub: "validated 30-day comparisons", children: [
+    { id: "action", label: "Business Action", sub: "decision plan · who to contact" },
+  ] },
   { id: "storyboard", icon: "🎬", label: "Storyboard", sub: "judge demo · 14 scenes in order" },
   { id: "docs", icon: "📄", label: "Document Translation", sub: "text, photos & voice notes" },
   { id: "testlab", icon: "🧪", label: "Inbox Test Lab", sub: "MGMT · 20-case acceptance testing", section: "TESTING" },
