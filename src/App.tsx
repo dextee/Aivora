@@ -6,6 +6,7 @@ import { DocsView } from "./DocsView";
 import { StoreView } from "./StoreView";
 import { PlanView } from "./PlanView";
 import { LeadsView } from "./LeadsView";
+import { MyShopView } from "./MyShopView";
 import { GoalsView } from "./GoalsView";
 import { ManagementView } from "./ManagementView";
 import { SecurityView } from "./SecurityView";
@@ -20,6 +21,7 @@ const TITLES: Record<View, { t: string; s: string }> = {
   store: { t: "Online Store Builder", s: "ecommerce catalog pages" },
   goals: { t: "My Goals", s: "plan · approve · track · report" },
   launch: { t: "Launch Business", s: "voice→plan→agents→artifacts" },
+  myshop: { t: "My Shop", s: "dropshipping catalog · live setup" },
   leads: { t: "Leads", s: "enquiries · follow-up drafts" },
 };
 
@@ -95,6 +97,7 @@ export function App() {
       {view === "store" && <StoreView seed={storeSeed} onBack={() => setView("talk")} />}
       {view === "launch" && <PlanView />}
       {view === "leads" && <LeadsView />}
+      {view === "myshop" && <MyShopView />}
       {view === "goals" && <GoalsView />}
       </>}
       {mode === "management" && <ManagementView />}

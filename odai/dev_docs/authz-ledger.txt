@@ -352,3 +352,5 @@
 2026-11-22T13:33:59Z|ISSUE|WO-MENUCLEAN|ops=check,commit|paths=src/,odai/dev_docs/|minutes=120|budget=20|single_use=0|expires_at=2026-11-22T15:33:59Z
 2026-11-22T13:36:05Z|HOOK_ALLOW|WO-MENUCLEAN|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+src/App.tsx+src/Menu.tsx
 2026-11-22T13:36:07Z|REVOKE|WO-MENUCLEAN|reason=menu cleaned; revoke after commit
+2026-11-22T13:36:07Z|HOOK_ALLOW|WO-MENUCLEAN|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T13:56:09Z|ISSUE|WO-MYSHOP2|ops=check,commit|paths=server.mjs,server/,src/,tests/,odai/dev_docs/|minutes=240|budget=40|single_use=0|expires_at=2026-11-22T17:56:09Z
