@@ -79,6 +79,9 @@ function currentClient() {
   }
   return brokerClient();                              // legacy broker path
 }
+/** Expose the request-scoped client to trusted server modules (notifications/membership). */
+export function scopedClient() { return currentClient(); }
+export { DbUnavailable, DbAuthRequired };
 
 async function op(client, name, fn) {
   try {

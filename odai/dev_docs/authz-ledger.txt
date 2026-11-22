@@ -417,3 +417,5 @@
 2026-11-22T22:20:04Z|ISSUE|WO-BIZREPORTS|ops=check,commit|paths=server.mjs,server/odai/,odai/dev_docs/|minutes=90|budget=20|single_use=0|expires_at=2026-11-22T23:50:04Z
 2026-11-22T22:20:35Z|HOOK_ALLOW|WO-BIZREPORTS|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server.mjs+server/odai/business_testlab.mjs+server/odai/inbox.mjs
 2026-11-22T22:20:59Z|REVOKE|WO-BIZREPORTS|reason=Per-case reports shipped 502aef0; revoke after commit
+2026-11-22T22:21:00Z|HOOK_ALLOW|WO-BIZREPORTS|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T22:54:34Z|ISSUE|WO-INBOXONLINE|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/migrations/,odai/dev_docs/|minutes=120|budget=40|single_use=0|expires_at=2026-11-23T00:54:34Z

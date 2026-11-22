@@ -40,6 +40,7 @@ export function InboxView({ onOpen, onSpeak }: { onOpen(view: string): void; onS
   const [fingerprint, setFingerprint] = useState("");
   const [security, setSecurity] = useState("");
   const [dispatchResult, setDispatchResult] = useState("");
+  const [health, setHealth] = useState<{ native_inbox: string; mode: string; dimensions?: Record<string, string> } | null>(null);
 
   async function request(path: string, init?: RequestInit) {
     const token = getAccessToken();
@@ -55,7 +56,7 @@ export function InboxView({ onOpen, onSpeak }: { onOpen(view: string): void; onS
       if (j.context?.active_message_id) setActive((j.emails || []).find((e: Email) => e.message_id === j.context.active_message_id) || null);
     } catch (e) { setError((e as Error).message); }
   }
-  useEffect(() => { void refreshNotifications(); void refreshMail(); }, [category, q]);
+  useEffect(() => { void refreshNotifications(); void refreshMail(); api("/api/odai/inbox/health").then(setHealth).catch(() => setHealth(null)); }, [category, q]);
 
   function log(line: string) { setTimeline((t) => [...t.slice(-40), line]); }
   async function run(text: string) {
@@ -91,6 +92,8 @@ export function InboxView({ onOpen, onSpeak }: { onOpen(view: string): void; onS
 
   return <main className="view inbox-view">
     <div className="inbox-heading"><div><h1>My Inbox</h1><p>Your voice-operated AI secretary for email and notifications.</p></div><button onClick={() => { void refreshNotifications(); void refreshMail(); }}>Refresh</button></div>
+    {health && <p className="inbox-health" data-status={health.native_inbox}>Inbox readiness: <strong>{health.native_inbox}</strong> · mode {health.mode}{health.native_inbox !== "READY" && health.dimensions ? " · " + Object.entries(health.dimensions).filter(([, v]) => v !== "READY").map(([k, v]) => `${k}: ${v}`).join("; ") : ""}</p>}
+    {data && data.messages.length === 0 && <p className="inbox-empty">No notifications yet. Real business events will appear here — nothing is pre-filled.</p>}
     {error && <p role="alert" className="inbox-card">{error}</p>}
 
     <div className="appt-conns"><div className="appt-conn"><div className="appt-conn-icon">✉️</div><b>Gmail</b><small>{gmail?.configured ? (gmail.mode === "live" ? "Connected · live" : "Connected · sandbox (labeled)") : "Connection required"}</small></div></div>

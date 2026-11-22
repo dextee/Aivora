@@ -746,3 +746,10 @@ button { font-family: inherit; }
 .sb-audio{color:#b54708;font-size:12px;margin:6px 0}
 .sb-detail pre{background:#0b1220;color:#d6e2ff;padding:8px;border-radius:8px;overflow:auto;max-height:200px;font-size:11px;margin:8px 0 0}
 
+
+.inbox-health{font-size:12px;color:var(--muted);margin:0 0 10px}
+.inbox-health[data-status="READY"]{color:#0e6b57}
+.inbox-health[data-status="BLOCKED"]{color:#b42318}
+.inbox-health strong{text-transform:uppercase}
+.inbox-empty{color:var(--muted);font-size:13px;font-style:italic}
+

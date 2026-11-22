@@ -27,6 +27,7 @@ import { listCases as labCases, runCase as labRunCase, runAll as labRunAll, dev1
 import { reportPdf, reportXlsx } from "./server/odai/testlab_report.mjs";
 import { listCases as bizLabCases, runCase as bizRunCase, runModule as bizRunModule, runAll as bizRunAll, dev11Verify as bizDev11, consolidate as bizConsolidate, storeReport as bizStore, getReport as bizGetReport, getCaseReport as bizGetCaseReport, newRunId as bizNewRunId } from "./server/odai/business_testlab.mjs";
 import { listScenes as sbScenes, runScene as sbRunScene, runStoryboard as sbRunAll } from "./server/odai/storyboard.mjs";
+import { validateInboxMembership, listNotifications as nbList, getNotification as nbGet, getUnreadCount as nbUnread, markAsRead as nbMarkRead, markAllAsRead as nbMarkAll, archiveNotification as nbArchive, resolveApproval as nbResolve, healthCheck as nbHealth } from "./server/odai/notifications.mjs";
 import { appointmentIntent, extractAppointment, listAppointments, saveAppointment, confirmAppointment, calendarStatus, appointmentIcs, getAppointment, rescheduleAppointment, cancelAppointment, reconcileAppointment, deliverDueReminders, recordAppointmentSecurityIncident, requestReminder, findAppointmentByObjective } from "./server/odai/appointments.mjs";
 import { connectionStatus, resolveAudience, correctAppointment, checkAvailability, prepareInvitations, authorizeAndDispatch, attemptAudienceExpansion, recordRsvp, attendanceReport } from "./server/odai/appt_workflow.mjs";
 import { businessScope, businessView, importBatch, runAnalysis, purchaseOrderAction } from "./server/odai/business.mjs";
@@ -506,17 +507,30 @@ async function odaiRoute(url, request, response) {
       } catch (e) { return json({ error: e.message, ...(e.code ? { code: e.code } : {}), ...(e.current_fingerprint ? { current_fingerprint: e.current_fingerprint } : {}) }, e.status || 503); }
     }
     if (path === "/inbox" || path.startsWith("/inbox/")) {
-      if (!isOffline()) return json({ error: "Online inbox blocked: validated membership and notification persistence schema are not integrated; no memory fallback", code: "INBOX_ONLINE_BLOCKED" }, 503);
-      if (tenant !== DEMO_TENANT) return json({ error: "Offline inbox tenant denied" }, 403);
-      if (get(tenant).inbox_persistence_failed) return json({ error: "Inbox event persistence failed; completeness cannot be verified" }, 503);
-      if (request.method === "GET" && path === "/inbox") return json(listInbox(tenant, Object.fromEntries(url.searchParams)));
-      if (request.method === "POST") {
-        let raw = ""; for await (const c of request) { raw += c; if (raw.length > 4096) return json({ error: "Body too large" }, 413); }
-        const body = JSON.parse(raw || "{}");
-        try { return json(updateInbox(tenant, path.split("/")[2], body.action)); }
-        catch (e) { return json({ error: e.message }, e.status || 503); }
-      }
-      return json({ error: "Unsupported inbox method" }, 405);
+      const rd = async () => { let raw = ""; for await (const c of request) { raw += c; if (raw.length > 65536) throw Object.assign(new Error("Body too large"), { status: 413 }); } try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      try {
+        if (path === "/inbox/health" && request.method === "GET") return json(await nbHealth());
+        if (get(tenant).inbox_persistence_failed) return json({ error: "Inbox event persistence failed; completeness cannot be verified" }, 503);
+        /* §3/§5: resolve authenticated identity + validated membership server-side for
+         * every inbox request; never trust client-supplied ids. Offline demo resolves to
+         * the labelled offline-owner context (local-disk persistent store). */
+        const ws = isOffline() ? tenant : (url.searchParams.get("workspace") || tenant);
+        const perm = request.method === "GET" ? "read" : "approve";
+        const ctx = await validateInboxMembership({ workspaceId: ws, requiredPermission: perm });
+        if (isOffline() && tenant !== DEMO_TENANT) return json({ error: "Offline inbox tenant denied" }, 403);
+        const seg = path.split("/");
+        if (path === "/inbox" && request.method === "GET") return json(await nbList(ctx, Object.fromEntries(url.searchParams)));
+        if (path === "/inbox/unread-count" && request.method === "GET") return json(await nbUnread(ctx));
+        if (path === "/inbox/mark-all-read" && request.method === "POST") return json(await nbMarkAll(ctx));
+        if (path === "/inbox/events" && request.method === "GET") { const r = await nbList(ctx, { limit: 20 }); return json({ mode: r.mode, events: r.notifications || [], cursor: (r.notifications || [])[0]?.created_at || null }); }
+        if (seg[2] && seg[3] === "read" && (request.method === "PATCH" || request.method === "POST")) return json(await nbMarkRead(ctx, decodeURIComponent(seg[2])));
+        if (seg[2] && seg[3] === "archive" && (request.method === "PATCH" || request.method === "POST")) return json(await nbArchive(ctx, decodeURIComponent(seg[2])));
+        if (seg[2] && seg[3] === "action" && request.method === "POST") { const b = await rd(); return json(await nbResolve(ctx, { approval_id: b.approval_id, decision: b.decision, payload_hash: b.payload_hash })); }
+        if (seg[2] && !seg[3] && request.method === "GET") return json(await nbGet(ctx, decodeURIComponent(seg[2])));
+        if (seg[2] && !seg[3] && request.method === "POST") { const b = await rd(); if (b.action === "read") return json(await nbMarkRead(ctx, decodeURIComponent(seg[2]))); if (b.action === "archive") return json(await nbArchive(ctx, decodeURIComponent(seg[2]))); if (b.action === "read_all") return json(await nbMarkAll(ctx)); return json({ error: "Unsupported inbox action" }, 400); }
+        if (path === "/inbox" && request.method === "POST") { const b = await rd(); if (b.action === "read_all") return json(await nbMarkAll(ctx)); return json({ error: "Unsupported inbox action" }, 400); }
+        return json({ error: "Unsupported inbox route" }, 404);
+      } catch (e) { return json({ error: e.message, ...(e.code ? { code: e.code } : {}) }, e.status || 503); }
     }
     if (path === "/appointments" || path.startsWith("/appointments/")) {
       if (!isOffline()) return json({ error: "Online appointments blocked: validated membership and calendar persistence schema are not integrated; no memory fallback", code: "APPOINTMENTS_ONLINE_BLOCKED" }, 503);
