@@ -455,3 +455,10 @@ button { font-family: inherit; }
 .admin-registry li span { overflow-wrap: anywhere; color: #374151; }
 .admin-registry li b { color: #0b6b46; }
 .admin-version { margin: 6px 0 0; font: 600 10.5px var(--font); color: #3c4f43; }
+
+/* Green livestream button — activates qwen3.8-omni-flash-realtime live voice (Talk to AIVORA) */
+.live-btn { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; padding: 9px 16px; border: 0; border-radius: 999px; background: var(--wa-green); color: #0b3d2a; font: 800 13px var(--font); cursor: pointer; box-shadow: 0 2px 10px rgba(37,211,102,.35); }
+.live-btn:hover { filter: brightness(1.05); }
+.live-btn.on { background: radial-gradient(circle at 32% 28%, #ff7a70, #e23b34 55%, #b23029); color: #fff; animation: livePulse 1.4s ease-in-out infinite; }
+.live-btn.wait { opacity: .7; }
+@keyframes livePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(226,59,52,.5);} 50% { box-shadow: 0 0 0 8px rgba(226,59,52,0);} }
