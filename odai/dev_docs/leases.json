@@ -1348,8 +1348,12 @@
     ],
     "budget": 90,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 9
+    },
+    "revoked": true,
+    "revoked_reason": "Business test lab shipped e842d86; revoke after commit per convention",
+    "revoked_at": "2026-11-22T21:39:59Z"
   },
   "WO-BRAND-MENU": {
     "issued_at": "2026-11-22T15:42:29Z",
