@@ -8,6 +8,8 @@ import { LeadsView } from "./LeadsView";
 import { MyShopView } from "./MyShopView";
 import { InboxView } from "./InboxView";
 import { BusinessView, type BusinessPage } from "./BusinessView";
+import { TestLabView } from "./TestLabView";
+import { BusinessTestLabView } from "./BusinessTestLabView";
 import { ManagementView } from "./ManagementView";
 import { SecurityView } from "./SecurityView";
 import { probeKey, type ConnSource } from "./lib";
@@ -25,6 +27,8 @@ const TITLES: Record<View, { t: string; s: string }> = {
   myshop: { t: "My Shop", s: "dropshipping catalog · live setup" },
   leads: { t: "Leads", s: "enquiries · follow-up drafts" },
   inbox: { t: "My Inbox", s: "AIVORA ODAI V0.9BETA" },
+  testlab: { t: "Inbox Test Lab", s: "MGMT · acceptance testing" },
+  bizlab: { t: "Business Test Lab", s: "MGMT · 45-case integration verification" },
 };
 
 export function App() {
@@ -102,6 +106,8 @@ export function App() {
       {view === "leads" && <LeadsView />}
       {view === "myshop" && <MyShopView />}
       {view === "inbox" && <InboxView onSpeak={() => { setTalkAutoStart(true); setTalkNonce((n) => n + 1); setView("talk"); }} onOpen={(target) => { if (target === "security" || target === "management") void switchMode(target); else if (target === "myshop" || target === "talk") goFeature(target); }} />}
+        {view === "testlab" && <TestLabView />}
+        {view === "bizlab" && <BusinessTestLabView />}
       </>}
       {mode === "management" && <ManagementView />}
       {mode === "security" && <SecurityView />}

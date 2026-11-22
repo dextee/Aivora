@@ -23,6 +23,9 @@ import { createObjective, approve, resume, finalReport, project, listObjectives,
 import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
 import { listInbox, updateInbox, inboxIntent } from "./server/odai/inbox.mjs";
 import { gmailStatus, seedDemo as mailSeed, listEmails, briefing as mailBriefing, navigate as mailNavigate, composeReply as mailReply, composeNew as mailComposeNew, amend as mailAmend, prepareDocument as mailDocument, draftFingerprint as mailFingerprint, confirmDispatch as mailDispatch, scanEmail as mailScan, mailContext, resetContext as mailReset, mailIntent, handleMail } from "./server/odai/mail.mjs";
+import { listCases as labCases, runCase as labRunCase, runAll as labRunAll, dev11Verify, consolidate as labConsolidate, storeReport as labStore, getReport as labGetReport, newRunId, sandboxTenant } from "./server/odai/inbox_testlab.mjs";
+import { reportPdf, reportXlsx } from "./server/odai/testlab_report.mjs";
+import { listCases as bizLabCases, runCase as bizRunCase, runModule as bizRunModule, runAll as bizRunAll, dev11Verify as bizDev11, consolidate as bizConsolidate, storeReport as bizStore, getReport as bizGetReport, newRunId as bizNewRunId } from "./server/odai/business_testlab.mjs";
 import { appointmentIntent, extractAppointment, listAppointments, saveAppointment, confirmAppointment, calendarStatus, appointmentIcs, getAppointment, rescheduleAppointment, cancelAppointment, reconcileAppointment, deliverDueReminders, recordAppointmentSecurityIncident, requestReminder, findAppointmentByObjective } from "./server/odai/appointments.mjs";
 import { connectionStatus, resolveAudience, correctAppointment, checkAvailability, prepareInvitations, authorizeAndDispatch, attemptAudienceExpansion, recordRsvp, attendanceReport } from "./server/odai/appt_workflow.mjs";
 import { businessScope, businessView, importBatch, runAnalysis, purchaseOrderAction } from "./server/odai/business.mjs";
@@ -36,6 +39,7 @@ import { createCampaign as mktCreate, attachAsset as mktAttach, getCampaign as m
 import { createCampaign as hmCreate, uploadCreative as hmUpload, preparePublication as hmPrepare, approvePublication as hmApprove, submit as hmSubmit, getCampaignStatus as hmStatus, getCampaignMetrics as hmMetrics, getRecord as hmRecord } from "./server/odai/hashmeta_adapter.mjs";
 import { seedMock as custSeed, createCustomer, updateCustomer, getCustomer, searchCustomers, importCustomers, addPurchase, getPurchaseHistory, identifyRepeatBuyers, identifyInactiveBuyers, analyzePurchasePatterns, recommendProducts, prepareFollowup, scheduleFollowup, listFollowups, savePurchaseHealed, registerAgent, exportCustomers, generateReport, getThresholds, setThresholds } from "./server/odai/customers.mjs";
 import { runShop, getShop, attemptPriceChange, dropshipList, addProducts, removeProduct, shopQr } from "./server/odai/shop_setup.mjs";
+import { getStoreConfig, attemptPaymentChange, recordPaymentEvent, paymentState, HASHMETA_STORE_URL, PAYPAL_PAYMENT_URL } from "./server/odai/store_config.mjs";
 import { storeUpload, getUploadMeta, publicMeta, contextForAttachments, MAX_BYTES } from "./server/uploads.mjs"; // feat/composer-attachments: local upload sink
 
 const host = process.env.HOST;
@@ -397,6 +401,72 @@ async function odaiRoute(url, request, response) {
         } catch (e) { return json({ error: e.message }, e.status || 503); }
       }
     }
+    if (path === "/testlab" || path.startsWith("/testlab/")) {
+      if (!isOffline()) return json({ error: "Test lab requires offline sandbox mode" }, 503);
+      const rd = async () => { let raw = ""; for await (const c of request) { raw += c; if (raw.length > 65536) throw Object.assign(new Error("Body too large"), { status: 413 }); } try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      try {
+        if (path === "/testlab/cases" && request.method === "GET") return json({ cases: labCases(), gmail: gmailStatus() });
+        if (path === "/testlab/run" && request.method === "POST") {
+          const b = await rd();
+          const runId = newRunId();
+          const tenant = sandboxTenant(runId);
+          const prevSandbox = process.env.GMAIL_SANDBOX;
+          process.env.GMAIL_SANDBOX = "1"; /* exercise the labeled sandbox adapter for the lab run */
+          let results;
+          try { results = b.case_id ? [await labRunCase(tenant, String(b.case_id), runId)] : await labRunAll(tenant, runId); }
+          finally { if (prevSandbox === undefined) delete process.env.GMAIL_SANDBOX; else process.env.GMAIL_SANDBOX = prevSandbox; }
+          const verification = dev11Verify(results);
+          const report = labConsolidate(runId, results, verification);
+          labStore(report);
+          return json(report);
+        }
+        const seg = path.split("/");
+        if (seg[2] === "report" && seg[3] && !seg[4] && request.method === "GET") return json(labGetReport(decodeURIComponent(seg[3])));
+        if (seg[2] === "report" && seg[3] && seg[4] === "pdf" && request.method === "GET") {
+          const buf = reportPdf(labGetReport(decodeURIComponent(seg[3])));
+          response.writeHead(200, { "content-type": "application/pdf", "content-disposition": `attachment; filename="${seg[3]}.pdf"`, "x-content-type-options": "nosniff" });
+          response.end(buf); return;
+        }
+        if (seg[2] === "report" && seg[3] && seg[4] === "xlsx" && request.method === "GET") {
+          const buf = await reportXlsx(labGetReport(decodeURIComponent(seg[3])));
+          response.writeHead(200, { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${seg[3]}.xlsx"`, "x-content-type-options": "nosniff" });
+          response.end(buf); return;
+        }
+        return json({ error: "Unsupported testlab route" }, 404);
+      } catch (e) { return json({ error: e.message }, e.status || 503); }
+    }
+    if (path === "/bizlab" || path.startsWith("/bizlab/")) {
+      if (!isOffline()) return json({ error: "Business test lab requires offline sandbox mode" }, 503);
+      const rd = async () => { let raw = ""; for await (const c of request) { raw += c; if (raw.length > 65536) throw Object.assign(new Error("Body too large"), { status: 413 }); } try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      try {
+        if (path === "/bizlab/cases" && request.method === "GET") return json({ cases: bizLabCases(), dataset: "AIVORA_Coffee_SGD_Anomaly_and_Reorder.xlsx", gmail: gmailStatus() });
+        if (path === "/bizlab/run" && request.method === "POST") {
+          const b = await rd();
+          const runId = bizNewRunId();
+          let results;
+          if (b.case_id) results = [await bizRunCase(String(b.case_id), runId)];
+          else if (b.category) results = await bizRunModule(String(b.category), runId);
+          else results = await bizRunAll(runId);
+          const verification = bizDev11(results);
+          const report = bizConsolidate(runId, results, verification);
+          bizStore(report);
+          return json(report);
+        }
+        const seg = path.split("/");
+        if (seg[2] === "report" && seg[3] && !seg[4] && request.method === "GET") return json(bizGetReport(decodeURIComponent(seg[3])));
+        if (seg[2] === "report" && seg[3] && seg[4] === "pdf" && request.method === "GET") {
+          const buf = reportPdf(bizGetReport(decodeURIComponent(seg[3])));
+          response.writeHead(200, { "content-type": "application/pdf", "content-disposition": `attachment; filename="${seg[3]}.pdf"`, "x-content-type-options": "nosniff" });
+          response.end(buf); return;
+        }
+        if (seg[2] === "report" && seg[3] && seg[4] === "xlsx" && request.method === "GET") {
+          const buf = await reportXlsx(bizGetReport(decodeURIComponent(seg[3])));
+          response.writeHead(200, { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${seg[3]}.xlsx"`, "x-content-type-options": "nosniff" });
+          response.end(buf); return;
+        }
+        return json({ error: "Unsupported bizlab route" }, 404);
+      } catch (e) { return json({ error: e.message }, e.status || 503); }
+    }
     if (path === "/mail" || path.startsWith("/mail/")) {
       if (!isOffline()) return json({ error: "Online mail blocked: validated auth membership and Gmail persistence schema are not integrated; no memory fallback", code: "MAIL_ONLINE_BLOCKED" }, 503);
       if (tenant !== DEMO_TENANT) return json({ error: "Offline mail tenant denied" }, 403);
@@ -577,6 +647,10 @@ async function odaiRoute(url, request, response) {
       if (path === "/shop/remove" && request.method === "POST") { const b = await rd(); return json(removeProduct(tenant, String(b.product_id || ""))); }
       if (path === "/shop/price-test" && request.method === "POST") return json(attemptPriceChange(tenant, await rd()));
       if (path === "/shop/qr" && request.method === "GET") return json(await shopQr());
+      if (path === "/shop/config" && request.method === "GET") return json(getStoreConfig());
+      if (path === "/shop/payment" && request.method === "POST") { const b = await rd(); try { return json(recordPaymentEvent(tenant, b)); } catch (e) { return json({ error: e.message }, e.status || 503); } }
+      if (path === "/shop/payments" && request.method === "GET") return json(paymentState(tenant));
+      if (path === "/shop/payment-guard-test" && request.method === "POST") return json(attemptPaymentChange(tenant, await rd()));
       return json({ error: "unknown shop route" }, 404);
     }
     if (path === "/company") { const { COMPANY } = await import("./server/odai/store.mjs"); return json({ tenant_id: tenant, company: COMPANY, note: "synthetic demo brand standing in for TGDO per owner instruction; swap odai/config/company_profile.json when real data arrives" }); }

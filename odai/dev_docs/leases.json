@@ -1330,6 +1330,27 @@
     "revoked_reason": "Branding edit completed; no commit requested",
     "revoked_at": "2026-11-22T15:18:14Z"
   },
+  "WO-BIZLAB": {
+    "issued_at": "2026-11-22T20:43:27Z",
+    "expires_at": "2026-11-23T01:43:27Z",
+    "minutes": 300,
+    "paths": [
+      "server.mjs",
+      "server/odai/",
+      "src/",
+      "tests/",
+      "package.json",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 90,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-BRAND-MENU": {
     "issued_at": "2026-11-22T15:42:29Z",
     "expires_at": "2026-11-22T16:12:29Z",
@@ -2052,6 +2073,27 @@
     "revoked": true,
     "revoked_reason": "Terminal shown only by prepare click",
     "revoked_at": "2026-11-22T17:32:34Z"
+  },
+  "WO-TESTLAB": {
+    "issued_at": "2026-11-22T20:02:20Z",
+    "expires_at": "2026-11-23T00:02:20Z",
+    "minutes": 240,
+    "paths": [
+      "server.mjs",
+      "server/odai/",
+      "src/",
+      "tests/",
+      "package.json",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 80,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
   },
   "WO-UI01": {
     "issued_at": "2026-11-20T14:35:38Z",

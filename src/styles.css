@@ -671,3 +671,50 @@ button { font-family: inherit; }
 .anomaly-banner { background: #fff3e0; border-left: 4px solid #e08a2b; border-radius: 8px; padding: 8px 10px; margin: 6px 0; font-size: 12.5px; color: #7a4a12; }
 .anomaly-banner .anomaly-reasons { margin: 4px 0; }
 .anomaly-inline { color: #b03a2e; font-size: 11.5px; }
+
+/* ===== Inbox Test Lab ===== */
+.tl-case { border-top: 1px solid #efe7de; padding: 8px 0; }
+.tl-pass { color: #2f7a3e; font-weight: 800; }
+.tl-fail { color: #b03a2e; font-weight: 800; }
+.tl-blocked { color: #c07a1f; font-weight: 800; }
+.cust-stat.tl-pass b { color: #2f7a3e; }
+.cust-stat.tl-fail b { color: #b03a2e; }
+.cust-stat.tl-blocked b { color: #c07a1f; }
+.tl-observed { font-size: 12.5px; color: #4a3f37; margin: 4px 0; }
+.tl-verifier { font-size: 11.5px; color: #0f5f4a; margin: 2px 0; }
+
+/* Business Integration Test Lab */
+.bizlab{padding:16px;max-width:900px;margin:0 auto}
+.bizlab-head h2{margin:0 0 4px}
+.bizlab-sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+.bizlab-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.bizlab-summary{display:flex;gap:14px;font-weight:700;flex-wrap:wrap;align-items:center}
+.bizlab-accept{font-weight:500;color:var(--muted);font-size:13px}
+.bizlab-error{background:#fef3f2;color:#b42318;padding:10px;border-radius:8px;margin-bottom:10px}
+.bizlab-group{border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.bizlab-group-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--panel)}
+.bizlab-group-head h3{margin:0;font-size:15px}
+.bizlab-count{background:var(--line);border-radius:10px;padding:1px 8px;font-size:12px;margin-left:6px}
+.bizlab-cases{list-style:none;margin:0;padding:0}
+.bizlab-case{border-top:1px solid var(--line)}
+.bizlab-case-main{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;padding:10px 14px;cursor:pointer;font:inherit}
+.bizlab-case-main:disabled{opacity:.6;cursor:default}
+.bizlab-id{font-weight:700;min-width:62px;font-size:13px}
+.bizlab-desc{flex:1;font-size:13px;color:var(--ink)}
+.bizlab-status{color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700}
+.bizlab-tag{font-size:10px;background:var(--line);border-radius:6px;padding:2px 6px;color:var(--muted)}
+.bizlab-evidence-toggle{background:none;border:0;color:var(--accent);font-size:12px;padding:0 14px 8px;cursor:pointer}
+.bizlab-evidence{padding:0 14px 12px;font-size:12px}
+.bizlab-evidence pre{background:var(--panel);padding:8px;border-radius:8px;overflow:auto;max-height:220px;font-size:11px}
+.bizlab-blockers{border:1px solid #f79009;border-radius:12px;padding:12px 14px;margin-bottom:14px;background:#fffcf5}
+.bizlab-blockers h3{margin:0 0 8px;font-size:14px}
+.bizlab-blockers ul{margin:0;padding-left:18px;font-size:13px}
+.bizlab-console{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.bizlab-console h3{margin:0 0 8px;font-size:14px}
+.bizlab-running{color:var(--accent);font-weight:500;font-size:12px}
+.bizlab-console pre{background:#0b1220;color:#d6e2ff;padding:10px;border-radius:8px;max-height:260px;overflow:auto;font-size:11px;margin:0}
+.btn-primary{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer}
+.btn-primary:disabled{opacity:.6;cursor:default}
+.btn-ghost{border:1px solid var(--line);border-radius:8px;padding:8px 14px;text-decoration:none;color:var(--ink);font-size:13px}
+.btn-small{border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;background:none;cursor:pointer}
+
