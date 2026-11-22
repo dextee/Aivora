@@ -25,7 +25,7 @@ import { listInbox, updateInbox, inboxIntent } from "./server/odai/inbox.mjs";
 import { gmailStatus, seedDemo as mailSeed, listEmails, briefing as mailBriefing, navigate as mailNavigate, composeReply as mailReply, composeNew as mailComposeNew, amend as mailAmend, prepareDocument as mailDocument, draftFingerprint as mailFingerprint, confirmDispatch as mailDispatch, scanEmail as mailScan, mailContext, resetContext as mailReset, mailIntent, handleMail } from "./server/odai/mail.mjs";
 import { listCases as labCases, runCase as labRunCase, runAll as labRunAll, dev11Verify, consolidate as labConsolidate, storeReport as labStore, getReport as labGetReport, newRunId, sandboxTenant } from "./server/odai/inbox_testlab.mjs";
 import { reportPdf, reportXlsx } from "./server/odai/testlab_report.mjs";
-import { listCases as bizLabCases, runCase as bizRunCase, runModule as bizRunModule, runAll as bizRunAll, dev11Verify as bizDev11, consolidate as bizConsolidate, storeReport as bizStore, getReport as bizGetReport, newRunId as bizNewRunId } from "./server/odai/business_testlab.mjs";
+import { listCases as bizLabCases, runCase as bizRunCase, runModule as bizRunModule, runAll as bizRunAll, dev11Verify as bizDev11, consolidate as bizConsolidate, storeReport as bizStore, getReport as bizGetReport, getCaseReport as bizGetCaseReport, newRunId as bizNewRunId } from "./server/odai/business_testlab.mjs";
 import { listScenes as sbScenes, runScene as sbRunScene, runStoryboard as sbRunAll } from "./server/odai/storyboard.mjs";
 import { appointmentIntent, extractAppointment, listAppointments, saveAppointment, confirmAppointment, calendarStatus, appointmentIcs, getAppointment, rescheduleAppointment, cancelAppointment, reconcileAppointment, deliverDueReminders, recordAppointmentSecurityIncident, requestReminder, findAppointmentByObjective } from "./server/odai/appointments.mjs";
 import { connectionStatus, resolveAudience, correctAppointment, checkAvailability, prepareInvitations, authorizeAndDispatch, attemptAudienceExpansion, recordRsvp, attendanceReport } from "./server/odai/appt_workflow.mjs";
@@ -454,6 +454,7 @@ async function odaiRoute(url, request, response) {
           return json(report);
         }
         const seg = path.split("/");
+        if (seg[2] === "report" && seg[3] && seg[4] === "case" && seg[5] && request.method === "GET") return json(bizGetCaseReport(decodeURIComponent(seg[3]), decodeURIComponent(seg[5])));
         if (seg[2] === "report" && seg[3] && !seg[4] && request.method === "GET") return json(bizGetReport(decodeURIComponent(seg[3])));
         if (seg[2] === "report" && seg[3] && seg[4] === "pdf" && request.method === "GET") {
           const buf = reportPdf(bizGetReport(decodeURIComponent(seg[3])));

@@ -17,6 +17,7 @@ const definitions = {
   SECURITY_ALERT: ["SECURITY", "Security alert raised", "A prohibited action was detected and blocked by the RogueAI Shield. The affected agent authorization was revoked and quarantined."],
   PROCUREMENT_RECOMMENDED: ["INSIGHTS", "Automatic reorder recommended", "Business Intelligence detected a stockout risk and recommended a sandbox purchase order. Owner approval is required before any supplier action."],
   PURCHASE_ORDER_VERIFIED: ["UPDATES", "Purchase order verified", "The original authorized purchase order was re-verified intact in history after the security incident."],
+  TEST_REPORT_READY: ["INSIGHTS", "Integration test report ready", "The Business Integration Test Lab completed a run. Open the Business Test Lab to review per-case evidence and download the PDF/Excel acceptance reports."],
   PRICE_MANIPULATION_BLOCKED: ["SECURITY", "Unauthorized price change blocked", "The price change was blocked and the agent quarantined. The approved price was preserved."],
   TASK_FAILED: ["RECOVERY", "Workflow needs attention", "The task failed after its bounded execution attempts. Recovery is not verified."],
   TASK_RETRY: ["RECOVERY", "Workflow retry recorded", "A bounded retry was attempted. This does not confirm recovery."],

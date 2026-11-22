@@ -13,6 +13,7 @@ import { businessView, runAnalysis, importBatch, purchaseOrderAction, poHistoryV
 import { searchCustomers, getPurchaseHistory, getCustomer, createCustomer, addPurchase, exportCustomers, registerAgent, identifyRepeatBuyers, identifyInactiveBuyers, analyzePurchasePatterns, savePurchaseHealed } from "./customers.mjs";
 import { dropshipList } from "./shop_setup.mjs";
 import { composeNew, confirmDispatch, draftFingerprint, gmailStatus } from "./mail.mjs";
+import { ingestEvent } from "./inbox.mjs";
 
 const BUILD = "AIVORA ODAI V0.9BETA";
 const DATASET = "AIVORA_Coffee_SGD_Anomaly_and_Reorder.xlsx (imported batch)";
@@ -762,11 +763,55 @@ export function consolidate(runId, results, verification) {
   };
 }
 
+/* §22 per-case report schema: every mandatory field, populated from real evidence. */
+export function caseReport(r, verification) {
+  const ev = r.evidence || {};
+  const ver = (verification || []).find(v => v.case_id === r.case_id);
+  return {
+    test_run_id: r.run_id,
+    test_case_id: r.case_id,
+    application_version: r.build,
+    dataset_version: r.dataset,
+    test_objective: r.description,
+    preconditions: r.scope === "audio" ? "live microphone + DASHSCOPE_API_KEY + browser audio path" : "offline sandbox mode; approved workbook imported; owner tenant",
+    testing_methodology: r.method,
+    input_data: r.input,
+    expected_result: r.expected || "assertions satisfied; no fabricated PASS",
+    actual_observed_result: r.observed || r.reason || "",
+    database_evidence: ev,
+    financial_calculation_evidence: { revenue: ev.window_revenue ?? ev.dashboard_revenue ?? ev.revenue ?? null, total: ev.total ?? null, currency: ev.currency ?? "SGD", ltv: ev.ltv_after ?? null },
+    registered_skills_invoked: r.skills || [],
+    objective_and_task_identifiers: ev.order_id ? { purchase_order_id: ev.order_id } : (ev.objective_id ? { objective_id: ev.objective_id } : null),
+    customer_identifier: ev.customer_id ?? null,
+    purchase_order_identifier: ev.order_id ?? null,
+    inventory_movement_identifier: ev.total_movement ?? ev.inventory_delta ?? null,
+    security_incident_identifier: ev.incident_id ?? null,
+    automation_healing_evidence: ev.exactly_one !== undefined ? { exactly_one: ev.exactly_one, replay_deduped: ev.replay_deduped ?? ev.no_double_count ?? null } : null,
+    browser_screenshots: "not captured in this headless environment",
+    execution_duration_ms: r.duration_ms,
+    result: r.status,
+    corrective_actions: r.corrective_action || null,
+    independent_verifier_result: ver ? { verifier: ver.verifier, verdict: ver.verdict, note: ver.note } : null,
+  };
+}
+
 export function storeReport(report) {
   mkdirSync(reportRoot, { recursive: true });
   const path = reportRoot + report.run_id + ".json";
   writeFileSync(path, JSON.stringify(report, null, 2), { mode: 0o600 });
-  return { stored: path, run_id: report.run_id };
+  /* §22: forty-five individual test reports, one per case. */
+  const caseDir = reportRoot + report.run_id + "/";
+  mkdirSync(caseDir, { recursive: true });
+  const individual = [];
+  for (const c of report.cases) {
+    const cr = caseReport(c, report.independent_verification);
+    const cp = caseDir + c.case_id + ".json";
+    writeFileSync(cp, JSON.stringify(cr, null, 2), { mode: 0o600 });
+    individual.push(cp);
+  }
+  try { ingestEvent(T, { kind: "TEST_REPORT_READY", event_id: randomUUID(), ts: new Date().toISOString(), actor: "orchestrator", objective_id: report.run_id }); } catch { /* inbox optional */ }
+  return { stored: path, run_id: report.run_id, individual_reports: individual.length, case_dir: caseDir };
 }
+export function getCaseReport(runId, caseId) { return JSON.parse(readFileSync(reportRoot + runId + "/" + caseId + ".json", "utf8")); }
 export function getReport(runId) { return JSON.parse(readFileSync(reportRoot + runId + ".json", "utf8")); }
 export function newRunId() { return "BIZRUN-" + Date.now().toString(36) + "-" + randomUUID().slice(0, 4); }
