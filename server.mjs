@@ -21,6 +21,7 @@ import { get, DEMO_TENANT } from "./server/odai/store.mjs";
 import { createObjective, approve, resume, finalReport, project, listObjectives, view as objView } from "./server/odai/objectives.mjs";
 import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
 import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
+import { runWithToken, supabaseConfigured, isOffline, putUpload } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
 import { storeUpload, getUploadMeta, publicMeta, contextForAttachments, MAX_BYTES } from "./server/uploads.mjs"; // feat/composer-attachments: local upload sink
 
 const host = process.env.HOST;
@@ -100,7 +101,10 @@ function sessionUpdate(mode, q) {
 }
 
 /* ---------------- server + websocket relay ---------------- */
-const server = createServer(async (request, response) => {
+const server = createServer((request, response) => {
+  // feat: carry the caller's Supabase access token (if any) for request-scoped RLS.
+  const bearer = String(request.headers.authorization || "").replace(/^Bearer\s+/i, "") || null;
+  return runWithToken(bearer, async () => {
   try {
     const url = new URL(request.url ?? "/", "http://qwenwork.local");
 
@@ -148,6 +152,7 @@ const server = createServer(async (request, response) => {
     console.error("Request failed", error);
     send(response, 500, "Internal Server Error", "text/plain; charset=utf-8");
   }
+  });
 });
 
 /* POST /api/webrtc/sdp?model=… → forward the browser's Offer SDP to Model Studio
@@ -285,7 +290,14 @@ async function uploadReceive(request, response) {
   try { body = JSON.parse(raw || "{}"); } catch { return send(response, 400, JSON.stringify({ error: "bad json" }), "application/json; charset=utf-8"); }
   const r = storeUpload({ name: body.name, mime: body.mime, data: body.data });
   if (!r.ok) return send(response, r.status, JSON.stringify({ error: r.error }), "application/json; charset=utf-8");
-  return send(response, 200, JSON.stringify({ ok: true, file: r.meta }), "application/json; charset=utf-8");
+  // Supabase mode: mirror the actual file bytes to the private Storage bucket as the
+  // signed-in user (RLS-scoped); metadata lives in odai_upload. Offline/no-env stays local-only.
+  let storage = null;
+  if (supabaseConfigured() && !isOffline()) {
+    const tenant = new URL(request.url ?? "/", "http://qwenwork.local").searchParams.get("tenant") || DEMO_TENANT;
+    storage = await putUpload({ tenantId: tenant, uploadId: r.meta.id, filename: r.meta.name, body: Buffer.from(body.data, "base64"), contentType: body.mime || "application/octet-stream" });
+  }
+  return send(response, 200, JSON.stringify({ ok: true, file: r.meta, storage }), "application/json; charset=utf-8");
 }
 
 /* GET /api/uploads/:id — metadata for a stored attachment (never bytes or full text). */

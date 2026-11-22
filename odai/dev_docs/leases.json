@@ -1235,7 +1235,9 @@
     ],
     "budget": 60,
     "single_use": false,
-    "used_by_op": {},
+    "used_by_op": {
+      "commit": 5
+    },
     "revoked": false
   },
   "WO-UI01": {

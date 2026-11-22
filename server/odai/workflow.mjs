@@ -27,7 +27,11 @@ const BEAT_ROLE = Object.fromEntries(Object.entries(BEAT_LABELS).map(([b, [, r]]
 async function tryDb(t, label, fn) {
   if (!t.dbOk) return null;
   try { return await fn(); }
-  catch (e) { console.error("db mirror:", label, e.diagnostic || e.code || ""); return null; }
+  catch (e) {
+    // Supabase mode: surface the error explicitly (no silent memory fallback).
+    if (db.supabaseConfigured()) { t.dbError = e?.diagnostic || e?.code || String(e); throw e; }
+    console.error("db mirror:", label, e.diagnostic || e.code || ""); return null; // legacy broker: best-effort
+  }
 }
 
 async function ensureDb(t) {

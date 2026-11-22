@@ -59,7 +59,8 @@ function internalArtifact(task, obj) {
 }
 
 async function persist(obj) {
-  try { if (await db.dbAvailable()) { const m = await import("./db.mjs"); m.upsertObjective && m.upsertObjective({ tenant_id: obj.tenant_id, objective_id: obj.objective_id, row: obj }); logEvent(get(obj.tenant_id), { runId: obj.run_id, beat: "·", actor: "orchestrator", kind: "OBJECTIVE_CHECKPOINT", decision: "ALLOW", note: obj.state }); } } catch { /* durable-best-effort: memory remains authoritative in staging */ }
+  try { if (await db.dbAvailable()) { const m = await import("./db.mjs"); m.upsertObjective && m.upsertObjective({ tenant_id: obj.tenant_id, objective_id: obj.objective_id, row: obj }); logEvent(get(obj.tenant_id), { runId: obj.run_id, beat: "·", actor: "orchestrator", kind: "OBJECTIVE_CHECKPOINT", decision: "ALLOW", note: obj.state }); } }
+  catch (e) { if (db.supabaseConfigured()) throw e; /* legacy broker: durable-best-effort, memory authoritative */ }
 }
 
 /* WO-A1 registry objective (WO-110 routing + WO-102 generalized criterion).
