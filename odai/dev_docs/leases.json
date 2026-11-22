@@ -1233,8 +1233,12 @@
     ],
     "budget": 30,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 8
+    },
+    "revoked": true,
+    "revoked_reason": "Supabase Auth login + app wiring committed 1d7338f; offline verified; revoke after commit",
+    "revoked_at": "2026-11-22T04:44:42Z"
   },
   "WO-SUPA-DB": {
     "issued_at": "2026-11-22T03:52:55Z",
