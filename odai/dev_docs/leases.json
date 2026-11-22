@@ -1330,8 +1330,12 @@
     ],
     "budget": 40,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 6
+    },
+    "revoked": true,
+    "revoked_reason": "My Shop dropshipping integration shipped; external sync/verify honestly pending; revoke after commit",
+    "revoked_at": "2026-11-22T13:56:14Z"
   },
   "WO-NETTEST": {
     "issued_at": "2026-11-22T12:58:18Z",

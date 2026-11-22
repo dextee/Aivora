@@ -354,3 +354,5 @@
 2026-11-22T13:36:07Z|REVOKE|WO-MENUCLEAN|reason=menu cleaned; revoke after commit
 2026-11-22T13:36:07Z|HOOK_ALLOW|WO-MENUCLEAN|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-22T13:56:09Z|ISSUE|WO-MYSHOP2|ops=check,commit|paths=server.mjs,server/,src/,tests/,odai/dev_docs/|minutes=240|budget=40|single_use=0|expires_at=2026-11-22T17:56:09Z
+2026-11-22T13:56:10Z|HOOK_ALLOW|WO-MYSHOP2|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server.mjs+server/odai/shop_setup.mjs+src/App.tsx+src/Menu.tsx+src/MyShopView.tsx+tests/shop_setup.test.mjs
+2026-11-22T13:56:14Z|REVOKE|WO-MYSHOP2|reason=My Shop dropshipping integration shipped; external sync/verify honestly pending; revoke after commit
