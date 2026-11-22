@@ -1216,6 +1216,23 @@
     "revoked_reason": "WO-SEC05 SHIPPED (staged, NO publish; files: server/odai/reservations.mjs NEW, server/odai/{skills,ledger,objectives}.mjs, tests/policy_registry.test.mjs, tests/policy_gaps.txt GREEN-regenerated; AGEN",
     "revoked_at": "2026-11-20T18:08:41Z"
   },
+  "WO-SUPA-007": {
+    "issued_at": "2026-11-22T05:50:39Z",
+    "expires_at": "2026-11-22T07:50:39Z",
+    "minutes": 120,
+    "paths": [
+      "odai/migrations/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 20,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-SUPA-APPROVE": {
     "issued_at": "2026-11-22T04:57:36Z",
     "expires_at": "2026-11-22T06:57:36Z",

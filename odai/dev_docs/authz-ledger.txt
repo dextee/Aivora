@@ -312,3 +312,5 @@
 2026-11-22T04:57:36Z|ISSUE|WO-SUPA-APPROVE|ops=check,commit|paths=odai/migrations/,server.mjs,server/,tests/,odai/dev_docs/|minutes=120|budget=30|single_use=0|expires_at=2026-11-22T06:57:36Z
 2026-11-22T04:57:52Z|HOOK_ALLOW|WO-SUPA-APPROVE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/migrations/006_upload_approval.sql+server.mjs+server/odai/db.mjs+tests/uploads.test.mjs
 2026-11-22T04:58:13Z|REVOKE|WO-SUPA-APPROVE|reason=upload approval gate committed 409d5ee; offline verified; kept draft (not applied to staging/production); revoke after commit
+2026-11-22T04:58:13Z|HOOK_ALLOW|WO-SUPA-APPROVE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T05:50:39Z|ISSUE|WO-SUPA-007|ops=check,commit|paths=odai/migrations/,odai/dev_docs/|minutes=120|budget=20|single_use=0|expires_at=2026-11-22T07:50:39Z
