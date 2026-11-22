@@ -22,6 +22,13 @@ import { createObjective, approve, resume, finalReport, project, listObjectives,
 import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
 import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
 import { runWithToken, supabaseConfigured, isOffline, putUpload, approveUpload, requestCtx } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
+// ECOMMERCE (V43) coffee-storyboard modules — integrated additively into MAIN's existing dispatcher (no second dispatcher).
+import { storeSetup, storeIntent, hasSession as hasStoreSession, storeRecord, storeExport, resetStore } from "./server/odai/store_setup.mjs";
+import { submitCoffeePlan, getPlan as getPlanById } from "./server/odai/plan_engine.mjs";
+import { listLeads, addLead, draftFollowup } from "./server/odai/leads.mjs";
+import { createCampaign as mktCreate, attachAsset as mktAttach, getCampaign as mktGet, latestCampaign as mktLatest } from "./server/odai/marketing.mjs";
+import { createCampaign as hmCreate, uploadCreative as hmUpload, preparePublication as hmPrepare, approvePublication as hmApprove, submit as hmSubmit, getCampaignStatus as hmStatus, getCampaignMetrics as hmMetrics, getRecord as hmRecord } from "./server/odai/hashmeta_adapter.mjs";
+import { seedMock as custSeed, createCustomer, updateCustomer, getCustomer, searchCustomers, importCustomers, addPurchase, getPurchaseHistory, identifyRepeatBuyers, identifyInactiveBuyers, analyzePurchasePatterns, recommendProducts, prepareFollowup, scheduleFollowup, listFollowups, savePurchaseHealed, registerAgent, exportCustomers, generateReport, getThresholds, setThresholds } from "./server/odai/customers.mjs";
 import { storeUpload, getUploadMeta, publicMeta, contextForAttachments, MAX_BYTES } from "./server/uploads.mjs"; // feat/composer-attachments: local upload sink
 
 const host = process.env.HOST;
@@ -350,6 +357,64 @@ async function odaiRoute(url, request, response) {
   if (supabaseConfigured() && !isOffline() && !requestCtx.getStore()?.token)
     return json({ error: "A signed-in user is required in Supabase mode", code: "AUTH_REQUIRED" }, 401);
   try {
+    /* ---- ECOMMERCE (V43) coffee-storyboard integration — additive routes on MAIN's dispatcher ---- */
+    if (path === "/submit" && request.method === "POST") {
+      let raw = ""; for await (const c of request) raw += c;
+      const { text, request_id, source, objective_id } = JSON.parse(raw || "{}");
+      const statement = String(text || "").slice(0, 300);
+      if (!statement.trim()) return json({ error: "empty submission" }, 400);
+      if (objective_id == null && (hasStoreSession(tenant) || storeIntent(statement))) return json(await storeSetup(tenant, { text: statement, request_id, source }));
+      if (objective_id == null && /launch .*coffee business|start .*coffee business|coffee business/i.test(statement)) return json(await submitCoffeePlan(tenant, statement, request_id));
+      if (objective_id == null && /best customers|most valuable|lifetime value|not purchased recently|inactive|likely to purchase|repeat buyer|popular product|purchase together|which products|monthly customer report|recommend .*campaign/i.test(statement)) {
+        if (/best customers|most valuable|lifetime value/i.test(statement)) return json({ objective: "OBJ-CUSTOMER-001/007", report: generateReport(tenant), top_customers: identifyRepeatBuyers(tenant).sort((a, b) => b.total_purchase_amount - a.total_purchase_amount).slice(0, 5) });
+        if (/not purchased recently|inactive/i.test(statement)) return json({ objective: "OBJ-CUSTOMER-002", inactive_customers: identifyInactiveBuyers(tenant) });
+        if (/likely to purchase|repeat buyer|promotion for repeat/i.test(statement)) return json({ objective: "OBJ-CUSTOMER-003/005", repeat_buyers: identifyRepeatBuyers(tenant) });
+        if (/popular product|purchase together|which products/i.test(statement)) return json({ objective: "OBJ-CUSTOMER-008/009", patterns: analyzePurchasePatterns(tenant) });
+        return json({ objective: "OBJ-CUSTOMER-008", report: generateReport(tenant) });
+      }
+      return json(await createObjective(tenant, statement)); // MAIN's own objective engine for other goals
+    }
+    if (path === "/plan" && request.method === "POST") { let raw = ""; for await (const c of request) raw += c; const { statement, request_id } = JSON.parse(raw || "{}"); return json(await submitCoffeePlan(tenant, String(statement || "Launch my RM4 coffee business"), request_id)); }
+    if (path.startsWith("/plan/") && request.method === "GET") return json(getPlanById(tenant, decodeURIComponent(path.split("/")[2])));
+    if (path === "/store" && request.method === "GET") return json(storeRecord(tenant));
+    if (path === "/store/export" && request.method === "GET") return json(storeExport(tenant));
+    if (path === "/store" && request.method === "POST") { let raw = ""; for await (const c of request) raw += c; const { action } = JSON.parse(raw || "{}"); if (action === "reset") return json(resetStore(tenant)); if (action === "sync" || action === "regenerate") return json(await storeSetup(tenant, { text: "sync", request_id: "sync:" + Date.now() })); return json({ error: "unknown store action" }, 400); }
+    if (path === "/leads" && request.method === "GET") return json(listLeads(tenant));
+    if (path === "/leads" && request.method === "POST") { let raw = ""; for await (const c of request) raw += c; return json(addLead(tenant, JSON.parse(raw || "{}"))); }
+    if (path.startsWith("/leads/") && path.endsWith("/followup") && request.method === "POST") return json(draftFollowup(tenant, decodeURIComponent(path.split("/")[2])));
+    if (path === "/campaign" && request.method === "POST") return json(mktCreate(tenant, {}));
+    if (path === "/campaign" && request.method === "GET") return json(mktLatest(tenant));
+    if (path.startsWith("/campaign/") && path.endsWith("/assets") && request.method === "POST") { const id = decodeURIComponent(path.split("/")[2]); let raw = ""; for await (const c of request) raw += c; return json(mktAttach(tenant, id, JSON.parse(raw || "{}"))); }
+    if (path.startsWith("/campaign/") && request.method === "GET") return json(mktGet(tenant, decodeURIComponent(path.split("/")[2])));
+    if (path.startsWith("/hashmeta/")) { const hmEnv = { hashmetaToken: process.env.HASHMETA_API_TOKEN || null, hashmetaUrl: process.env.HASHMETA_MCP_URL || null }; const seg = path.split("/")[2];
+      if (seg === "campaign" && request.method === "POST") return json(hmCreate(tenant, hmEnv));
+      if (seg === "campaign" && request.method === "GET") return json(hmRecord(tenant));
+      if (seg === "creative" && request.method === "POST") return json(hmUpload(tenant, hmEnv));
+      if (seg === "prepare" && request.method === "POST") return json(hmPrepare(tenant, hmEnv));
+      if (seg === "approve" && request.method === "POST") return json(hmApprove(tenant));
+      if (seg === "submit" && request.method === "POST") return json(hmSubmit(tenant, hmEnv));
+      if (seg === "status" && request.method === "GET") return json(hmStatus(tenant));
+      if (seg === "metrics" && request.method === "GET") return json(hmMetrics(tenant));
+      return json({ error: "unknown hashmeta route" }, 404); }
+    if (path.startsWith("/customers")) { const body = async () => { let raw = ""; for await (const c of request) raw += c; try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      if (path === "/customers" && request.method === "GET") return json(searchCustomers(tenant, { q: url.searchParams.get("q") || "", category: url.searchParams.get("category") || "", page: +(url.searchParams.get("page") || 1), pageSize: +(url.searchParams.get("pageSize") || 20) }));
+      if (path === "/customers" && request.method === "POST") return json(createCustomer(tenant, await body()));
+      if (path === "/customers/seed" && request.method === "POST") return json(custSeed(tenant));
+      if (path === "/customers/import" && request.method === "POST") { const b = await body(); return json(importCustomers(tenant, Array.isArray(b) ? b : b.rows || [])); }
+      if (path === "/customers/report" && request.method === "GET") return json(generateReport(tenant));
+      if (path === "/customers/patterns" && request.method === "GET") return json(analyzePurchasePatterns(tenant));
+      if (path === "/customers/repeat" && request.method === "GET") return json({ repeat: identifyRepeatBuyers(tenant) });
+      if (path === "/customers/inactive" && request.method === "GET") return json({ inactive: identifyInactiveBuyers(tenant) });
+      if (path === "/customers/followups" && request.method === "GET") return json(listFollowups(tenant));
+      if (path === "/customers/heal-demo" && request.method === "POST") { const b = await body(); return json(savePurchaseHealed(tenant, b.purchase || b, { injectFailure: b.injectFailure !== false })); }
+      if (path === "/customers/export" && request.method === "POST") { const b = await body(); return json(exportCustomers(tenant, String(b.agent_id || ""))); }
+      if (path.startsWith("/customers/") && request.method === "GET" && path.endsWith("/history")) return json(getPurchaseHistory(tenant, decodeURIComponent(path.split("/")[2])));
+      if (path.startsWith("/customers/") && request.method === "GET" && path.endsWith("/recommend")) return json(recommendProducts(tenant, decodeURIComponent(path.split("/")[2])));
+      if (path.startsWith("/customers/") && request.method === "POST" && path.endsWith("/purchase")) { const id = decodeURIComponent(path.split("/")[2]); const b = await body(); return json(addPurchase(tenant, { ...b, customer_id: id })); }
+      if (path.startsWith("/customers/") && request.method === "POST" && path.endsWith("/followup")) { const id = decodeURIComponent(path.split("/")[2]); const b = await body(); return json(prepareFollowup(tenant, id, (b && b.type) || "thank_you")); }
+      if (path.startsWith("/customers/") && request.method === "PATCH") { const id = decodeURIComponent(path.split("/")[2]); return json(updateCustomer(tenant, id, await body())); }
+      if (path.startsWith("/customers/") && request.method === "GET") return json(getCustomer(tenant, decodeURIComponent(path.split("/")[2])));
+      return json({ error: "unknown customers route" }, 404); }
     if (path === "/company") { const { COMPANY } = await import("./server/odai/store.mjs"); return json({ tenant_id: tenant, company: COMPANY, note: "synthetic demo brand standing in for TGDO per owner instruction; swap odai/config/company_profile.json when real data arrives" }); }
     if (path === "/objectives") {
     if (request.method === "GET") return json({ tenant_id: tenant, objectives: listObjectives(tenant) }); // WO-10R restore list

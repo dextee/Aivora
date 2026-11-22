@@ -1,0 +1,46 @@
+{
+  "store_name": "AIVORA",
+  "language": "English",
+  "integration": "Hashmeta",
+  "currency": "SGD",
+  "source_note": "Coffee product set for the AIVORA demo store. Names + prices are owner-provided (competition brief); images REUSE the existing Hashmeta media library (ids 66-70, already on page 29) — not regenerated. benefits/specs/availability are intentionally null: not invented (no approved source).",
+  "whatsapp": "6583827213",
+  "hashmeta": { "project_id": "5540010c-3d9d-43fb-9f3f-1a225d3c9cfc", "page_id": 29, "public_path": "/coffee-store", "published": false },
+  "products": [
+    {
+      "id": "COF-CEO-001", "sku": "COF-CEO-001", "name": "CEO Signature Coffee",
+      "category": "Instant Coffee", "image": "https://aivora-voice-first-ai-assist.geo.hashmeta.tech/api/media/file/ceo-signature-kuGXZ9oUsKcwhoGjnSKFy4GjEmbQ2p.jpg",
+      "description": "Instant coffee — CEO Signature blend.", "benefits": null, "specifications": null,
+      "price": 21.90, "currency": "SGD", "availability": null,
+      "action": { "type": "whatsapp_enquiry", "url": "https://wa.me/6583827213?text=Hi%2C%20I%27d%20like%20to%20enquire%20about%20CEO%20Signature%20Coffee" }
+    },
+    {
+      "id": "COF-TKA-002", "sku": "COF-TKA-002", "name": "Tongkat Ali Coffee",
+      "category": "Instant Coffee", "image": "https://aivora-voice-first-ai-assist.geo.hashmeta.tech/api/media/file/tongkat-ali-amaGCrH4vOUtX1C6iku55WlAtGavYH.jpg",
+      "description": "Instant coffee — Tongkat Ali.", "benefits": null, "specifications": null,
+      "price": 24.90, "currency": "SGD", "availability": null,
+      "action": { "type": "whatsapp_enquiry", "url": "https://wa.me/6583827213?text=Hi%2C%20I%27d%20like%20to%20enquire%20about%20Tongkat%20Ali%20Coffee" }
+    },
+    {
+      "id": "COF-VIE-003", "sku": "COF-VIE-003", "name": "Vietnamese Heritage Coffee",
+      "category": "Instant Coffee", "image": "https://aivora-voice-first-ai-assist.geo.hashmeta.tech/api/media/file/vietnamese-heritage-WkJAYFoSqlMNeuyFNp732P6PKLyxSw.jpg",
+      "description": "Instant coffee — Vietnamese Heritage.", "benefits": null, "specifications": null,
+      "price": 22.90, "currency": "SGD", "availability": null,
+      "action": { "type": "whatsapp_enquiry", "url": "https://wa.me/6583827213?text=Hi%2C%20I%27d%20like%20to%20enquire%20about%20Vietnamese%20Heritage%20Coffee" }
+    },
+    {
+      "id": "COF-NYG-004", "sku": "COF-NYG-004", "name": "Nanyang Gold Kopi",
+      "category": "Instant Coffee", "image": "https://aivora-voice-first-ai-assist.geo.hashmeta.tech/api/media/file/nanyang-gold-2Rs64IfxkyIiAu8wj8jH9WrxzQ0qnW.jpg",
+      "description": "Instant coffee — Nanyang Gold Kopi.", "benefits": null, "specifications": null,
+      "price": 19.90, "currency": "SGD", "availability": null,
+      "action": { "type": "whatsapp_enquiry", "url": "https://wa.me/6583827213?text=Hi%2C%20I%27d%20like%20to%20enquire%20about%20Nanyang%20Gold%20Kopi" }
+    },
+    {
+      "id": "COF-MOCHA-005", "sku": "COF-MOCHA-005", "name": "Mocha Reserve Coffee",
+      "category": "Instant Coffee", "image": "https://aivora-voice-first-ai-assist.geo.hashmeta.tech/api/media/file/mocha-reserve-5cajhf1f5lJW7lBT7Yi8sbbQumf6FD.jpg",
+      "description": "Instant coffee — Mocha Reserve.", "benefits": null, "specifications": null,
+      "price": 21.90, "currency": "SGD", "availability": null,
+      "action": { "type": "whatsapp_enquiry", "url": "https://wa.me/6583827213?text=Hi%2C%20I%27d%20like%20to%20enquire%20about%20Mocha%20Reserve%20Coffee" }
+    }
+  ]
+}
