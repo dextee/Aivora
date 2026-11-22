@@ -1236,8 +1236,12 @@
     ],
     "budget": 60,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 6
+    },
+    "revoked": true,
+    "revoked_reason": "coffee screens integrated into MAIN UI; GoalsView+engine reconciliation deferred; revoke after commit",
+    "revoked_at": "2026-11-22T12:10:36Z"
   },
   "WO-SEC05": {
     "issued_at": "2026-11-20T17:50:15Z",

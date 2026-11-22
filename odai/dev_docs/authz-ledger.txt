@@ -326,3 +326,5 @@
 2026-11-22T11:53:43Z|REVOKE|WO-ECOMINT|reason=backend coffee-storyboard integration committed 98fc92e; frontend screens are the next phase; revoke after commit
 2026-11-22T11:53:44Z|HOOK_ALLOW|WO-ECOMINT|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-22T12:07:52Z|ISSUE|WO-ECOMUI|ops=check,commit|paths=src/,server.mjs,server/,tests/,odai/data/,odai/dev_docs/|minutes=240|budget=60|single_use=0|expires_at=2026-11-22T16:07:52Z
+2026-11-22T12:10:33Z|HOOK_ALLOW|WO-ECOMUI|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+src/App.tsx+src/CustomersView.tsx+src/LeadsView.tsx+src/Menu.tsx+src/MyStoreView.tsx+src/PlanView.tsx
+2026-11-22T12:10:36Z|REVOKE|WO-ECOMUI|reason=coffee screens integrated into MAIN UI; GoalsView+engine reconciliation deferred; revoke after commit
