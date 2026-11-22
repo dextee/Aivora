@@ -1285,8 +1285,12 @@
     ],
     "budget": 60,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 7
+    },
+    "revoked": true,
+    "revoked_reason": "My Shop integrated into MAIN-FIX; external sync/verification honestly pending; revoke after commit",
+    "revoked_at": "2026-11-22T13:30:05Z"
   },
   "WO-NETTEST": {
     "issued_at": "2026-11-22T12:58:18Z",
