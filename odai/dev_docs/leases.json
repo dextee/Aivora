@@ -1230,8 +1230,12 @@
     ],
     "budget": 20,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "migration 007 committed 897e7bd; revoke after commit; no further writes",
+    "revoked_at": "2026-11-22T05:51:10Z"
   },
   "WO-SUPA-APPROVE": {
     "issued_at": "2026-11-22T04:57:36Z",
