@@ -4,6 +4,10 @@ import { SettingsSheet } from "./SettingsSheet";
 import { TalkView } from "./TalkView";
 import { DocsView } from "./DocsView";
 import { StoreView } from "./StoreView";
+import { PlanView } from "./PlanView";
+import { MyStoreView } from "./MyStoreView";
+import { CustomersView } from "./CustomersView";
+import { LeadsView } from "./LeadsView";
 import { ManagementView } from "./ManagementView";
 import { SecurityView } from "./SecurityView";
 import type { StoreSpec } from "./lib";
@@ -15,6 +19,10 @@ const TITLES: Record<View, { t: string; s: string }> = {
   talk: { t: "AIVORA", s: "Objective-Driven Autonomous Intelligence" },
   docs: { t: "Document Translation", s: "text · photo · voice note" },
   store: { t: "Online Store Builder", s: "ecommerce catalog pages" },
+  launch: { t: "Launch Business", s: "voice→plan→agents→artifacts" },
+  mystore: { t: "My Store", s: "Hashmeta store · catalog · sync status" },
+  customers: { t: "My Customers", s: "customers · purchase history · AI insights" },
+  leads: { t: "Leads", s: "enquiries · follow-up drafts" },
 };
 
 export function App() {
@@ -87,6 +95,10 @@ export function App() {
       {view === "talk" && <TalkView onOpenDocs={() => setView("docs")} onOpenStore={(sd) => { setStoreSeed(sd); setView("store"); }} />}
       {view === "docs" && <DocsView />}
       {view === "store" && <StoreView seed={storeSeed} onBack={() => setView("talk")} />}
+      {view === "launch" && <PlanView />}
+      {view === "mystore" && <MyStoreView />}
+      {view === "customers" && <CustomersView />}
+      {view === "leads" && <LeadsView />}
       </>}
       {mode === "management" && <ManagementView />}
       {mode === "security" && <SecurityView />}

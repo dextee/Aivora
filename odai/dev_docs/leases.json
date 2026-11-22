@@ -1218,6 +1218,27 @@
     "revoked_reason": "backend coffee-storyboard integration committed 98fc92e; frontend screens are the next phase; revoke after commit",
     "revoked_at": "2026-11-22T11:53:43Z"
   },
+  "WO-ECOMUI": {
+    "issued_at": "2026-11-22T12:07:52Z",
+    "expires_at": "2026-11-22T16:07:52Z",
+    "minutes": 240,
+    "paths": [
+      "src/",
+      "server.mjs",
+      "server/",
+      "tests/",
+      "odai/data/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 60,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-SEC05": {
     "issued_at": "2026-11-20T17:50:15Z",
     "expires_at": "2026-11-20T19:20:15Z",

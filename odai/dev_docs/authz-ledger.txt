@@ -324,3 +324,5 @@
 2026-11-22T11:46:44Z|ISSUE|WO-ECOMINT|ops=check,commit|paths=server.mjs,server/,src/,tests/,odai/data/,odai/dev_docs/|minutes=240|budget=60|single_use=0|expires_at=2026-11-22T15:46:44Z
 2026-11-22T11:53:25Z|HOOK_ALLOW|WO-ECOMINT|odai/data/catalog_store_aivora.json+odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server.mjs+server/odai/customers.mjs+server/odai/hashmeta_adapter.mjs+server/odai/leads.mjs+server/odai/marketing.mjs+server/odai/plan_engine.mjs+server/odai/store_setup.mjs
 2026-11-22T11:53:43Z|REVOKE|WO-ECOMINT|reason=backend coffee-storyboard integration committed 98fc92e; frontend screens are the next phase; revoke after commit
+2026-11-22T11:53:44Z|HOOK_ALLOW|WO-ECOMINT|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-22T12:07:52Z|ISSUE|WO-ECOMUI|ops=check,commit|paths=src/,server.mjs,server/,tests/,odai/data/,odai/dev_docs/|minutes=240|budget=60|single_use=0|expires_at=2026-11-22T16:07:52Z
