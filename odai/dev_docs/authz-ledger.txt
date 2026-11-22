@@ -426,3 +426,5 @@
 2026-11-22T23:00:51Z|HOOK_ALLOW|WO-INBOXONLINE2|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server.mjs
 2026-11-22T23:00:52Z|REVOKE|WO-INBOXONLINE2|reason=follow-up committed
 2026-11-22T23:07:09Z|ISSUE|WO-MENUBOTTOM|ops=check,commit|paths=src/,odai/dev_docs/|minutes=30|budget=10|single_use=0|expires_at=2026-11-22T23:37:09Z
+2026-11-22T23:07:10Z|HOOK_ALLOW|WO-MENUBOTTOM|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+src/Menu.tsx
+2026-11-22T23:07:13Z|REVOKE|WO-MENUBOTTOM|reason=menu reorder committed
