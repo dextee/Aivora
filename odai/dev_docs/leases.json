@@ -1236,9 +1236,11 @@
     "budget": 60,
     "single_use": false,
     "used_by_op": {
-      "commit": 5
+      "commit": 9
     },
-    "revoked": false
+    "revoked": true,
+    "revoked_reason": "Supabase migrations + request-scoped code committed ff323ce/12743b9; offline verified; revoke after commit",
+    "revoked_at": "2026-11-22T03:58:47Z"
   },
   "WO-UI01": {
     "issued_at": "2026-11-20T14:35:38Z",

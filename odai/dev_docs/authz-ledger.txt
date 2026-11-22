@@ -296,3 +296,5 @@
 2026-11-22T03:24:23Z|HOOK_ALLOW|WO-ATTACH|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-22T03:52:55Z|ISSUE|WO-SUPA-DB|ops=check,commit|paths=odai/migrations/,tools/,server.mjs,server/,src/,tests/,package.json|minutes=240|budget=60|single_use=0|expires_at=2026-11-22T07:52:55Z
 2026-11-22T03:53:39Z|HOOK_ALLOW|WO-SUPA-DB|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/migrations/002_seed_catalog.sql+odai/migrations/003_identity.sql+odai/migrations/004_rls.sql+odai/migrations/005_upload.sql+tools/supa_verify.sql
+2026-11-22T03:58:24Z|HOOK_ALLOW|WO-SUPA-DB|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server.mjs+server/odai/db.mjs+server/odai/objectives.mjs+server/odai/workflow.mjs
+2026-11-22T03:58:47Z|REVOKE|WO-SUPA-DB|reason=Supabase migrations + request-scoped code committed ff323ce/12743b9; offline verified; revoke after commit
