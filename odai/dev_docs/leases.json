@@ -1211,8 +1211,12 @@
     ],
     "budget": 60,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 8
+    },
+    "revoked": true,
+    "revoked_reason": "backend coffee-storyboard integration committed 98fc92e; frontend screens are the next phase; revoke after commit",
+    "revoked_at": "2026-11-22T11:53:43Z"
   },
   "WO-SEC05": {
     "issued_at": "2026-11-20T17:50:15Z",
