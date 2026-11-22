@@ -4,7 +4,7 @@ import { getAccessToken } from "./auth";
 
 export type View = "appointment" | "talk" | "myshop" | "leads" | "docs" | "inbox" | "contacts" | "purchases" | "orders" | "intelligence" | "testlab" | "bizlab" | "storyboard";
 
-const NAV: { id: View; icon: string; label: string; sub: string; children?: { id: View; label: string; sub: string }[] }[] = [
+const NAV: { id: View; icon: string; label: string; sub: string; section?: string; children?: { id: View; label: string; sub: string }[] }[] = [
   { id: "talk", icon: "🎙", label: "Talk to AIVORA", sub: "voice partner — interprets & routes itself" },
   { id: "appointment", icon: "AI", label: "Appointment", sub: "local organizer · Calendly booking" },
   { id: "inbox", icon: "AI", label: "Inbox", sub: "stored messages · approvals · security" },
@@ -14,10 +14,10 @@ const NAV: { id: View; icon: string; label: string; sub: string; children?: { id
     { id: "purchases", label: "Purchase History", sub: "original records and validation" },
   ] },
   { id: "intelligence", icon: "AI", label: "Business Intelligence", sub: "validated 30-day comparisons" },
-  { id: "testlab", icon: "🧪", label: "Inbox Test Lab", sub: "MGMT · 20-case acceptance testing" },
-  { id: "bizlab", icon: "📊", label: "Business Test Lab", sub: "MGMT · 45-case BI/PO/customer integration" },
   { id: "storyboard", icon: "🎬", label: "Storyboard", sub: "judge demo · 14 scenes in order" },
   { id: "docs", icon: "📄", label: "Document Translation", sub: "text, photos & voice notes" },
+  { id: "testlab", icon: "🧪", label: "Inbox Test Lab", sub: "MGMT · 20-case acceptance testing", section: "TESTING" },
+  { id: "bizlab", icon: "📊", label: "Business Test Lab", sub: "MGMT · 45-case BI/PO/customer integration" },
 ];
 
 export function Menu({ open, view, conn, onClose, onGo, onSettings, onAbout }: {
@@ -45,6 +45,7 @@ export function Menu({ open, view, conn, onClose, onGo, onSettings, onAbout }: {
           <div className="dsec">SERVICES</div>
           {NAV.map((n) => (
             <div key={n.id}>
+              {n.section && <div className="dsec">{n.section}</div>}
               <button className={`ditem${view === n.id ? " sel" : ""}`} onClick={() => onGo(n.id)}>
                 <span className="dic">{n.icon}</span>
                 <span style={{ flex: 1 }}>{n.label}{n.id === "inbox" && unread !== null ? ` (${unread})` : ""}<small>{n.sub}</small></span>
