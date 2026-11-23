@@ -228,10 +228,23 @@ function buildPosterSpec(job) {
 }
 
 /* Attach the real provider-rendered poster (validated like the video render). */
-export function attachPoster(tenant, job_id, { file_path, provider_task_id = null, provider = "qwenwork_builtin_image_generate" }) {
+/* Accept either a server-side path or a composer upload id (the studio UI uploads through
+ * POST /api/uploads, which stores bytes at odai/uploads/<id>.bin). */
+function resolveLocalFile({ file_path, upload_id }) {
+  if (upload_id) {
+    const meta = getUploadMeta(String(upload_id));
+    if (!meta) throw err(`upload ${upload_id} not found in this workspace's upload store`, 404);
+    const p = ROOT + "odai/uploads/" + meta.id + ".bin";
+    if (!existsSync(p)) throw err("uploaded bytes are missing on disk", 404);
+    return { path: p, name: meta.name, kind: meta.kind };
+  }
+  return { path: String(file_path || ""), name: null, kind: null };
+}
+
+export function attachPoster(tenant, job_id, { file_path, upload_id, provider_task_id = null, provider = "qwenwork_builtin_image_generate" }) {
   const job = getCommercial(tenant, job_id);
-  const p = String(file_path || "");
-  if (!p) throw err("file_path required");
+  const p = resolveLocalFile({ file_path, upload_id }).path;
+  if (!p) throw err("file_path or upload_id required");
   if (!existsSync(p)) throw err(`poster file not found: ${p}`, 404);
   const buf = readFileSync(p);
   if (buf.length < 512) throw err("poster file is too small to be a real image", 422);
@@ -270,10 +283,10 @@ export function markDispatched(tenant, job_id, { provider_task_id = null, dispat
   return save(job);
 }
 
-export function attachRender(tenant, job_id, { file_path, provider_task_id = null, duration_seconds = null, provider = PROVIDER.model }) {
+export function attachRender(tenant, job_id, { file_path, upload_id, provider_task_id = null, duration_seconds = null, provider = PROVIDER.model }) {
   const job = getCommercial(tenant, job_id);
-  const p = String(file_path || "");
-  if (!p) throw err("file_path required");
+  const p = resolveLocalFile({ file_path, upload_id }).path;
+  if (!p) throw err("file_path or upload_id required");
   if (!existsSync(p)) throw err(`rendered file not found: ${p}`, 404);
   const buf = readFileSync(p);
   if (buf.length < 1024) throw err("rendered file is too small to be a real video", 422);

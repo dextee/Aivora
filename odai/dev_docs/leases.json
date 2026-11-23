@@ -2320,6 +2320,25 @@
     "revoked_reason": "Storyboard shipped 625ceff; revoke after commit",
     "revoked_at": "2026-11-22T22:04:08Z"
   },
+  "WO-STUDIO": {
+    "issued_at": "2026-11-23T09:53:03Z",
+    "expires_at": "2026-11-23T11:23:03Z",
+    "minutes": 90,
+    "paths": [
+      "src/",
+      "server/odai/",
+      "tests/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 30,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-SUPA-007": {
     "issued_at": "2026-11-22T05:50:39Z",
     "expires_at": "2026-11-22T07:50:39Z",
