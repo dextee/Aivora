@@ -489,3 +489,5 @@
 2026-11-23T09:26:27Z|REVOKE|WO-IFRAME|reason=mobile iframe viewer shipped
 2026-11-23T09:26:28Z|HOOK_ALLOW|WO-IFRAME|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-23T09:53:03Z|ISSUE|WO-STUDIO|ops=check,commit|paths=src/,server/odai/,tests/,odai/dev_docs/|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T11:23:03Z
+2026-11-23T09:53:03Z|HOOK_ALLOW|WO-STUDIO|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server/odai/commercial.mjs+src/CommercialView.tsx
+2026-11-23T09:53:05Z|REVOKE|WO-STUDIO|reason=studio fixes shipped

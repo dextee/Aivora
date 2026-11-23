@@ -2336,8 +2336,12 @@
     ],
     "budget": 30,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 2
+    },
+    "revoked": true,
+    "revoked_reason": "studio fixes shipped",
+    "revoked_at": "2026-11-23T09:53:05Z"
   },
   "WO-SUPA-007": {
     "issued_at": "2026-11-22T05:50:39Z",
