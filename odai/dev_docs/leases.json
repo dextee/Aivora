@@ -1818,6 +1818,23 @@
     "revoked_reason": "menu reorder shipped",
     "revoked_at": "2026-11-23T07:47:36Z"
   },
+  "WO-MENU2": {
+    "issued_at": "2026-11-23T07:57:24Z",
+    "expires_at": "2026-11-23T08:57:24Z",
+    "minutes": 60,
+    "paths": [
+      "src/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 20,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-MENUBOTTOM": {
     "issued_at": "2026-11-22T23:07:09Z",
     "expires_at": "2026-11-22T23:37:09Z",

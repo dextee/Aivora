@@ -19,8 +19,6 @@ const NAV: { id: View; icon: string; label: string; sub: string; section?: strin
   ] },
   { id: "docs", icon: "📄", label: "Document Translation", sub: "text, photos & voice notes" },
   { id: "testlab", icon: "🧪", label: "Inbox Test Lab", sub: "MGMT · 20-case acceptance testing", section: "TESTING" },
-  { id: "bizlab", icon: "📊", label: "Business Test Lab", sub: "MGMT · 45-case BI/PO/customer integration" },
-  { id: "storyboard", icon: "🎬", label: "Storyboard", sub: "MGMT · judge demo · 14 scenes in order" },
 ];
 
 export function Menu({ open, view, conn, onClose, onGo, onSettings, onAbout }: {
