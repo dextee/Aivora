@@ -1894,8 +1894,12 @@
     ],
     "budget": 30,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 5
+    },
+    "revoked": true,
+    "revoked_reason": "migration 010 shipped; revoke after commit",
+    "revoked_at": "2026-11-23T00:41:06Z"
   },
   "WO-POINTEG": {
     "issued_at": "2026-11-23T00:06:38Z",

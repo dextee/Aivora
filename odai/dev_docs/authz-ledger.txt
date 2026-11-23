@@ -442,3 +442,5 @@
 2026-11-23T00:07:09Z|REVOKE|WO-POINTEG|reason=PO integration shipped; revoke after commit
 2026-11-23T00:07:10Z|HOOK_ALLOW|WO-POINTEG|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-23T00:40:44Z|ISSUE|WO-PO010|ops=check,commit|paths=server.mjs,server/odai/,tests/,package.json,odai/migrations/,odai/dev_docs/|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T02:10:44Z
+2026-11-23T00:41:03Z|HOOK_ALLOW|WO-PO010|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+odai/migrations/010_purchase_procurement.sql+package.json+server.mjs+server/odai/po_persistence.mjs+tests/po_persistence.test.mjs
+2026-11-23T00:41:06Z|REVOKE|WO-PO010|reason=migration 010 shipped; revoke after commit
