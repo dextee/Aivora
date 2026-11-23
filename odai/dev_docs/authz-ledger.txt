@@ -501,3 +501,5 @@
 2026-11-23T10:34:19Z|REVOKE|WO-TERSE|reason=prose stripped
 2026-11-23T10:34:20Z|HOOK_ALLOW|WO-TERSE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-23T10:37:17Z|ISSUE|WO-MENU3|ops=check,commit|paths=src/|minutes=30|budget=10|single_use=0|expires_at=2026-11-23T11:07:17Z
+2026-11-23T10:37:34Z|HOOK_ALLOW|WO-MENU3|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+src/Menu.tsx
+2026-11-23T10:38:14Z|REVOKE|WO-MENU3|reason=Menu nesting shipped 3025057; revoke after commit

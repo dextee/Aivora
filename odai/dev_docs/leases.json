@@ -1896,8 +1896,12 @@
     ],
     "budget": 10,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "Menu nesting shipped 3025057; revoke after commit",
+    "revoked_at": "2026-11-23T10:38:14Z"
   },
   "WO-MENUBOTTOM": {
     "issued_at": "2026-11-22T23:07:09Z",
