@@ -1560,8 +1560,12 @@
     ],
     "budget": 30,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 3
+    },
+    "revoked": true,
+    "revoked_reason": "studio simplified",
+    "revoked_at": "2026-11-23T10:16:29Z"
   },
   "WO-COMM": {
     "issued_at": "2026-11-23T07:07:39Z",
