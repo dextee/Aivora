@@ -736,7 +736,11 @@ async function odaiRoute(url, request, response) {
         const sb = JSON.parse(raw || "{}");
         return json({ appointment: true, ...extractAppointment(statement, sb.reference_now ? new Date(sb.reference_now) : new Date(), { tenant, objective_id: objective_id || request_id || sb.objective_id }) });
       }
-      if (objective_id == null && (hasStoreSession(tenant) || storeIntent(statement))) return json(await storeSetup(tenant, { text: statement, request_id, source }));
+      /* DEF-13 (guardrail-workbook acceptance): hasStoreSession() stays true after the wizard
+       * completes, so every later utterance was captured by the store branch and the intake stopped
+       * creating objectives (Judge Mode check 1 fails if run after the store demo). Only an
+       * in-progress wizard owns the turn; a finished session is reached via POST /store {action:sync}. */
+      if (objective_id == null && (storeAwaitingInput(tenant) || storeIntent(statement))) return json(await storeSetup(tenant, { text: statement, request_id, source }));
       if (objective_id == null && /launch .*coffee business|start .*coffee business|coffee business/i.test(statement)) return json(await submitCoffeePlan(tenant, statement, request_id));
       if (objective_id == null && /set up my online (coffee )?shop|help me (set up|open) .*shop|open (an?|my|another) (online )?shop|online coffee shop|set up my shop|my online shop/i.test(statement)) return json(await runShop(tenant, { name: "AIVORA Coffee", language: "English", objective_id: request_id }));
       if (objective_id == null && /best customers|most valuable|lifetime value|not purchased recently|inactive|likely to purchase|repeat buyer|popular product|purchase together|which products|monthly customer report|recommend .*campaign/i.test(statement)) {
