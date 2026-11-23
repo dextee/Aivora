@@ -4,6 +4,7 @@ import { loadConfig, type LiveEvent } from "./lib";
 import { IntentChips, ObjectivePlanCard, objectiveCreateOutcome, parseIntentsResponse, type IntentItem, type ObjView } from "./IntentChips";
 import { AdminPanel, parseRegistrySummary, sessionRole, type RegistrySummaryView, type Role } from "./RoleGate";
 import { getAccessToken } from "./auth";
+import { WorkspaceIcon } from "./WorkspaceIcon";
 
 /* Talk to AIVORA — one big green button, continuous WebRTC session.
  * The partner engine IS qwen-audio-3.1-realtime-flash (rtc.ts PARTNER_MODEL):
@@ -52,6 +53,7 @@ export type AppointmentDraft = { title: string; contact: string; phone: string; 
 export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness, onOpenAppointment, onOpenCommercial, autoStart }: { onOpenBusiness(): void; onOpenInbox(): void; onOpenDocs(): void; onOpenStore(seed: { storeName?: string; products?: string; market?: string; language?: string }): void; onOpenAppointment?(draft: AppointmentDraft): void; onOpenCommercial?(): void; autoStart?: boolean }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"idle" | "connecting" | "partner" | "interpreter">("idle");
+  const [audioBlocked, setAudioBlocked] = useState(false);
   const [target, setTarget] = useState("en");
   const [secs, setSecs] = useState(0);
   const engRef = useRef<RtcHandle | null>(null);
@@ -70,6 +72,7 @@ export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness,
 
   /* V31 — Qwen4-Max text composer (independent of the voice session) */
   const [q4text, setQ4text] = useState("");
+  const [posting, setPosting] = useState(false);
   const q4busy = useRef(false);
   const q4hist = useRef<{ role: string; content: string }[]>([]); // rolling context, last 12 exchanges
 
@@ -423,7 +426,8 @@ export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness,
             break;
           }
           setRows((r) => [...r, { who: "err" as const, text: e.msg }]); setState("idle"); break;
-        case "closed": setState((s) => (s === "connecting" || s === "idle" ? "idle" : s)); break;
+        case "audio": setAudioBlocked(e.blocked); break;
+        case "closed": setAudioBlocked(false); setState("idle"); break;
       }
     });
     engRef.current = eng;
@@ -488,7 +492,7 @@ export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness,
 
   async function askQ4(forced?: string) {
     const text = String(forced ?? q4text).trim();
-    if (!text || q4busy.current) return;
+    if (!text || q4busy.current || files.some((file) => file.status === "uploading")) return;
     setQ4text("");
     /* feat/composer-attachments: capture ready uploads now; they are sent as ids
      * with this turn and cleared once the request is dispatched. */
@@ -507,10 +511,15 @@ export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness,
       void askIntentsList();
       return;
     }
-    setRows((r) => [...r, { who: "me", text, ...(attachView.length ? { attach: attachView } : {}) }]);
-    if (await tryIntentMatch(text)) return;
     q4busy.current = true;
-    setFiles([]);
+    setPosting(true);
+    setRows((r) => [...r, { who: "me", text, ...(attachView.length ? { attach: attachView } : {}) }]);
+    if (!ready.length && await tryIntentMatch(text)) {
+      q4busy.current = false;
+      setPosting(false);
+      return;
+    }
+    setFiles((current) => current.filter((file) => !ready.some((sent) => sent.key === file.key)));
     q4hist.current = [...q4hist.current, { role: "user", content: text }].slice(-24);
     setRows((r) => [...r, { who: "ai", text: "", label: "Qwen4-Max" }]);
     let acc = "";
@@ -562,17 +571,34 @@ export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness,
           return [...c, { who: "err" as const, text: `Qwen4-Max: ${msg}` }];
         });
       }
-    } finally { q4busy.current = false; }
+    } finally {
+      q4busy.current = false;
+      setPosting(false);
+    }
   }
+
+  const voiceAction = state === "connecting" ? "Cancel connection" : state === "interpreter" ? "Stop interpreting"
+    : state === "partner" ? "End conversation" : "Start voice";
+  const voiceStatus = state === "connecting" ? "Connecting to AIVORA…"
+    : state === "interpreter" ? `Interpreting into ${LNAME[target] ?? target}`
+    : state === "partner" ? "Voice connected" : "Use your microphone";
+  const uploading = files.some((file) => file.status === "uploading");
 
   return (
     <div className="view talkview">
-      <div className="conv talkfeed" ref={feedRef}>
+      <div className={`conv talkfeed${rows.length === 0 ? " talkfeed-empty" : ""}`} ref={feedRef}
+        role={rows.length ? "log" : undefined} aria-label={rows.length ? "Conversation" : undefined}
+        aria-relevant="additions" tabIndex={rows.length ? 0 : undefined}>
         {rows.length === 0 && (
           <>
-            <div className="hello"><h2>Hello, Boss! 👋</h2>
-                <p>Just tell me what you want done — say it out loud, in any language.
-                  {odaiU?.company ? <span className="brandchip">{odaiU.company.name}{odaiU.company.synthetic ? " · demo brand" : ""}</span> : null}</p></div>
+            <div className="workspace-welcome">
+              <div className="workspace-mark"><img src="/logo.png" alt="" width="62" height="62" /></div>
+              <h1>How can I help<br className="workspace-title-break" /> today?</h1>
+              <p>Tell AIVORA what you need. Schedule a meeting, translate a conversation, or ask a question.</p>
+              {odaiU?.company && <p className="workspace-company">
+                {odaiU.company.name}{odaiU.company.synthetic ? " · Sample workspace" : ""}
+              </p>}
+            </div>
             {/* UI-01B: no chip expansion in the default render. AdminPanel
                 returns null for the USER role — chips + registry summary
                 exist ONLY on the ADMIN role surface (src/RoleGate.tsx). */}
@@ -588,7 +614,7 @@ export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness,
                   </div></div>
               : r.who === "objective" ? <ObjectivePlanCard label={r.label} o={r.obj} />
               : r.who === "sys" || r.who === "err"
-              ? <div className={`bub ${r.who === "err" ? "err" : "sys"}`}>{r.text}</div>
+              ? <div className={`bub ${r.who === "err" ? "err" : "sys"}`} role={r.who === "err" ? "alert" : undefined}>{r.text}</div>
               : r.who === "log" ? <LogCard log={r.log} />
               : r.who === "pair" ? (
                 <div style={{ maxWidth: "88%" }}>
@@ -628,20 +654,17 @@ export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness,
       )}
 
       <div className="talk-ctl">
-        <div className={`talk-status${isOn ? " on" : ""}`}>
-          {state === "connecting" ? "connecting…"
-            : state === "partner" ? `● live · ${fmt(secs)} · press to end`
-            : state === "interpreter" ? `🎧 interpreting → ${LNAME[target] ?? target} · press to stop`
-            : "press to talk"}
-        </div>
-        <button className={`big-mic${isOn ? " on" : ""}${state === "connecting" ? " wait" : ""}`} onClick={press}
-          aria-label={isOn ? "Stop talking to AIVORA" : "Talk to AIVORA"}>
-          {state === "connecting"
-            ? <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity=".25" strokeWidth="3" /><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur=".9s" repeatCount="indefinite" /></path></svg>
-            : isOn
-              ? <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="6.5" width="11" height="11" rx="2.5" /></svg>
-              : <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><rect x="9" y="2.5" width="6" height="12" rx="3" fill="currentColor" /><path d="M5 11.5a7 7 0 0 0 14 0M12 18.5V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>}
+        <button type="button" className="workspace-voice" data-state={state} onClick={press}
+          aria-describedby="workspace-voice-status">
+          <span className="workspace-mic-shell"><WorkspaceIcon name={isOn || state === "connecting" ? "stop" : "mic"} size={32} /></span>
+          <span>{voiceAction}</span>
         </button>
+        <p className="workspace-voice-status" id="workspace-voice-status" role="status">
+          {voiceStatus}{isOn && <span aria-hidden="true"> · {fmt(secs)}</span>}
+        </p>
+        {audioBlocked && <button type="button" className="workspace-audio-button" onClick={() => void engRef.current?.unlockAudio()}>
+          Enable audio playback
+        </button>}
       </div>
 
       {files.length > 0 && (
@@ -655,18 +678,21 @@ export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness,
           ))}
         </div>
       )}
-      <form className="q4bar" onSubmit={(e) => { e.preventDefault(); void askQ4(); }}>
+      {(posting || uploading) && <p className="workspace-compose-status" role="status">
+        {posting ? "AIVORA is responding…" : "Uploading attachments…"}
+      </p>}
+      <form className="q4bar workspace-composer" aria-label="Message AIVORA" onSubmit={(e) => { e.preventDefault(); void askQ4(); }}>
         <button type="button" className="q4attach" aria-label="Attach a file"
           onClick={() => fileRef.current?.click()}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
+          <WorkspaceIcon name="attach" size={19} />
         </button>
-        <input ref={fileRef} type="file" multiple className="hidden-file"
+        <input ref={fileRef} type="file" multiple hidden
           accept="video/mp4,audio/mpeg,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,.mp4,.mp3,.png,.jpg,.jpeg,.gif,.webp,.pdf,.docx,.txt,.md"
           onChange={(e) => { pickFiles(e.target.files); e.target.value = ""; }} />
-        <input value={q4text} onChange={(e) => setQ4text(e.target.value)} placeholder="Ask Qwen4-Max anything..."
-          aria-label="Ask Qwen4-Max anything" autoComplete="off" />
-        <button type="submit" className="q4send" aria-label="Send to Qwen4-Max">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 16-2.5-5.5L4 12z" fill="currentColor" /></svg>
+        <input value={q4text} onChange={(e) => setQ4text(e.target.value)} placeholder="Type a message…"
+          aria-label="Message" autoComplete="off" enterKeyHint="send" />
+        <button type="submit" className="q4send" aria-label="Send message" disabled={!q4text.trim() || posting || uploading}>
+          <WorkspaceIcon name="send" size={19} />
         </button>
       </form>
     </div>

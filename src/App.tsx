@@ -1,153 +1,231 @@
-import { useEffect, useState } from "react";
-import { Menu, type View } from "./Menu";
-import { SettingsSheet } from "./SettingsSheet";
-import { TalkView, type AppointmentDraft } from "./TalkView";
-import { DocsView } from "./DocsView";
+import { useEffect, useRef, useState } from "react";
 import { AppointmentView } from "./AppointmentView";
-import { LeadsView } from "./LeadsView";
-import { MyShopView } from "./MyShopView";
-import { InboxView } from "./InboxView";
-import { BusinessView, type BusinessPage } from "./BusinessView";
-import { TestLabView } from "./TestLabView";
-import { BusinessTestLabView } from "./BusinessTestLabView";
-import { StoryboardView } from "./StoryboardView";
-import { CommercialView } from "./CommercialView";
+import { getAccessToken, initAuth, onAuth, signOut } from "./auth";
 import { BusinessActionView } from "./BusinessActionView";
-import { ManagementView } from "./ManagementView";
-import { SecurityView } from "./SecurityView";
+import { BusinessTestLabView } from "./BusinessTestLabView";
+import { BusinessView } from "./BusinessView";
+import { CommercialView } from "./CommercialView";
+import { DocsView } from "./DocsView";
+import { InboxView } from "./InboxView";
+import { LeadsView } from "./LeadsView";
 import { probeKey, type ConnSource } from "./lib";
-import { initAuth, isSupabaseConfigured, getAccessToken, onAuth, signOut } from "./auth";
 import { Login } from "./Login";
+import { ManagementView } from "./ManagementView";
+import { Menu, type View } from "./Menu";
+import { MyShopView } from "./MyShopView";
+import { SecurityView } from "./SecurityView";
+import { SettingsSheet } from "./SettingsSheet";
+import { StoryboardView } from "./StoryboardView";
+import { TalkView, type AppointmentDraft } from "./TalkView";
+import { TestLabView } from "./TestLabView";
+import { WorkspaceDialog } from "./WorkspaceDialog";
+import { WorkspaceIcon } from "./WorkspaceIcon";
 
-const TITLES: Record<View, { t: string; s: string }> = {
-  appointment: { t: "AIVORA Appointment", s: "local organizer · Calendly" },
-  contacts: { t: "Customer Contacts", s: "AIVORA ODAI V0.9BETA" },
-  purchases: { t: "Purchase History", s: "AIVORA ODAI V0.9BETA" },
-  orders: { t: "Procurement", s: "AIVORA ODAI V0.9BETA" },
-  intelligence: { t: "Business Intelligence", s: "AIVORA ODAI V0.9BETA" },
-  action: { t: "Business Action", s: "decision plan · who to contact" },
-  talk: { t: "AIVORA ODAI V0.9BETA", s: "Objective-Driven Autonomous Intelligence" },
-  docs: { t: "Document Translation", s: "text · photo · voice note" },
-  myshop: { t: "My Shop", s: "dropshipping catalog · live setup" },
-  commercial: { t: "Commercial Studio", s: "your photo + product → 15s commercial" },
-  leads: { t: "Leads", s: "enquiries · follow-up drafts" },
-  inbox: { t: "My Inbox", s: "AIVORA ODAI V0.9BETA" },
-  testlab: { t: "Inbox Test Lab", s: "MGMT · acceptance testing" },
-  bizlab: { t: "Business Test Lab", s: "MGMT · 45-case integration verification" },
-  storyboard: { t: "Storyboard", s: "judge demo · 14 scenes in order" },
+const titles: Record<View, string> = {
+  appointment: "Appointments",
+  contacts: "Customer Contacts",
+  purchases: "Purchase History",
+  orders: "Procurement",
+  intelligence: "Business Intelligence",
+  action: "Business Action",
+  talk: "AIVORA",
+  docs: "Document Translation",
+  myshop: "My Shop",
+  commercial: "Commercial Studio",
+  leads: "Leads",
+  inbox: "Inbox",
+  testlab: "Inbox Test Lab",
+  bizlab: "Business Test Lab",
+  storyboard: "Storyboard",
 };
+
+const connectionLabels: Record<ConnSource, string> = {
+  env: "Server connected",
+  browser: "Browser connected",
+  none: "Connection setup",
+  checking: "Checking connection",
+};
+
+type Mode = "user" | "management" | "security";
 
 export function App() {
   const [view, setView] = useState<View>("talk");
-  const [mode, setMode] = useState<"user" | "management" | "security">("user");
-  const [modeErr, setModeErr] = useState<string | null>(null);
-  const [menu, setMenu] = useState(false);
-  const [settings, setSettings] = useState(false);
-  const [about, setAbout] = useState(false);
+  const [mode, setMode] = useState<Mode>("user");
+  const [modeError, setModeError] = useState<string | null>(null);
+  const [checkingMode, setCheckingMode] = useState(false);
+  const [overlay, setOverlay] = useState<"menu" | "settings" | "about" | null>(null);
+  const overlayOpener = useRef<HTMLButtonElement | null>(null);
   const [conn, setConn] = useState<ConnSource>("checking");
   const [supaOn, setSupaOn] = useState(false);
-  const [authed, setAuthed] = useState(true); // when Supabase is unconfigured the offline demo is treated as signed-in
+  const [authed, setAuthed] = useState(false);
+  const [authCheck, setAuthCheck] = useState<"loading" | "ready" | "error">("loading");
+  const [authRetry, setAuthRetry] = useState(0);
   const [appointmentDraft, setAppointmentDraft] = useState<AppointmentDraft | null>(null);
   const [talkNonce, setTalkNonce] = useState(0);
   const [talkAutoStart, setTalkAutoStart] = useState(false);
 
   useEffect(() => {
-    let un: () => void = () => {};
-    void initAuth().then((c) => {
-      const on = !!(c.configured);
-      setSupaOn(on);
-      setAuthed(!on || !!getAccessToken());
-      un = onAuth((s) => setAuthed(!!s));
-    });
-    return () => un();
-  }, []);
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    void initAuth().then(({ configured }) => {
+      if (!active) return;
+      setSupaOn(configured);
+      setAuthed(!!getAccessToken());
+      setAuthCheck("ready");
+      unsubscribe = onAuth((session) => setAuthed(!!session));
+    }).catch(() => { if (active) setAuthCheck("error"); });
+    return () => { active = false; unsubscribe?.(); };
+  }, [authRetry]);
 
-  const refreshConn = () => { void probeKey().then(setConn); };
-  async function switchMode(m: "user" | "management" | "security") {
-    if (m === mode) { setTalkAutoStart(false); setView("talk"); return; }
-    try {
-      const tok = getAccessToken();
-      const r = await fetch(`/api/odai/view?mode=${m}&_t=${Date.now()}`, { headers: tok ? { Authorization: `Bearer ${tok}` } : {} });
-      if (!r.ok) { const j = await r.json().catch(() => ({})); setModeErr(j.error || "mode denied by server"); return; }
-      setModeErr(null); setMode(m); if (m === "user") { setTalkAutoStart(false); setView("talk"); }
-    } catch { setModeErr("cannot reach authorization endpoint"); }
-  }
-  const goFeature = (v: View) => { setMode("user"); setTalkAutoStart(false); setView(v); };
   useEffect(() => { void probeKey().then(setConn); }, []);
-  useEffect(() => { setMenu(false); }, [view]);
 
-  const connLine = conn === "env" ? "connected via server"
-    : conn === "browser" ? "browser key ✓"
-    : conn === "none" ? "add a key to go live" : "connecting…";
+  async function switchMode(next: Mode) {
+    if (checkingMode) return;
+    setModeError(null);
+    if (next === mode) {
+      if (next === "user") goTo("talk");
+      return;
+    }
+    setCheckingMode(true);
+    try {
+      const token = getAccessToken();
+      const response = await fetch(`/api/odai/view?mode=${next}&_t=${Date.now()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        signal: AbortSignal.timeout(12_000),
+      });
+      if (!response.ok) {
+        setModeError(response.status === 401 || response.status === 403
+          ? "Your account does not have access to this view."
+          : "This view is unavailable right now. Try again.");
+        return;
+      }
+      if (next === "user") goTo("talk");
+      else setMode(next);
+    } catch {
+      setModeError("Could not check access. Try again.");
+    } finally {
+      setCheckingMode(false);
+    }
+  }
 
-  // Supabase configured but no session → show the sign-in gate (offline demo skips this).
+  function closeOverlay() {
+    setOverlay(null);
+    requestAnimationFrame(() => overlayOpener.current?.focus());
+  }
+
+  function goTo(next: View) {
+    if (overlay) closeOverlay();
+    setModeError(null);
+    setMode("user");
+    setTalkAutoStart(false);
+    setView(next);
+  }
+
+  function startTalking() {
+    setTalkAutoStart(true);
+    setTalkNonce((previous) => previous + 1);
+    setView("talk");
+  }
+
+  const assistant = mode === "user" && view === "talk";
+  const title = mode === "user" ? titles[view] : mode === "management" ? "Orchestration" : "AIVORA Shield";
+
+  if (authCheck !== "ready") return (
+    <main className="login-wrap">
+      <div className="login-card workspace-loading">
+        <img src="/logo.png" alt="AIVORA" width="52" height="52" />
+        {authCheck === "loading" ? <p role="status">Opening AIVORA…</p> : <>
+          <p role="alert">Could not check your sign-in status.</p>
+          <button className="gobtn" onClick={() => { setAuthCheck("loading"); setAuthRetry((n) => n + 1); }}>Try again</button>
+        </>}
+      </div>
+    </main>
+  );
   if (supaOn && !authed) return <Login />;
 
   return (
-    <div className={`app${mode === "user" && view === "talk" ? " usermode" : ""}${mode === "management" ? " darkchrome" : ""}${mode === "security" ? " darkchrome-s" : ""}`}>
-      <header className="topbar">
-        <button className="tb-btn burger" onClick={() => setMenu((m) => !m)} aria-label="Menu">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" /></svg>
-          <i className={conn === "env" || conn === "browser" ? "on" : "off"} />
+    <div className={`app aivora-workspace${assistant ? " usermode" : ""}${mode === "management" ? " darkchrome" : ""}${mode === "security" ? " darkchrome-s" : ""}`}>
+      <a className="workspace-skip" href="#workspace-content">Skip to content</a>
+      <header className="workspace-topbar">
+        <button type="button" className="workspace-icon-button" onClick={(event) => {
+          overlayOpener.current = event.currentTarget;
+          setOverlay("menu");
+        }} aria-label="Open menu" aria-haspopup="dialog" aria-controls="workspace-menu"
+          aria-expanded={overlay === "menu"} disabled={checkingMode}>
+          <WorkspaceIcon name="menu" />
         </button>
-        {view === "talk"
-          ? <img className="logo" src="/logo.png" alt="AIVORA" />
-          : <button className="tb-btn" onClick={() => { setTalkAutoStart(false); setView("talk"); }} aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>}
-        <span className="who">
-          <b>{mode === "user" ? TITLES[view].t : mode === "management" ? "AI Brain · Orchestration" : "AIVORA SHIELD"}</b>
-          <small><span className={`st-dot ${conn === "env" || conn === "browser" ? "ok" : conn === "checking" ? "warn" : "off"}`} />{mode === "user" ? `${TITLES[view].s} · ${connLine}` : modeErr ? modeErr : `${mode} mode · server-authorized`}</small>
-        </span>
-        <nav className="modeseg" aria-label="Mode">
-          <button className={mode === "user" ? "on" : ""} onClick={() => switchMode("user")}>USER</button>
-          <button className={mode === "security" ? "on s" : ""} onClick={() => switchMode("security")}>SHIELD</button>
-        </nav>
-        {supaOn && <button className="tb-btn signout" onClick={() => void signOut()} aria-label="Sign out">Sign out</button>}
-      </header>
-
-      {mode === "user" && <>
-      {view === "talk" && <TalkView key={`talk-${talkNonce}`} autoStart={talkAutoStart} onOpenBusiness={() => setView("intelligence")} onOpenInbox={() => setView("inbox")} onOpenDocs={() => setView("docs")} onOpenStore={() => setView("myshop")} onOpenCommercial={() => setView("commercial")} onOpenAppointment={(draft) => { setAppointmentDraft(draft); setTalkAutoStart(false); setView("appointment"); }} />}
-      {(["contacts", "purchases", "orders", "intelligence"] as string[]).includes(view) && <BusinessView key={view} page={view as BusinessPage} onTalk={() => setView("talk")} />}
-      {view === "docs" && <DocsView />}
-      {view === "appointment" && <AppointmentView key={`appt-${appointmentDraft ? "draft" : "plain"}`} draft={appointmentDraft} onTalk={() => { setTalkAutoStart(false); setView("talk"); }} onSpeak={() => { setAppointmentDraft(null); setTalkAutoStart(true); setTalkNonce((n) => n + 1); setView("talk"); }} />}
-      {view === "leads" && <LeadsView />}
-      {view === "myshop" && <MyShopView />}
-      {view === "commercial" && <CommercialView />}
-      {view === "inbox" && <InboxView onSpeak={() => { setTalkAutoStart(true); setTalkNonce((n) => n + 1); setView("talk"); }} onOpen={(target) => { if (target === "security" || target === "management") void switchMode(target); else if (target === "myshop" || target === "talk") goFeature(target); }} />}
-        {view === "testlab" && <TestLabView />}
-        {view === "bizlab" && <BusinessTestLabView />}
-        {view === "storyboard" && <StoryboardView />}
-        {view === "action" && <BusinessActionView />}
-      </>}
-      {mode === "management" && <ManagementView />}
-      {mode === "security" && <SecurityView />}
-
-      <Menu open={menu} view={view} conn={conn}
-        onClose={() => setMenu(false)}
-        onGo={goFeature}
-        onSettings={() => { setMenu(false); setSettings(true); }}
-        onAbout={() => { setMenu(false); setAbout(true); }} />
-
-      {settings && <SettingsSheet conn={conn} onClose={() => setSettings(false)} onChanged={refreshConn} />}
-
-      {about && (
-        <div className="modal-wrap" onClick={() => setAbout(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head"><h3>ℹ️ About AIVORA</h3><button className="icon-btn" onClick={() => setAbout(false)}>✕</button></div>
-            <div style={{ textAlign: "center", padding: "6px 0 10px" }}>
-              <img src="/logo.png" alt="" style={{ width: 84, height: 84, borderRadius: 24 }} />
-              <h4 style={{ font: "800 16px var(--display)", marginTop: 8 }}>AIVORA ODAI V0.9BETA</h4>
-              <p style={{ fontSize: 11, color: "var(--ink2)" }}>Objective-Driven Autonomous Intelligence</p>
-            </div>
-            <p style={{ fontSize: 12.5, color: "var(--ink2)", lineHeight: 1.65 }}>
-              One button, three Model Studio engines that AIVORA switches between by itself:
-              <b> qwen-audio-3.1-realtime-flash</b> (hears your voice and answers out loud), <b> qwen3.8-livetranslate-flash-realtime</b> (live interpreter, on
-              request) and <b> qwen3.8-omni-flash</b> (documents & photos). Voice is WebRTC; your key
-              only lives on the Page server.
-            </p>
-            <button className="gobtn" style={{ marginTop: 12 }} onClick={() => setAbout(false)}>Back</button>
-          </div>
+        <div className="workspace-name">
+          <strong>{title}</strong>
+          {mode === "user" && (
+            <button type="button" className="workspace-connection" aria-haspopup="dialog" onClick={(event) => {
+              overlayOpener.current = event.currentTarget;
+              setOverlay("settings");
+            }}>
+              <span className="workspace-connection-dot" data-connection={conn} />
+              {connectionLabels[conn]}
+            </button>
+          )}
         </div>
-      )}
+        <nav className="workspace-modes" aria-label="Workspace mode">
+          <button type="button" aria-pressed={mode === "user"} disabled={checkingMode}
+            onClick={() => void switchMode("user")}>Assistant</button>
+          <button type="button" aria-pressed={mode === "security"} disabled={checkingMode} onClick={() => void switchMode("security")}>
+            <WorkspaceIcon name="shield" size={15} />Shield
+          </button>
+        </nav>
+        {supaOn && <button type="button" className="workspace-icon-button" onClick={() => void signOut()} aria-label="Sign out">
+          <WorkspaceIcon name="logout" />
+        </button>}
+      </header>
+      {checkingMode && <p className="workspace-notice" role="status">Checking access…</p>}
+      {modeError && <p className="workspace-notice workspace-notice-error" role="alert">{modeError}</p>}
+
+      <main className="workspace-main" id="workspace-content" tabIndex={-1} aria-label={title}>
+        {mode === "user" && <>
+          {view === "talk" && (
+            <TalkView key={talkNonce} autoStart={talkAutoStart} onOpenBusiness={() => goTo("intelligence")}
+              onOpenInbox={() => goTo("inbox")} onOpenDocs={() => goTo("docs")} onOpenStore={() => goTo("myshop")}
+              onOpenCommercial={() => goTo("commercial")} onOpenAppointment={(draft) => {
+                setAppointmentDraft(draft);
+                goTo("appointment");
+              }} />
+          )}
+          {(view === "contacts" || view === "purchases" || view === "orders" || view === "intelligence") &&
+            <BusinessView key={view} page={view} onTalk={() => goTo("talk")} />}
+          {view === "docs" && <DocsView />}
+          {view === "appointment" && (
+            <AppointmentView key={appointmentDraft ? "draft" : "plain"} draft={appointmentDraft}
+              onTalk={() => goTo("talk")} onSpeak={() => { setAppointmentDraft(null); startTalking(); }} />
+          )}
+          {view === "leads" && <LeadsView />}
+          {view === "myshop" && <MyShopView />}
+          {view === "commercial" && <CommercialView />}
+          {view === "inbox" && <InboxView onSpeak={startTalking} onOpen={(target) => {
+            if (target === "security" || target === "management") void switchMode(target);
+            else if (target === "myshop" || target === "talk") goTo(target);
+          }} />}
+          {view === "testlab" && <TestLabView />}
+          {view === "bizlab" && <BusinessTestLabView />}
+          {view === "storyboard" && <StoryboardView />}
+          {view === "action" && <BusinessActionView />}
+        </>}
+        {mode === "management" && <ManagementView />}
+        {mode === "security" && <SecurityView />}
+      </main>
+
+      <Menu open={overlay === "menu"} view={mode === "user" ? view : null} conn={conn}
+        onClose={closeOverlay} onGo={goTo} onSettings={() => setOverlay("settings")} onAbout={() => setOverlay("about")} />
+      {overlay === "settings" && <SettingsSheet conn={conn} onClose={closeOverlay} onChanged={() => { void probeKey().then(setConn); }} />}
+      <WorkspaceDialog open={overlay === "about"} label="workspace-about-title" className="workspace-dialog" onClose={closeOverlay}>
+        <div className="workspace-dialog-head">
+          <h2 id="workspace-about-title">About AIVORA</h2>
+          <button className="workspace-icon-button" type="button" onClick={closeOverlay} aria-label="Close about">
+            <WorkspaceIcon name="close" />
+          </button>
+        </div>
+        <p>AIVORA is your voice-first business assistant. Use a live conversation to give instructions or interpret speech, and Document Translation for text, images, and audio.</p>
+        <p>Version 0.9 beta · Objective-Driven Autonomous Intelligence</p>
+      </WorkspaceDialog>
     </div>
   );
 }

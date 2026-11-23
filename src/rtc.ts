@@ -79,6 +79,7 @@ export function bareSession() {
 
 export type RtcHandle = {
   stop(): void;
+  unlockAudio(): Promise<void>;
   setMuted(v: boolean): void;
   sendTextTurn?(text: string): boolean;
   waitForReady?(timeoutMs?: number): Promise<boolean>;
@@ -120,11 +121,21 @@ export function openRealtimeRtc(
   bind(clientCh);
   pc.ondatachannel = ({ channel }) => bind(channel); // server may push events on "txt"
 
+  async function unlockAudio() {
+    if (dead || !remoteEl.srcObject) return;
+    try {
+      await remoteEl.play();
+      if (!dead) emit({ kind: "audio", blocked: false });
+    } catch {
+      if (!dead) emit({ kind: "audio", blocked: true });
+    }
+  }
+
   pc.ontrack = ({ track }) => {
     if (track.kind === "audio") {
       remoteStream.addTrack(track);
       remoteEl.srcObject = remoteStream;
-      remoteEl.play().catch(() => emit({ kind: "error", msg: "🔇 tap the screen to enable audio playback" }));
+      void unlockAudio();
     }
   };
   pc.onconnectionstatechange = () => {
@@ -189,8 +200,11 @@ export function openRealtimeRtc(
   async function connect() {
     try {
       local = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-    } catch { emit({ kind: "error", msg: "Microphone permission denied" }); markDead(); return; }
-    if (dead) return;
+    } catch {
+      if (!dead) { emit({ kind: "error", msg: "Microphone unavailable. Check your browser permissions or type a message." }); markDead(); }
+      return;
+    }
+    if (dead) { local.getTracks().forEach((track) => track.stop()); return; }
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     await new Promise<void>((res, rej) => {
@@ -225,6 +239,7 @@ export function openRealtimeRtc(
   connect().catch((e) => { if (!dead) { emit({ kind: "error", msg: e instanceof Error ? e.message : String(e) }); markDead(); } });
 
   return {
+    unlockAudio,
     sendTextTurn(text: string): boolean {
       if (dead || !modelReady || eventChannel?.readyState !== "open") return false;
       eventChannel.send(JSON.stringify({ type: "conversation.item.create",

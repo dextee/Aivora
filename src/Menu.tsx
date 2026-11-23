@@ -1,79 +1,108 @@
-import type { ConnSource } from "./lib";
 import { useEffect, useState } from "react";
 import { getAccessToken } from "./auth";
+import type { ConnSource } from "./lib";
+import { WorkspaceDialog } from "./WorkspaceDialog";
+import { WorkspaceIcon, type WorkspaceIconName } from "./WorkspaceIcon";
 
 export type View = "appointment" | "talk" | "myshop" | "commercial" | "leads" | "docs" | "inbox" | "contacts" | "purchases" | "orders" | "intelligence" | "action" | "testlab" | "bizlab" | "storyboard";
 
-const NAV: { id: View; icon: string; label: string; sub: string; section?: string; children?: { id: View; label: string; sub: string }[] }[] = [
-  { id: "talk", icon: "🎙", label: "Talk to AIVORA", sub: "voice partner — interprets & routes itself" },
-  { id: "appointment", icon: "AI", label: "Appointment", sub: "local organizer · Calendly booking" },
-  { id: "inbox", icon: "AI", label: "Inbox", sub: "stored messages · approvals · security" },
-  { id: "myshop", icon: "🛍", label: "My Shop", sub: "dropshipping catalog · live setup" },
-  { id: "commercial", icon: "🎞", label: "Commercial Studio", sub: "your photo + product → 15s ad (provider render)" },
-  { id: "contacts", icon: "AI", label: "Customer", sub: "contacts · purchase records · intelligence", children: [
-    { id: "purchases", label: "Purchase History", sub: "original records and validation" },
+type Destination = { id: View; icon: WorkspaceIconName; label: string; description: string };
+
+const groups: { title: string; items: Destination[] }[] = [
+  { title: "Workspace", items: [
+    { id: "talk", icon: "mic", label: "Assistant", description: "Voice and typed requests" },
+    { id: "inbox", icon: "inbox", label: "Inbox", description: "Messages and approvals" },
+    { id: "appointment", icon: "calendar", label: "Appointments", description: "Schedule and manage meetings" },
   ] },
-  { id: "orders", icon: "📦", label: "Procurement", sub: "purchase orders · sandbox review" },
-  { id: "intelligence", icon: "AI", label: "Business Intelligence", sub: "validated 30-day comparisons", children: [
-    { id: "action", label: "Business Action", sub: "decision plan · who to contact" },
+  { title: "Business", items: [
+    { id: "contacts", icon: "customers", label: "Customer Contacts", description: "Find customer records" },
+    { id: "purchases", icon: "doc", label: "Purchase History", description: "Review customer purchases" },
+    { id: "orders", icon: "box", label: "Procurement", description: "Review purchase orders" },
+    { id: "intelligence", icon: "chart", label: "Business Intelligence", description: "Compare activity and results" },
+    { id: "action", icon: "chart", label: "Business Action", description: "Plan decisions and follow-ups" },
   ] },
-  { id: "docs", icon: "📄", label: "Document Translation", sub: "text, photos & voice notes" },
-  { id: "testlab", icon: "🧪", label: "Inbox Test Lab", sub: "MGMT · 20-case acceptance testing", section: "TESTING" },
+  { title: "Tools", items: [
+    { id: "myshop", icon: "shop", label: "My Shop", description: "Set up a dropshipping catalog" },
+    { id: "commercial", icon: "studio", label: "Commercial Studio", description: "Create a video ad" },
+    { id: "docs", icon: "doc", label: "Document Translation", description: "Translate text, images, or audio" },
+    { id: "testlab", icon: "inbox", label: "Inbox Test Lab", description: "Verify inbox workflows" },
+  ] },
 ];
 
 export function Menu({ open, view, conn, onClose, onGo, onSettings, onAbout }: {
-  open: boolean; view: View; conn: ConnSource;
-  onClose(): void; onGo(v: View): void; onSettings(): void; onAbout(): void;
+  open: boolean; view: View | null; conn: ConnSource;
+  onClose(): void; onGo(view: View): void; onSettings(): void; onAbout(): void;
 }) {
   const [unread, setUnread] = useState<number | null>(null);
+  const [query, setQuery] = useState("");
+
   useEffect(() => {
-    if (!open) return;
-    let active = true;
+    if (!open) { setQuery(""); return; }
+    const request = new AbortController();
     const token = getAccessToken();
-    void fetch(`/api/odai/inbox?_t=${Date.now()}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} }).then(async (r) => r.ok ? r.json() : null).then((j) => { if (active) setUnread(typeof j?.counts?.unread === "number" ? j.counts.unread : null); }).catch(() => { if (active) setUnread(null); });
-    return () => { active = false; };
+    void fetch(`/api/odai/inbox?_t=${Date.now()}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      signal: request.signal,
+    }).then(async (response) => response.ok ? response.json() : null).then((data) => {
+      if (!request.signal.aborted) setUnread(typeof data?.counts?.unread === "number" ? data.counts.unread : null);
+    }).catch(() => { if (!request.signal.aborted) setUnread(null); });
+    return () => request.abort();
   }, [open]);
+
+  const term = query.trim().toLowerCase();
+  const visible = groups.map(({ title, items }) => ({
+    title,
+    items: items.filter(({ label, description }) => `${label} ${description}`.toLowerCase().includes(term)),
+  })).filter(({ items }) => items.length);
+  const connection = conn === "env" ? "Connected through server"
+    : conn === "browser" ? "Connected through browser"
+    : conn === "checking" ? "Checking connection" : "Setup required";
+
   return (
-    <>
-      <div className={`scrim${open ? " open" : ""}`} onClick={onClose} />
-      <aside className={`drawer${open ? " open" : ""}`} aria-hidden={!open}>
-        <div className="drawer-head">
-          <img src="/logo.png" alt="AIVORA logo" />
-          <b>AIVORA ODAI V0.9BETA</b>
-          <small>Objective-Driven Autonomous Intelligence</small>
-        </div>
-        <nav>
-          <div className="dsec">SERVICES</div>
-          {NAV.map((n) => (
-            <div key={n.id}>
-              {n.section && <div className="dsec">{n.section}</div>}
-              <button className={`ditem${view === n.id ? " sel" : ""}`} onClick={() => onGo(n.id)}>
-                <span className="dic">{n.icon}</span>
-                <span style={{ flex: 1 }}>{n.label}{n.id === "inbox" && unread !== null ? ` (${unread})` : ""}<small>{n.sub}</small></span>
+    <WorkspaceDialog id="workspace-menu" label="workspace-menu-title" className="workspace-drawer"
+      open={open} onClose={onClose}>
+      <div className="workspace-drawer-head">
+        <img src="/logo.png" alt="" width="36" height="36" />
+        <h2 id="workspace-menu-title">AIVORA menu</h2>
+        <button type="button" className="workspace-icon-button" onClick={onClose} aria-label="Close menu">
+          <WorkspaceIcon name="close" />
+        </button>
+      </div>
+      <label className="workspace-search">
+        <WorkspaceIcon name="search" size={17} />
+        <input type="search" placeholder="Find a tool…" aria-label="Find a tool"
+          value={query} onChange={(event) => setQuery(event.target.value)} />
+      </label>
+      <nav className="workspace-drawer-nav" aria-label="Tools">
+        {visible.map(({ title, items }) => (
+          <section key={title}>
+            <h3>{title}</h3>
+            {items.map(({ id, label, description, icon }) => (
+              <button key={id} type="button" className="workspace-nav-item"
+                aria-current={view === id ? "page" : undefined} onClick={() => onGo(id)}>
+                <span className="workspace-nav-icon"><WorkspaceIcon name={icon} size={18} /></span>
+                <span className="workspace-nav-copy"><strong>{label}</strong><small>{description}</small></span>
+                {id === "inbox" && unread !== null && unread > 0
+                  ? <span className="workspace-unread" aria-label={`${unread} unread`}>{unread > 99 ? "99+" : unread}</span>
+                  : <WorkspaceIcon name="arrow" size={16} />}
               </button>
-              {n.children?.map((ch) => (
-                <button key={ch.id} className={`ditem sub${view === ch.id ? " sel" : ""}`} onClick={() => onGo(ch.id)} style={{ paddingLeft: 38 }}>
-                  <span className="dic">↳</span>
-                  <span style={{ flex: 1 }}>{ch.label}<small>{ch.sub}</small></span>
-                </button>
-              ))}
-            </div>
-          ))}
-          <div className="dsec">SETTINGS</div>
-          <button className="ditem" onClick={onSettings}>
-            <span className="dic">🔐</span>
-            <span style={{ flex: 1 }}>API connection<small>
-              {conn === "env" ? "Stored on the Page server (recommended)"
-                : conn === "browser" ? "Browser key connected ✓" : "No key yet — add one"}
-            </small></span>
-          </button>
-          <button className="ditem" onClick={onAbout}>
-            <span className="dic">ℹ️</span>
-            <span style={{ flex: 1 }}>About AIVORA<small>V0.9BETA · Model Studio realtime</small></span>
-          </button>
-        </nav>
-        <div className="drawer-foot">Powered by qwen-audio-3.1-realtime-flash · livetranslate · omni-flash</div>
-      </aside>
-    </>
+            ))}
+          </section>
+        ))}
+        {visible.length === 0 && <p className="workspace-no-results" role="status">No matching tools.</p>}
+      </nav>
+      <footer className="workspace-drawer-footer">
+        <button className="workspace-nav-item" type="button" onClick={onSettings}>
+          <span className="workspace-nav-icon"><WorkspaceIcon name="key" size={18} /></span>
+          <span className="workspace-nav-copy"><strong>API connection</strong><small>{connection}</small></span>
+          <WorkspaceIcon name="arrow" size={16} />
+        </button>
+        <button className="workspace-nav-item" type="button" onClick={onAbout}>
+          <span className="workspace-nav-icon"><WorkspaceIcon name="info" size={18} /></span>
+          <span className="workspace-nav-copy"><strong>About AIVORA</strong></span>
+          <WorkspaceIcon name="arrow" size={16} />
+        </button>
+      </footer>
+    </WorkspaceDialog>
   );
 }
