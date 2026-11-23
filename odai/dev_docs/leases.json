@@ -1563,8 +1563,12 @@
     ],
     "budget": 40,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 8
+    },
+    "revoked": true,
+    "revoked_reason": "Commercial Studio shipped",
+    "revoked_at": "2026-11-23T07:08:29Z"
   },
   "WO-CUSTOMER-BI": {
     "issued_at": "2026-11-22T15:32:29Z",

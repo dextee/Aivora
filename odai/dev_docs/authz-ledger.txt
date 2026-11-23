@@ -466,3 +466,5 @@
 2026-11-23T06:08:08Z|REVOKE|WO-B6DEF3|reason=DEF-13 committed
 2026-11-23T06:08:09Z|HOOK_ALLOW|WO-B6DEF3|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-23T07:07:39Z|ISSUE|WO-COMM|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,.gitignore,odai/dev_docs/|minutes=120|budget=40|single_use=0|expires_at=2026-11-23T09:07:39Z
+2026-11-23T07:07:40Z|HOOK_ALLOW|WO-COMM|.gitignore+odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package.json+server.mjs+server/odai/commercial.mjs+src/App.tsx+src/CommercialView.tsx+src/Menu.tsx+tests/commercial.test.mjs
+2026-11-23T07:08:29Z|REVOKE|WO-COMM|reason=Commercial Studio shipped
