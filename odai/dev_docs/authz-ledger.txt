@@ -512,3 +512,7 @@
 2026-11-23T11:02:43Z|HOOK_ALLOW|WO-MENU4|src/App.tsx+src/BusinessActionView.tsx+src/BusinessView.tsx+src/Menu.tsx
 2026-11-23T11:02:45Z|REVOKE|WO-MENU4|reason=Menu restructure shipped
 2026-11-23T11:02:46Z|HOOK_ALLOW|WO-MENU4|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-23T15:33:06Z|ISSUE|WO-ENVFILE|ops=check,commit|paths=server.mjs,server/,tests/,tools/,.env.example,package.json,odai/dev_docs/|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T17:03:06Z
+2026-11-23T15:33:34Z|HOOK_ALLOW|WO-ENVFILE|.env.example+package.json+server.mjs+server/env_file.mjs+tests/env_file.test.mjs+tools/set_dashscope_key.ps1
+2026-11-23T15:34:03Z|REVOKE|WO-ENVFILE|reason=env-file loader shipped f160e60
+2026-11-23T15:34:04Z|HOOK_ALLOW|WO-ENVFILE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json

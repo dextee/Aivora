@@ -1704,6 +1704,32 @@
     "revoked_reason": "coffee screens integrated into MAIN UI; GoalsView+engine reconciliation deferred; revoke after commit",
     "revoked_at": "2026-11-22T12:10:36Z"
   },
+  "WO-ENVFILE": {
+    "issued_at": "2026-11-23T15:33:06Z",
+    "expires_at": "2026-11-23T17:03:06Z",
+    "minutes": 90,
+    "paths": [
+      "server.mjs",
+      "server/",
+      "tests/",
+      "tools/",
+      ".env.example",
+      "package.json",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 30,
+    "single_use": false,
+    "used_by_op": {
+      "commit": 6
+    },
+    "revoked": true,
+    "revoked_reason": "env-file loader shipped f160e60",
+    "revoked_at": "2026-11-23T15:34:03Z"
+  },
   "WO-EXCELIMPORT": {
     "issued_at": "2026-11-22T17:07:06Z",
     "expires_at": "2026-11-22T18:07:06Z",

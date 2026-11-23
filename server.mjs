@@ -8,6 +8,7 @@
  * (used for that socket only, never logged). Owner config read at REQUEST time — import-time use
  * of owner vars is forbidden (pre-publish validation boots without them).
  */
+import { envFileState } from "./server/env_file.mjs"; // must be first: loads gitignored .env.local before any module reads env
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { readFileSync } from "node:fs";
@@ -168,7 +169,11 @@ const server = createServer((request, response) => {
     }
 
     if (url.pathname === "/api/keyinfo" && request.method === "GET")
-      return send(response, 200, JSON.stringify({ source: KEY() ? "env" : "none" }), "application/json; charset=utf-8");
+      return send(response, 200, JSON.stringify({
+        source: KEY() ? (envFileState.names.includes("DASHSCOPE_API_KEY") ? "env-file" : "env") : "none",
+        env_file: envFileState.loaded_from,
+        env_file_vars: envFileState.names, // names only — values are never exposed
+      }), "application/json; charset=utf-8");
 
     // feat: client-safe Supabase auth bootstrap. Publishable key + URL are designed for
     // clients; the service-role key is NEVER exposed here. When Supabase isn't configured
