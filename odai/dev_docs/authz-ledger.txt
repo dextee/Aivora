@@ -470,3 +470,5 @@
 2026-11-23T07:08:29Z|REVOKE|WO-COMM|reason=Commercial Studio shipped
 2026-11-23T07:08:30Z|HOOK_ALLOW|WO-COMM|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-23T07:47:34Z|ISSUE|WO-MENU|ops=check,commit|paths=src/,odai/dev_docs/|minutes=60|budget=20|single_use=0|expires_at=2026-11-23T08:47:34Z
+2026-11-23T07:47:35Z|HOOK_ALLOW|WO-MENU|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+src/Menu.tsx
+2026-11-23T07:47:36Z|REVOKE|WO-MENU|reason=menu reorder shipped

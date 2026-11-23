@@ -1811,8 +1811,12 @@
     ],
     "budget": 20,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 1
+    },
+    "revoked": true,
+    "revoked_reason": "menu reorder shipped",
+    "revoked_at": "2026-11-23T07:47:36Z"
   },
   "WO-MENUBOTTOM": {
     "issued_at": "2026-11-22T23:07:09Z",
