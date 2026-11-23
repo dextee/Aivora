@@ -56,6 +56,7 @@ function TrustPanel() {
   const [data, setData] = useState<{ stats: any; rules: any[] } | null>(null);
   const [log, setLog] = useState<any[]>([]);
   const [dual, setDual] = useState<any>(null);
+  const [acc, setAcc] = useState<any>(null);
   const [msg, setMsg] = useState("");
   const [propose, setPropose] = useState({ rule_id: "", threshold_value: "", rationale: "" });
   const load = () => { fetch("/api/odai/trust").then(r => r.json()).then(setData).catch(e => setMsg(e.message)); fetch("/api/odai/trust/log?limit=12").then(r => r.json()).then(j => setLog(j.evaluations || [])).catch(() => setLog([])); };
@@ -73,7 +74,15 @@ function TrustPanel() {
       <p className="tl-ver">Trust version {s.trust_version} · LLM assessments are recorded separately and can never override these decisions.</p>
       <div className="sh-tabs">
         <button onClick={() => { const r = act("dual-llm-test", {}).then(setDual); void r; }}>Run dual-LLM failure test</button>
+        <button onClick={() => { setMsg("running guardrail acceptance report…"); fetch("/api/odai/trust/report").then(r => r.json()).then(j => { setAcc(j); setMsg(j.failed ? `acceptance report: ${j.passed}/${j.total} passed, ${j.failed} FAILED` : `acceptance report: ${j.passed}/${j.total} passed`); }).catch(e => setMsg("acceptance report: " + e.message)); }}>Run guardrail acceptance report</button>
+        <a className="btn-ghost" href="/api/odai/trust/report/pdf" download>⬇ Guardrail PDF</a>
+        <a className="btn-ghost" href="/api/odai/trust/report/xlsx" download>⬇ Guardrail Excel</a>
       </div>
+      {acc && <div className="tl-log">
+        <p className={acc.failed ? "tl-bad" : "tl-ok"}><b>{acc.run_id}</b> · {acc.passed}/{acc.total} passed · {acc.failed} failed · {acc.blocked} blocked · {acc.duration_ms}ms · {acc.sandbox_adapter}</p>
+        {acc.cases.map((c: any) => <p key={c.case_id}><b style={{ color: c.status === "PASS" ? "#2f7a3e" : "#b42318" }}>{c.status}</b> {c.case_id} {c.description} → <code>{c.observed}</code>{c.reason ? ` · ${c.reason}` : ""}</p>)}
+        {(acc.independent_verification || []).map((v: any) => <p key={v.case_id}>independent: {v.case_id} claimed “{v.claimed}” → <b>{v.verdict}</b> ({v.note})</p>)}
+      </div>}
       {dual && <p className={dual.blocked_despite_llm_approval ? "tl-ok" : "tl-bad"}>Both LLMs approved a prohibited S$60,000 PO → Trust layer: <b>{dual.trust_decision}</b> via {dual.denied_by.join(", ")} · side effects {dual.side_effects}</p>}
       <h4 className="seclabel">Guardrail Control Centre (owner-only changes)</h4>
       <div className="tl-rules">

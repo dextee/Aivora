@@ -28,7 +28,7 @@ import { reportPdf, reportXlsx } from "./server/odai/testlab_report.mjs";
 import { listCases as bizLabCases, runCase as bizRunCase, runModule as bizRunModule, runAll as bizRunAll, dev11Verify as bizDev11, consolidate as bizConsolidate, storeReport as bizStore, getReport as bizGetReport, getCaseReport as bizGetCaseReport, newRunId as bizNewRunId } from "./server/odai/business_testlab.mjs";
 import { listScenes as sbScenes, runScene as sbRunScene, runStoryboard as sbRunAll } from "./server/odai/storyboard.mjs";
 import { actionPlan, customerContactList, preparePurchaseOrder, prepareCustomerEmails, contactListCsv, DISCOUNT_POLICY } from "./server/odai/business_action.mjs";
-import { listRules as trustRules, trustStats, evaluateAction as trustEvaluate, proposeRuleChange, approveRuleChange, rollbackRule, listChanges as trustChanges, simulateRule, dualLlmFailureTest, evaluationLog as trustLog, verifyOutboundLink } from "./server/odai/trust_layer.mjs";
+import { listRules as trustRules, trustStats, evaluateAction as trustEvaluate, proposeRuleChange, approveRuleChange, rollbackRule, listChanges as trustChanges, simulateRule, dualLlmFailureTest, evaluationLog as trustLog, verifyOutboundLink, acceptanceReport as trustAcceptanceReport } from "./server/odai/trust_layer.mjs";
 import { validateInboxMembership, listNotifications as nbList, getNotification as nbGet, getUnreadCount as nbUnread, markAsRead as nbMarkRead, markAllAsRead as nbMarkAll, archiveNotification as nbArchive, resolveApproval as nbResolve, healthCheck as nbHealth } from "./server/odai/notifications.mjs";
 import { appointmentIntent, extractAppointment, listAppointments, saveAppointment, confirmAppointment, calendarStatus, appointmentIcs, getAppointment, rescheduleAppointment, cancelAppointment, reconcileAppointment, deliverDueReminders, recordAppointmentSecurityIncident, requestReminder, findAppointmentByObjective } from "./server/odai/appointments.mjs";
 import { connectionStatus, resolveAudience, correctAppointment, checkAvailability, prepareInvitations, authorizeAndDispatch, attemptAudienceExpansion, recordRsvp, attendanceReport } from "./server/odai/appt_workflow.mjs";
@@ -565,6 +565,21 @@ async function odaiRoute(url, request, response) {
         if (path === "/trust/propose" && request.method === "POST") { const b = await rd(); return json(proposeRuleChange(b.actor || {}, b.rule_id, b.patch || {}, b.rationale)); }
         if (path === "/trust/approve" && request.method === "POST") { const b = await rd(); return json(approveRuleChange(b.actor || {}, b.change_id)); }
         if (path === "/trust/rollback" && request.method === "POST") { const b = await rd(); return json(rollbackRule(b.actor || {}, b.rule_id, b.to_version)); }
+        /* §15 guardrail acceptance report: generated live from the real rule engine, then
+         * rendered to PDF / XLSX by the same exporters the Test Lab uses. */
+        if (path === "/trust/report" && request.method === "GET") return json(trustAcceptanceReport());
+        if (path === "/trust/report/pdf" && request.method === "GET") {
+          const rep = trustAcceptanceReport();
+          const buf = reportPdf(rep);
+          response.writeHead(200, { "content-type": "application/pdf", "content-disposition": `attachment; filename="${rep.run_id}.pdf"`, "x-content-type-options": "nosniff" });
+          response.end(buf); return;
+        }
+        if (path === "/trust/report/xlsx" && request.method === "GET") {
+          const rep = trustAcceptanceReport();
+          const buf = await reportXlsx(rep);
+          response.writeHead(200, { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${rep.run_id}.xlsx"`, "x-content-type-options": "nosniff" });
+          response.end(buf); return;
+        }
         return json({ error: "Unsupported trust route" }, 404);
       } catch (e) { return json({ error: e.message, ...(e.code ? { code: e.code } : {}) }, e.status || 503); }
     }
