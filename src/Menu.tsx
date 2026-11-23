@@ -17,10 +17,10 @@ const NAV: { id: View; icon: string; label: string; sub: string; section?: strin
   { id: "intelligence", icon: "AI", label: "Business Intelligence", sub: "validated 30-day comparisons", children: [
     { id: "action", label: "Business Action", sub: "decision plan · who to contact" },
   ] },
-  { id: "storyboard", icon: "🎬", label: "Storyboard", sub: "judge demo · 14 scenes in order" },
   { id: "docs", icon: "📄", label: "Document Translation", sub: "text, photos & voice notes" },
   { id: "testlab", icon: "🧪", label: "Inbox Test Lab", sub: "MGMT · 20-case acceptance testing", section: "TESTING" },
   { id: "bizlab", icon: "📊", label: "Business Test Lab", sub: "MGMT · 45-case BI/PO/customer integration" },
+  { id: "storyboard", icon: "🎬", label: "Storyboard", sub: "MGMT · judge demo · 14 scenes in order" },
 ];
 
 export function Menu({ open, view, conn, onClose, onGo, onSettings, onAbout }: {
