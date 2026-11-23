@@ -1741,8 +1741,12 @@
     ],
     "budget": 30,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 3
+    },
+    "revoked": true,
+    "revoked_reason": "mobile iframe viewer shipped",
+    "revoked_at": "2026-11-23T09:26:27Z"
   },
   "WO-INBOXONLINE": {
     "issued_at": "2026-11-22T22:54:34Z",
