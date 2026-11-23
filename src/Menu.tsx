@@ -2,13 +2,14 @@ import type { ConnSource } from "./lib";
 import { useEffect, useState } from "react";
 import { getAccessToken } from "./auth";
 
-export type View = "appointment" | "talk" | "myshop" | "leads" | "docs" | "inbox" | "contacts" | "purchases" | "orders" | "intelligence" | "action" | "testlab" | "bizlab" | "storyboard";
+export type View = "appointment" | "talk" | "myshop" | "commercial" | "leads" | "docs" | "inbox" | "contacts" | "purchases" | "orders" | "intelligence" | "action" | "testlab" | "bizlab" | "storyboard";
 
 const NAV: { id: View; icon: string; label: string; sub: string; section?: string; children?: { id: View; label: string; sub: string }[] }[] = [
   { id: "talk", icon: "🎙", label: "Talk to AIVORA", sub: "voice partner — interprets & routes itself" },
   { id: "appointment", icon: "AI", label: "Appointment", sub: "local organizer · Calendly booking" },
   { id: "inbox", icon: "AI", label: "Inbox", sub: "stored messages · approvals · security" },
   { id: "myshop", icon: "🛍", label: "My Shop", sub: "dropshipping catalog · live setup" },
+  { id: "commercial", icon: "🎞", label: "Commercial Studio", sub: "your photo + product → 15s ad (provider render)" },
   { id: "contacts", icon: "AI", label: "Customer", sub: "contacts · purchase records · orders · intelligence" },
   { id: "orders", icon: "AI", label: "Purchase Orders", sub: "sandbox procurement review", children: [
     { id: "purchases", label: "Purchase History", sub: "original records and validation" },

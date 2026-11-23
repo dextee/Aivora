@@ -1544,6 +1544,28 @@
     "revoked_reason": "Checkpoint 2557c4d committed; revoke after commit",
     "revoked_at": "2026-11-22T19:57:21Z"
   },
+  "WO-COMM": {
+    "issued_at": "2026-11-23T07:07:39Z",
+    "expires_at": "2026-11-23T09:07:39Z",
+    "minutes": 120,
+    "paths": [
+      "server.mjs",
+      "server/odai/",
+      "src/",
+      "tests/",
+      "package.json",
+      ".gitignore",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 40,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-CUSTOMER-BI": {
     "issued_at": "2026-11-22T15:32:29Z",
     "expires_at": "2026-11-22T18:32:29Z",

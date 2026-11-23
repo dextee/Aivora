@@ -38,6 +38,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
 import { runWithToken, supabaseConfigured, isOffline, putUpload, approveUpload, requestCtx, dbAvailable } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
 import { onlineEnabled, persistOrderOnline, persistReceiptOnline, loadOrdersOnline } from "./server/odai/po_persistence.mjs";
+import { listCommercial as commList, getCommercial as commGet, attachInput as commAttachInput, createCommercial as commCreate, markDispatched as commDispatch, attachRender as commAttachRender, renderFile as commRenderFile, PROVIDER as COMMERCIAL_PROVIDER } from "./server/odai/commercial.mjs";
 // ECOMMERCE (V43) coffee-storyboard modules — integrated additively into MAIN's existing dispatcher (no second dispatcher).
 import { storeSetup, storeIntent, hasSession as hasStoreSession, storeAwaitingInput, storeRecord, storeExport, resetStore } from "./server/odai/store_setup.mjs";
 import { submitCoffeePlan, getPlan as getPlanById } from "./server/odai/plan_engine.mjs";
@@ -563,6 +564,31 @@ async function odaiRoute(url, request, response) {
         }
         return json({ error: "Unsupported action route" }, 404);
       } catch (e) { return json({ error: e.message }, e.status || 503); }
+    }
+    /* ---- Commercial Studio: owner attaches a self photo (avatar) + product → 15s commercial.
+     * The render is produced by the authorized media provider and attached back; the job stays
+     * PENDING_PROVIDER until a real file is verified (container magic + duration tolerance). ---- */
+    if (path === "/commercial" || path.startsWith("/commercial/")) {
+      if (!isOffline()) return json({ error: "Commercial Studio requires offline sandbox mode: the provider handoff and render attachment are not integrated for online mode", code: "COMMERCIAL_ONLINE_BLOCKED" }, 503);
+      if (tenant !== DEMO_TENANT) return json({ error: "Offline commercial tenant denied" }, 403);
+      const rd = async () => { let raw = ""; for await (const c of request) { raw += c; if (raw.length > 12_000_000) throw Object.assign(new Error("Body too large"), { status: 413 }); } try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      try {
+        if (path === "/commercial/provider" && request.method === "GET") return json(COMMERCIAL_PROVIDER);
+        if (path === "/commercial" && request.method === "GET") return json(commList(tenant));
+        if (path === "/commercial/input" && request.method === "POST") { const b = await rd(); return json(commAttachInput(tenant, b)); }
+        if (path === "/commercial" && request.method === "POST") { const b = await rd(); return json(commCreate(tenant, b)); }
+        const cseg = path.split("/");
+        if (cseg[2] && cseg[3] === "spec" && request.method === "GET") { const cj = commGet(tenant, decodeURIComponent(cseg[2])); return json({ job_id: cj.job_id, status: cj.status, blockers: cj.blockers, spec: cj.spec }); }
+        if (cseg[2] && cseg[3] === "dispatch" && request.method === "POST") { const b = await rd(); return json(commDispatch(tenant, decodeURIComponent(cseg[2]), b)); }
+        if (cseg[2] && cseg[3] === "render" && request.method === "POST") { const b = await rd(); return json(commAttachRender(tenant, decodeURIComponent(cseg[2]), b)); }
+        if (cseg[2] && cseg[3] === "file" && request.method === "GET") {
+          const f = commRenderFile(tenant, decodeURIComponent(cseg[2]));
+          response.writeHead(200, { "content-type": "video/mp4", "content-length": String(f.buf.length), "content-disposition": `inline; filename="${f.job.job_id}-15s.mp4"`, "x-content-type-options": "nosniff" });
+          response.end(f.buf); return;
+        }
+        if (cseg[2] && !cseg[3] && request.method === "GET") return json(commGet(tenant, decodeURIComponent(cseg[2])));
+        return json({ error: "Unsupported commercial route" }, 404);
+      } catch (e) { return json({ error: e.message, ...(e.code ? { code: e.code } : {}) }, e.status || 503); }
     }
     if (path === "/trust" || path.startsWith("/trust/")) {
       const rd = async () => { let raw = ""; for await (const c of request) { raw += c; if (raw.length > 65536) throw Object.assign(new Error("Body too large"), { status: 413 }); } try { return JSON.parse(raw || "{}"); } catch { return {}; } };

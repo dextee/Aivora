@@ -28,6 +28,8 @@ odai/testlab/
 odai/data/trust/
 odai/data/bizlab/
 odai/data/documents/
+# Commercial Studio: job records and attached renders (runtime data, never committed)
+odai/data/commercial/
 # local fixtures, media and session artefacts (large binaries, kept outside git)
 DB/
 workflow/

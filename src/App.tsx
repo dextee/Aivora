@@ -11,6 +11,7 @@ import { BusinessView, type BusinessPage } from "./BusinessView";
 import { TestLabView } from "./TestLabView";
 import { BusinessTestLabView } from "./BusinessTestLabView";
 import { StoryboardView } from "./StoryboardView";
+import { CommercialView } from "./CommercialView";
 import { BusinessActionView } from "./BusinessActionView";
 import { ManagementView } from "./ManagementView";
 import { SecurityView } from "./SecurityView";
@@ -28,6 +29,7 @@ const TITLES: Record<View, { t: string; s: string }> = {
   talk: { t: "AIVORA ODAI V0.9BETA", s: "Objective-Driven Autonomous Intelligence" },
   docs: { t: "Document Translation", s: "text · photo · voice note" },
   myshop: { t: "My Shop", s: "dropshipping catalog · live setup" },
+  commercial: { t: "Commercial Studio", s: "your photo + product → 15s commercial" },
   leads: { t: "Leads", s: "enquiries · follow-up drafts" },
   inbox: { t: "My Inbox", s: "AIVORA ODAI V0.9BETA" },
   testlab: { t: "Inbox Test Lab", s: "MGMT · acceptance testing" },
@@ -109,6 +111,7 @@ export function App() {
       {view === "appointment" && <AppointmentView key={`appt-${appointmentDraft ? "draft" : "plain"}`} draft={appointmentDraft} onTalk={() => { setTalkAutoStart(false); setView("talk"); }} onSpeak={() => { setAppointmentDraft(null); setTalkAutoStart(true); setTalkNonce((n) => n + 1); setView("talk"); }} />}
       {view === "leads" && <LeadsView />}
       {view === "myshop" && <MyShopView />}
+      {view === "commercial" && <CommercialView />}
       {view === "inbox" && <InboxView onSpeak={() => { setTalkAutoStart(true); setTalkNonce((n) => n + 1); setView("talk"); }} onOpen={(target) => { if (target === "security" || target === "management") void switchMode(target); else if (target === "myshop" || target === "talk") goFeature(target); }} />}
         {view === "testlab" && <TestLabView />}
         {view === "bizlab" && <BusinessTestLabView />}
