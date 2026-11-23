@@ -480,3 +480,8 @@
 2026-11-23T09:09:43Z|ISSUE|WO-VOICEVID|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/dev_docs/|minutes=120|budget=40|single_use=0|expires_at=2026-11-23T11:09:43Z
 2026-11-23T09:10:32Z|HOOK_ALLOW|WO-VOICEVID|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package.json+server.mjs+server/odai/commercial.mjs+server/odai/store_config.mjs+server/odai/video_merge.mjs+src/App.tsx+src/TalkView.tsx+tests/video_commercial.test.mjs
 2026-11-23T09:10:35Z|REVOKE|WO-VOICEVID|reason=voice video/poster + merge shipped
+2026-11-23T09:10:36Z|HOOK_ALLOW|WO-VOICEVID|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-23T09:15:32Z|ISSUE|WO-VOICE-VIDEO|ops=check|paths=src/TalkView.tsx,src/rtc.ts,server/odai/objectives.mjs,server/odai/skills.mjs,server/odai/commercial.mjs,server.mjs,odai/config/skill_contracts.json,tests/video_commercial.test.mjs|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T10:45:32Z
+2026-11-23T09:17:20Z|ISSUE|WO-VOICE-VIDEO|ops=check|paths=src/TalkView.tsx,src/rtc.ts,server/uploads.mjs,server/odai/objectives.mjs,server/odai/commercial.mjs,server.mjs,tests/voice_video.test.mjs|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T10:47:20Z
+2026-11-23T09:18:22Z|REVOKE|WO-VOICE-VIDEO|reason=Stopped before source edits: required apply_patch unavailable
+2026-11-23T09:26:24Z|ISSUE|WO-IFRAME|ops=check,commit|paths=src/,odai/dev_docs/|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T10:56:24Z

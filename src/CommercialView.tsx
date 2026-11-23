@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { MobileFrame } from "./MobileFrame";
 
-type Job = { job_id: string; status: string; blockers?: { code: string; detail: string }[]; spec?: any; render?: any; product?: any; avatar?: any; provider_task_id?: string };
+type Job = { job_id: string; status: string; blockers?: { code: string; detail: string }[]; spec?: any; render?: any; poster?: any; merged?: any; product?: any; avatar?: any; provider_task_id?: string; publish_target?: { url: string; page_id?: number; page_title?: string; state: string; requires?: string } };
 type Up = { upload_id: string; ext: string; bytes: number; sha256: string };
 
 const b64 = (f: File) => new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = rej; r.readAsDataURL(f); });
@@ -21,6 +22,7 @@ export function CommercialView() {
   const [current, setCurrent] = useState<Job | null>(null);
   const [renderPath, setRenderPath] = useState("");
   const [renderDur, setRenderDur] = useState("15");
+  const [preview, setPreview] = useState(false);
   const [msg, setMsg] = useState("");
 
   const load = () => {
@@ -135,7 +137,22 @@ export function CommercialView() {
               <p style={{ fontSize: 11, color: "#8a93a3" }}>{current.render.bytes} B · {current.render.container} · {current.render.duration_seconds ?? "unreported"} s · sha256 {current.render.sha256.slice(0, 16)}… · provider {current.render.provider}</p>
             </div>
           )}
+          {current.publish_target && (
+            <div style={{ marginTop: 10, borderTop: "1px solid #eef0f4", paddingTop: 8 }}>
+              <p style={{ fontSize: 12, margin: "0 0 6px" }}>
+                Landing page: <b style={{ wordBreak: "break-all" }}>{current.publish_target.url}</b>
+                {current.publish_target.page_id ? ` · page ${current.publish_target.page_id} “${current.publish_target.page_title}”` : ""} · {" "}
+                <span style={{ color: current.publish_target.state === "NOT_PUBLISHED" ? "#b54708" : "#2f7a3e", fontWeight: 800 }}>{current.publish_target.state}</span>
+              </p>
+              <button onClick={() => setPreview(true)} style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #0e6b57", background: "#fff", color: "#0e6b57", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>Preview landing page (mobile frame)</button>
+              <p style={{ fontSize: 11, color: "#8a93a3", margin: "6px 0 0" }}>{current.publish_target.requires}</p>
+            </div>
+          )}
         </section>
+      )}
+      {preview && current?.publish_target?.url && (
+        <MobileFrame url={current.publish_target.url} title="Campaign landing page" onClose={() => setPreview(false)}
+          note="Preview only — nothing has been published. Publishing writes to this live public page and needs your explicit approval." />
       )}
 
       <section style={{ marginTop: 10 }}>

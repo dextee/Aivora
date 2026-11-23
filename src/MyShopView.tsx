@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { MobileFrame } from "./MobileFrame";
 
 /* My Shop (MAIN-FIX) — V43 high-speed animated store-creation experience.
  * Data-driven from the existing Dropshipping Product List; the console streams ACTUAL persisted
@@ -274,15 +275,7 @@ export function MyShopView() {
       {showProducts && <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 30, padding: "12px 16px calc(12px + env(safe-area-inset-bottom))", background: "var(--bg, #eeeade)", borderTop: "1px solid var(--line, #d7dbe3)" }}>
         <a href={STORE_DESTINATION} onClick={(e) => { e.preventDefault(); setStoreOpen(true); }} style={{ display: "block", maxWidth: 528, margin: "0 auto", padding: 14, borderRadius: 12, background: "var(--green, #0e6b57)", color: "var(--white, #fff)", textAlign: "center", fontWeight: 800, textDecoration: "none" }}>ENTER THE STORE →</a>
       </div>}
-      {storeOpen && <section role="dialog" aria-modal="true" aria-label="Coffee storefront" style={{ position: "fixed", inset: 0, zIndex: 100, background: "var(--bg, #eeeade)", display: "flex", flexDirection: "column" }}>
-        <header style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, background: "var(--green, #0e6b57)", color: "white" }}>
-          <button autoFocus onClick={() => setStoreOpen(false)} style={{ padding: "10px 14px", borderRadius: 8, border: 0 }}>← Back to My Shop</button>
-          <strong style={{ flex: 1 }}>Coffee Store</strong>
-          <a href={STORE_DESTINATION} target="_blank" rel="noopener noreferrer" style={{ color: "white" }}>Open externally</a>
-        </header>
-        <p style={{ margin: 0, padding: "8px 12px", fontSize: 12 }}>If the store cannot be embedded, use Open externally. Your My Shop setup remains saved when you return.</p>
-        <iframe title="Hashmeta Coffee Store" src={STORE_DESTINATION} referrerPolicy="strict-origin-when-cross-origin" style={{ flex: 1, width: "100%", border: 0 }} />
-      </section>}
+      {storeOpen && <MobileFrame url={shop?.store_url || STORE_DESTINATION} title="Coffee Store" onClose={() => setStoreOpen(false)} note="If the store cannot be embedded, use Open externally. Your My Shop setup remains saved when you return." />}
       {!shop && <div style={{ fontSize: 12, color: "#8a93a3", textAlign: "center" }}>Set your store details and press <b>Prepare Store Setup</b> to watch the live build.</div>}
     </div>
   );

@@ -1727,6 +1727,23 @@
     "revoked_reason": "guardrail report shipped; revoke after commit",
     "revoked_at": "2026-11-23T00:59:03Z"
   },
+  "WO-IFRAME": {
+    "issued_at": "2026-11-23T09:26:24Z",
+    "expires_at": "2026-11-23T10:56:24Z",
+    "minutes": 90,
+    "paths": [
+      "src/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 30,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-INBOXONLINE": {
     "issued_at": "2026-11-22T22:54:34Z",
     "expires_at": "2026-11-23T00:54:34Z",
@@ -2538,6 +2555,31 @@
     "revoked": true,
     "revoked_reason": "WO-V42PREP SHIPPED (state sync only, no source changes; no publish)",
     "revoked_at": "2026-11-21T06:19:33Z"
+  },
+  "WO-VOICE-VIDEO": {
+    "issued_at": "2026-11-23T09:17:20Z",
+    "expires_at": "2026-11-23T10:47:20Z",
+    "minutes": 90,
+    "paths": [
+      "src/TalkView.tsx",
+      "src/rtc.ts",
+      "server/uploads.mjs",
+      "server/odai/objectives.mjs",
+      "server/odai/commercial.mjs",
+      "server.mjs",
+      "tests/voice_video.test.mjs"
+    ],
+    "ops": [
+      "check"
+    ],
+    "budget": 30,
+    "single_use": false,
+    "used_by_op": {
+      "check": 1
+    },
+    "revoked": true,
+    "revoked_reason": "Stopped before source edits: required apply_patch unavailable",
+    "revoked_at": "2026-11-23T09:18:22Z"
   },
   "WO-VOICEVID": {
     "issued_at": "2026-11-23T09:09:43Z",
