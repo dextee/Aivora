@@ -43,19 +43,35 @@ const GATES = [
 
 export function interpret(raw) {
   const text = String(raw || "").trim();
-  const units = +(text.match(/(\d+)(?:\s+\w+){0,4}\s*(?:units?|products?|pieces?|pcs|个|件|套)/i)?.[1] || 0);
+  /* DEF-01 (Blueprint 6.0 acceptance): the storyboard goal "sell 100 cups of my RM4 kopi in
+   * seven days" was rejected as unmeasurable because the grammar only accepted a narrow unit
+   * noun set, numeric day counts and catalog/brand names. Broaden recognition only — the gate
+   * still rejects statements with no measurable quantity. */
+  const UNIT_NOUNS = "units?|products?|pieces?|pcs|cups?|boxes?|packs?|bottles?|bags?|servings?|orders?|tickets?|leads?|customers?|个|件|套";
+  const units = +(text.match(new RegExp("(\\d+)(?:\\s+\\w+){0,4}\\s*(?:" + UNIT_NOUNS + ")", "i"))?.[1] || 0);
   const pct = +(text.match(/(\d+)\s*%/)?.[1] || 0);
-  const days = +(text.match(/(\d+)\s*(?:days?|天|工|日)/i)?.[1] || 0);
+  const WORD_NUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, fourteen: 14, thirty: 30, sixty: 60, ninety: 90 };
+  const dayNum = text.match(/(\d+)\s*(?:days?|天|工|日)/i)?.[1];
+  const dayWord = text.match(/\b(one|two|three|four|five|six|seven|eight|nine|ten|fourteen|thirty|sixty|ninety)\s+days?\b/i)?.[1];
+  const days = dayNum ? +dayNum : (dayWord ? WORD_NUM[dayWord.toLowerCase()] : 0);
   const catalog = /fny\s?global/i.test(text) ? "FNYGlobal" : null;
   const brand = /good\s?doctor/i.test(text) ? "The Good Doctor Organization" : /lumen/i.test(text) ? "Lumen Wellness (synthetic demo brand)" : null;
+  const product = text.match(/\b(?:rm|s\$|\$)\s?\d+(?:\.\d+)?\s+(kopi|coffee|tea|cake|product|item)s?\b/i)?.[0]
+    || text.match(/\b(kopi|coffee|tea|cake|cookies?|snack)s?\b/i)?.[0] || null;
   let criterion = null;
   if (units && (catalog || brand)) criterion = { kind: "units_sold", target_units: units, via_catalog: catalog, brand, measurable: true };
+  else if (units && product) criterion = { kind: "units_sold", target_units: units, via_catalog: catalog, brand: product.trim() + " (product-stated)", measurable: true };
   else if (pct && days) criterion = { kind: "growth", pct, days, measurable: true };
-  return { text, criterion, valid: !!criterion, reason: criterion ? null : "not measurable — restate with a number (units / % over days)" };
+  return { text, criterion, valid: !!criterion, days: days || undefined, reason: criterion ? null : "not measurable — restate with a number (units / % over days)" };
 }
 
+const criterionSummary = (c = {}) => c.kind === "growth" ? `${c.pct}% growth in ${c.days} days`
+  : c.kind === "units_sold" ? `${c.target_units} units of ${c.brand || c.via_catalog || "the stated product"}`
+    : c.kind ? `${c.kind}: ` + Object.entries(c).filter(([k]) => !["kind", "measurable"].includes(k)).map(([k, v]) => `${k}=${v}`).join(" ")
+      : "no criterion";
+
 function internalArtifact(task, obj) {
-  if (task.id === "marketing_plan") return { channels: ["Shopee(draft)", "Facebook(draft)", "WhatsApp Broadcast(draft)"], message: `Sell ${obj.criterion.target_units} ${obj.criterion.brand || ""} wellness units via ${obj.criterion.via_catalog} catalog`, budget_proposal_sgd: 150, requires_gate: "approve_spend", external: false };
+  if (task.id === "marketing_plan") return { channels: ["Shopee(draft)", "Facebook(draft)", "WhatsApp Broadcast(draft)"], message: `Sell ${criterionSummary(obj.criterion)} via ${obj.criterion?.via_catalog || "the stated product"} catalog`, budget_proposal_sgd: 150, requires_gate: "approve_spend", external: false };
   return { cadence: "10-beat staging run under TEST mode", schedule: TASKS.map((t, i) => ({ task: t.id, slot: i })) };
 }
 
@@ -186,7 +202,16 @@ export async function createObjective(tenantId, statement, provider = {}) {
       return { error: "Objective interpretation provider unavailable; nothing dispatched", code: "PLANNER_UNAVAILABLE" };
     }
   }
-  if (!p.valid) return { error: p.reason, planning };
+  if (!p.valid) {
+    /* DEF-01b: consult the WO-102 generalized criterion grammar before rejecting, so measurable
+     * statements the legacy units/percent grammar cannot express (RM caps, counts, deadlines,
+     * money amounts) still create a real objective. Unmeasurable text still fails closed. */
+    let generalized = null;
+    try { generalized = criterionFromText(String(statement || "")); } catch { generalized = null; }
+    if (generalized) { p = { text: String(statement || "").trim(), criterion: generalized, valid: true, reason: null }; planning = { ...planning, criterion_source: "generalized_registry_grammar" }; }
+    else return { error: p.reason, planning: { ...planning, criterion_source: "none" } };
+  }
+  else planning = { ...planning, criterion_source: "legacy_interpret" };
   p.text = String(statement || "").trim();
   const objective_id = "OBJ-" + Date.now().toString(36);
   const start = await wf.startRun(tenantId, p.text);
@@ -194,7 +219,7 @@ export async function createObjective(tenantId, statement, provider = {}) {
     run_id: start.runId, manifest: { tasks: TASKS, gates: GATES }, state: "AWAITING_SPEND_APPROVAL",
     approvals: [], created_at: new Date().toISOString(), completed_at: null, report: null };
   store.set(tenantId + "/" + objective_id, obj);
-  logEvent(get(tenantId), { runId: obj.run_id, beat: 0, actor: "orchestrator", kind: "OBJECTIVE_CREATED", decision: "ALLOW", note: `${objective_id} criterion=${p.criterion.kind}:${p.criterion.target_units ?? p.criterion.pct}` });
+  logEvent(get(tenantId), { runId: obj.run_id, beat: 0, actor: "orchestrator", kind: "OBJECTIVE_CREATED", decision: "ALLOW", note: `${objective_id} criterion=${criterionSummary(p.criterion)}` });
   await project(obj); await persist(obj);
   return view(obj);
 }

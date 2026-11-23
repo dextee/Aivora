@@ -39,7 +39,7 @@ import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry 
 import { runWithToken, supabaseConfigured, isOffline, putUpload, approveUpload, requestCtx, dbAvailable } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
 import { onlineEnabled, persistOrderOnline, persistReceiptOnline, loadOrdersOnline } from "./server/odai/po_persistence.mjs";
 // ECOMMERCE (V43) coffee-storyboard modules — integrated additively into MAIN's existing dispatcher (no second dispatcher).
-import { storeSetup, storeIntent, hasSession as hasStoreSession, storeRecord, storeExport, resetStore } from "./server/odai/store_setup.mjs";
+import { storeSetup, storeIntent, hasSession as hasStoreSession, storeAwaitingInput, storeRecord, storeExport, resetStore } from "./server/odai/store_setup.mjs";
 import { submitCoffeePlan, getPlan as getPlanById } from "./server/odai/plan_engine.mjs";
 import { listLeads, addLead, draftFollowup } from "./server/odai/leads.mjs";
 import { createCampaign as mktCreate, attachAsset as mktAttach, getCampaign as mktGet, latestCampaign as mktLatest } from "./server/odai/marketing.mjs";
@@ -75,6 +75,20 @@ const contentTypes = new Map([
 function send(response, status, body, contentType) {
   response.writeHead(status, { "content-type": contentType, "x-content-type-options": "nosniff" });
   response.end(body);
+}
+/* DEF-10 (Blueprint 6.0 acceptance, Phase 3 file-size limits): 18 request-body readers ingested
+ * unbounded payloads into memory while 9 other routes already capped at 65,536 B / 200,000 B.
+ * One shared bounded reader now backs every route; exceeding the cap throws 413 and the existing
+ * per-route try/catch surfaces it. Limits are per route class, not a global server change. */
+const BODY_LIMIT_JSON = 65536;
+const BODY_LIMIT_UPLOAD = 200_000;
+async function readBody(request, limit = BODY_LIMIT_JSON) {
+  let raw = "";
+  for await (const c of request) {
+    raw += c;
+    if (raw.length > limit) throw Object.assign(new Error("payload too large"), { status: 413 });
+  }
+  return raw;
 }
 async function existingFile(p) {
   try { const d = await stat(p); return d.isFile() ? p : null; }
@@ -236,8 +250,7 @@ async function analyze(request, response) {
   try { auth = JSON.parse(decodeURIComponent(request.headers["x-aivora-auth"] || "null")); } catch { /* optional */ }
   if (!k && !auth?.key)
     return send(response, 503, JSON.stringify({ error: "No Model Studio key — set the Page env var or connect one under 🔐." }), "application/json; charset=utf-8");
-  let raw = "";
-  for await (const c of request) raw += c;
+  const raw = await readBody(request, BODY_LIMIT_UPLOAD);
   const { messages } = JSON.parse(raw || "{}");
   if (!Array.isArray(messages))
     return send(response, 400, JSON.stringify({ error: "messages[] required" }), "application/json; charset=utf-8");
@@ -354,8 +367,7 @@ function uploadMeta(request, response, url) {
 }
 
 async function storeStream(request, response) {
-  let raw = "";
-  for await (const c of request) raw += c;
+  const raw = await readBody(request, BODY_LIMIT_UPLOAD);
   let auth = null;
   try { auth = JSON.parse(decodeURIComponent(request.headers["x-aivora-auth"] || "null")); } catch { /* optional */ }
   let spec = null;
@@ -668,15 +680,22 @@ async function odaiRoute(url, request, response) {
     }
     /* ---- ECOMMERCE (V43) coffee-storyboard integration — additive routes on MAIN's dispatcher ---- */
     if (path === "/submit" && request.method === "POST") {
-      let raw = ""; for await (const c of request) raw += c;
+      const raw = await readBody(request);
       const { text, request_id, source, objective_id } = JSON.parse(raw || "{}");
       const statement = String(text || "").slice(0, 300);
       if (!statement.trim()) return json({ error: "empty submission" }, 400);
-      if (/how is my business doing|analy[sz]e .*business|business intelligence|customer contacts|purchase history|purchase orders/i.test(statement)) {
+      /* DEF-05 (Blueprint 6.0 acceptance): the business-intelligence pattern was literal, so the
+       * storyboard/judge question "Uncle, how is my RM4 coffee business doing?" fell through to the
+       * store-session branch and answered with a store record. Allow up to a few words between
+       * "how is my" and "business" so the real question routes to business intelligence. */
+      if (/how (is|'s) my [^.?!]{0,40}business|analy[sz]e [^.?!]{0,40}business|business intelligence|customer contacts|purchase history|purchase orders/i.test(statement)) {
         try { businessScope(tenant); return json(runAnalysis(tenant, JSON.parse(raw || "{}").reference_date)); }
         catch (e) { return json({ error: e.message }, e.status || 503); }
       }
-      if (mailIntent(statement) || /^(yes|proceed|go ahead|confirm|approve|yes send)\b/i.test(statement)) {
+      /* DEF-04: an in-progress store wizard owns confirmation words; otherwise "yes" / "go ahead"
+       * / "okay, start" were routed to the mail handler and answered 403, breaking the storyboard
+       * approval dialogue. Mail confirmation is unaffected when no wizard turn is pending. */
+      if ((mailIntent(statement) || /^(yes|proceed|go ahead|confirm|approve|yes send)\b/i.test(statement)) && !storeAwaitingInput(tenant)) {
         if (!isOffline()) return json({ error: "Online mail blocked: auth membership and Gmail schema integration required", code: "MAIL_ONLINE_BLOCKED" }, 503);
         if (tenant !== DEMO_TENANT) return json({ error: "Offline mail tenant denied" }, 403);
         try { return json({ mail: true, ...(await handleMail(tenant, statement)) }); }
@@ -729,17 +748,17 @@ async function odaiRoute(url, request, response) {
       }
       return json(await createObjective(tenant, statement, provider)); // MAIN's own objective engine for other goals
     }
-    if (path === "/plan" && request.method === "POST") { let raw = ""; for await (const c of request) raw += c; const { statement, request_id } = JSON.parse(raw || "{}"); return json(await submitCoffeePlan(tenant, String(statement || "Launch my RM4 coffee business"), request_id)); }
+    if (path === "/plan" && request.method === "POST") { const raw = await readBody(request); const { statement, request_id } = JSON.parse(raw || "{}"); return json(await submitCoffeePlan(tenant, String(statement || "Launch my RM4 coffee business"), request_id)); }
     if (path.startsWith("/plan/") && request.method === "GET") return json(getPlanById(tenant, decodeURIComponent(path.split("/")[2])));
     if (path === "/store" && request.method === "GET") return json(storeRecord(tenant));
     if (path === "/store/export" && request.method === "GET") return json(storeExport(tenant));
-    if (path === "/store" && request.method === "POST") { let raw = ""; for await (const c of request) raw += c; const { action } = JSON.parse(raw || "{}"); if (action === "reset") return json(resetStore(tenant)); if (action === "sync" || action === "regenerate") return json(await storeSetup(tenant, { text: "sync", request_id: "sync:" + Date.now() })); return json({ error: "unknown store action" }, 400); }
+    if (path === "/store" && request.method === "POST") { const raw = await readBody(request); const { action } = JSON.parse(raw || "{}"); if (action === "reset") return json(resetStore(tenant)); if (action === "sync" || action === "regenerate") return json(await storeSetup(tenant, { text: "sync", request_id: "sync:" + Date.now() })); return json({ error: "unknown store action" }, 400); }
     if (path === "/leads" && request.method === "GET") return json(listLeads(tenant));
-    if (path === "/leads" && request.method === "POST") { let raw = ""; for await (const c of request) raw += c; return json(addLead(tenant, JSON.parse(raw || "{}"))); }
+    if (path === "/leads" && request.method === "POST") { const raw = await readBody(request); return json(addLead(tenant, JSON.parse(raw || "{}"))); }
     if (path.startsWith("/leads/") && path.endsWith("/followup") && request.method === "POST") return json(draftFollowup(tenant, decodeURIComponent(path.split("/")[2])));
     if (path === "/campaign" && request.method === "POST") return json(mktCreate(tenant, {}));
     if (path === "/campaign" && request.method === "GET") return json(mktLatest(tenant));
-    if (path.startsWith("/campaign/") && path.endsWith("/assets") && request.method === "POST") { const id = decodeURIComponent(path.split("/")[2]); let raw = ""; for await (const c of request) raw += c; return json(mktAttach(tenant, id, JSON.parse(raw || "{}"))); }
+    if (path.startsWith("/campaign/") && path.endsWith("/assets") && request.method === "POST") { const id = decodeURIComponent(path.split("/")[2]); const raw = await readBody(request); return json(mktAttach(tenant, id, JSON.parse(raw || "{}"))); }
     if (path.startsWith("/campaign/") && request.method === "GET") return json(mktGet(tenant, decodeURIComponent(path.split("/")[2])));
     if (path.startsWith("/hashmeta/")) { const hmEnv = { hashmetaToken: process.env.HASHMETA_API_TOKEN || null, hashmetaUrl: process.env.HASHMETA_MCP_URL || null }; const seg = path.split("/")[2];
       if (seg === "campaign" && request.method === "POST") return json(hmCreate(tenant, hmEnv));
@@ -751,7 +770,7 @@ async function odaiRoute(url, request, response) {
       if (seg === "status" && request.method === "GET") return json(hmStatus(tenant));
       if (seg === "metrics" && request.method === "GET") return json(hmMetrics(tenant));
       return json({ error: "unknown hashmeta route" }, 404); }
-    if (path.startsWith("/customers")) { const body = async () => { let raw = ""; for await (const c of request) raw += c; try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+    if (path.startsWith("/customers")) { const body = async () => { const raw = await readBody(request); try { return JSON.parse(raw || "{}"); } catch { return {}; } };
       if (path === "/customers" && request.method === "GET") return json(searchCustomers(tenant, { q: url.searchParams.get("q") || "", category: url.searchParams.get("category") || "", page: +(url.searchParams.get("page") || 1), pageSize: +(url.searchParams.get("pageSize") || 20) }));
       if (path === "/customers" && request.method === "POST") return json(createCustomer(tenant, await body()));
       if (path === "/customers/seed" && request.method === "POST") return json(custSeed(tenant));
@@ -771,7 +790,7 @@ async function odaiRoute(url, request, response) {
       if (path.startsWith("/customers/") && request.method === "GET") return json(getCustomer(tenant, decodeURIComponent(path.split("/")[2])));
       return json({ error: "unknown customers route" }, 404); }
     if (path.startsWith("/shop")) {
-      const rd = async () => { let raw = ""; for await (const c of request) raw += c; try { return JSON.parse(raw || "{}"); } catch { return {}; } };
+      const rd = async () => { const raw = await readBody(request); try { return JSON.parse(raw || "{}"); } catch { return {}; } };
       if (path === "/shop" && request.method === "POST") return json(await runShop(tenant, await rd()));
       if (path === "/shop" && request.method === "GET") return json(getShop(tenant));
       if (path === "/shop/products" && request.method === "GET") return json({ products: dropshipList() });
@@ -788,7 +807,7 @@ async function odaiRoute(url, request, response) {
     if (path === "/company") { const { COMPANY } = await import("./server/odai/store.mjs"); return json({ tenant_id: tenant, company: COMPANY, note: "synthetic demo brand standing in for TGDO per owner instruction; swap odai/config/company_profile.json when real data arrives" }); }
     if (path === "/objectives") {
     if (request.method === "GET") return json({ tenant_id: tenant, objectives: listObjectives(tenant) }); // WO-10R restore list
-    let raw = ""; for await (const c of request) raw += c;
+    const raw = await readBody(request);
     const body = JSON.parse(raw || "{}");
     const statement = body.statement || body.text || body.objective || body.utterance; // WO-10R restore V38 body fields
     return json(await createObjective(tenant, String(statement || "").slice(0, 300), provider));
@@ -796,16 +815,16 @@ async function odaiRoute(url, request, response) {
   if (path.startsWith("/objectives/")) {
     const seg = path.split("/"); const oid = seg[2], action = seg[3];
     if (request.method === "POST" && action === "approve") {
-      let raw = ""; for await (const c of request) raw += c;
+      const raw = await readBody(request);
       const { scope, cap } = JSON.parse(raw || "{}");
       return json(await approve(tenant, oid, String(scope), Number(cap) || 150));
     }
     if (request.method === "POST" && action === "resume") return json(await resume(tenant, oid));
     if (request.method === "POST" && action === "report") return json(finalReport(tenant, oid));
     if (request.method === "GET" && action === "report") return json(salesReport(tenant, oid));
-    if (request.method === "POST" && action === "demo-sales") { let raw = ""; for await (const c of request) raw += c; return json(await setDemoSales(tenant, oid, JSON.parse(raw || "{}"))); }
-    if (request.method === "POST" && action === "boost") { let raw = ""; for await (const c of request) raw += c; const { amount } = JSON.parse(raw || "{}"); return json(await requestBoost(tenant, oid, { amount })); }
-    if (request.method === "POST" && action === "constraint") { let raw = ""; for await (const c of request) raw += c; const { organic_only } = JSON.parse(raw || "{}"); return json(await applyConstraint(tenant, oid, { organic_only })); }
+    if (request.method === "POST" && action === "demo-sales") { const raw = await readBody(request); return json(await setDemoSales(tenant, oid, JSON.parse(raw || "{}"))); }
+    if (request.method === "POST" && action === "boost") { const raw = await readBody(request); const { amount } = JSON.parse(raw || "{}"); return json(await requestBoost(tenant, oid, { amount })); }
+    if (request.method === "POST" && action === "constraint") { const raw = await readBody(request); const { organic_only } = JSON.parse(raw || "{}"); return json(await applyConstraint(tenant, oid, { organic_only })); }
     if (request.method === "GET" && !action) return json(await resume(tenant, oid));
   }
   if (path === "/modes") return json({ contract: "ui_modes_9_0", policy_version: POLICY_VERSION, unavailable_rule_sets: UNAVAILABLE_RULE_SETS, modes: ["user", "management", "security"], mode_change_grants_permission: false });
@@ -815,7 +834,7 @@ async function odaiRoute(url, request, response) {
       return json({ tenant_id: tenant, intents: publicIntents() });
     }
     if (path === "/intents/match" && request.method === "POST") {
-      let raw = ""; for await (const c of request) raw += c;
+      const raw = await readBody(request);
       let body; try { body = JSON.parse(raw || "{}"); } catch { return json({ error: "bad json" }, 400); }
       const utterance = String(body.utterance || "").slice(0, 300);
       const match = matchIntent(utterance);
@@ -834,19 +853,19 @@ async function odaiRoute(url, request, response) {
       return json({ mode, tenant_id: tenant, grants: authz.grants, data_mode: "TEST", ...body });
     }
     if (path === "/demo/start" && request.method === "POST") {
-      let raw = ""; for await (const c of request) raw += c;
+      const raw = await readBody(request);
       const { objective } = JSON.parse(raw || "{}");
       return json({ tenant_id: tenant, ...await startRun(tenant, String(objective || "Sell FNYGlobal wellness products to 100 customers").slice(0, 300)) });
     }
     if (path === "/demo/approve" && request.method === "POST") {
-      let raw = ""; for await (const c of request) raw += c;
+      const raw = await readBody(request);
       const { runId, approve, cap } = JSON.parse(raw || "{}");
       return json(await decideSpend(tenant, String(runId), !!approve, Number(cap) || 200));
     }
     if (path === "/catalog") return json({ tenant_id: tenant, review_mode: "QUARANTINE_REVIEW_REQUIRED", products: get(tenant).products.map((p) => ({ id: p.id, name: p.name, currency: p.currency, price: p.website_price, price_type: p.price_type, reseller_authorized: p.reseller_authorized, regulatory: p.regulatory_review_status, review_state: p.review_state })) });
     if (path === "/uploads/approve" && request.method === "POST") {
       if (!supabaseConfigured()) return json({ error: "upload approval requires Supabase mode", code: "SUPABASE_NOT_CONFIGURED" }, 501);
-      let raw = ""; for await (const c of request) raw += c;
+      const raw = await readBody(request);
       let body; try { body = JSON.parse(raw || "{}"); } catch { return json({ error: "bad json" }, 400); }
       const uploadId = String(body.upload_id || "");
       if (!/^[0-9a-fA-F-]{36}$/.test(uploadId)) return json({ error: "upload_id (uuid) required" }, 400);

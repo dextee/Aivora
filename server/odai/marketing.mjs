@@ -6,7 +6,7 @@
  * (Qwen image/video) and attached via attachAsset — NEVER fabricated here (rule: never fake media). */
 import { get, logEvent } from "./store.mjs";
 import { loadStoreCatalog } from "./store_setup.mjs";
-import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const CAMPAIGNS_DIR = fileURLToPath(new URL("../../odai/campaigns/", import.meta.url));
@@ -120,4 +120,21 @@ export function attachAsset(tenant, campaign_id, { kind, url, provider, poster_u
 function loadFile(campaign_id) { try { return JSON.parse(readFileSync(CAMPAIGNS_DIR + `${campaign_id}.json`, "utf8")); } catch { return null; } }
 
 export function getCampaign(tenant, campaign_id) { return campaigns.get(`${tenant}/${campaign_id}`) || loadFile(campaign_id) || { error: "not found" }; }
-export function latestCampaign(tenant) { const all = [...campaigns.entries()].filter(([k]) => k.startsWith(tenant + "/")).map(([, v]) => v).sort((a, b) => b.created_at.localeCompare(a.created_at)); return all[0] || { error: "no campaign yet" }; }
+/* DEF-03 (Blueprint 6.0 acceptance): latestCampaign() only read the in-memory map, so after a
+ * process restart GET /campaign answered "no campaign yet" even though the campaign JSON was
+ * persisted on disk — breaking the storyboard rule "use one campaign ID throughout". The read
+ * path now unions persisted campaigns with memory (memory wins for the same id). */
+function persistedCampaigns(tenant) {
+  try {
+    return readdirSync(CAMPAIGNS_DIR)
+      .filter((f) => f.endsWith(".json"))
+      .map((f) => { try { return JSON.parse(readFileSync(CAMPAIGNS_DIR + f, "utf8")); } catch { return null; } })
+      .filter((c) => c && c.campaign_id && c.tenant_id === tenant);
+  } catch { return []; }
+}
+export function latestCampaign(tenant) {
+  const mem = [...campaigns.entries()].filter(([k]) => k.startsWith(tenant + "/")).map(([, v]) => v);
+  const byId = new Map([...persistedCampaigns(tenant), ...mem].map((c) => [c.campaign_id, c]));
+  const all = [...byId.values()].sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+  return all[0] || { error: "no campaign yet" };
+}

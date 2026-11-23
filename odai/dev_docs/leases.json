@@ -1311,6 +1311,25 @@
     "revoked_reason": "composer attachments shipped fd55304; revoke after commit per convention; no further writes",
     "revoked_at": "2026-11-22T03:23:56Z"
   },
+  "WO-B6DEF": {
+    "issued_at": "2026-11-23T04:17:39Z",
+    "expires_at": "2026-11-23T06:17:39Z",
+    "minutes": 120,
+    "paths": [
+      "server.mjs",
+      "server/odai/",
+      "tests/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 40,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-BASELINE": {
     "issued_at": "2026-11-23T03:00:44Z",
     "expires_at": "2026-11-23T05:00:44Z",

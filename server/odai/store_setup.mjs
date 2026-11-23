@@ -35,6 +35,12 @@ function emit(tenant, kind, note, decision = "ALLOW") {
 /* entry detection (used by the /submit route to decide delegation) */
 export function storeIntent(text) { return /create an online store|help me create .*store|set up .*(online )?store|start (an?|my) (online )?store|make (an?|my) (online )?store|build (an?|my) (online )?store/i.test(String(text || "")); }
 export function hasSession(tenant) { return sessions.has(tenant); }
+/* DEF-04 (Blueprint 6.0 acceptance): true only while the wizard is mid-flow and waiting for the
+ * owner's answer. The dispatcher uses this so confirmation words ("yes", "go ahead", "okay,
+ * start") reach the store wizard instead of being hijacked by the mail-intent branch — the
+ * authoritative storyboard dialogue depends on it. False once step === "done", so mail
+ * confirmation behaviour is unchanged before and after setup. */
+export function storeAwaitingInput(tenant) { const s = sessions.get(tenant); return !!s && s.step !== "done"; }
 export function storeRecord(tenant) { return records.get(tenant) || { error: "no store yet" }; }
 
 async function generate(tenant, s) {

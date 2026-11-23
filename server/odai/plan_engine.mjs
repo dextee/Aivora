@@ -22,20 +22,25 @@ function audit(tenant, objective_id, task_id, kind, decision, note) {
   return id;
 }
 
+/* DEF-02 (Blueprint 6.0 acceptance): skill_id values were registry labels that did not match the
+ * task they labelled (e.g. "Create online store" → SK-014 Consent Checker), and T13 carried no
+ * label at all while reporting status=done. Labels are now bound to the registry skill that owns
+ * the work, and every task declares its real native `handler` so completion is traceable to code.
+ * Gates keep skill_id null by design: a human owner approval is the handler. */
 const TEMPLATE = [
-  { task_id: "T01", title: "Validate product information", assigned_agent: "catalog", skill_id: "SK-021", deps: [], priority: 1, kind: "native" },
-  { task_id: "T02", title: "Prepare coffee product catalog", assigned_agent: "catalog", skill_id: "SK-027", deps: ["T01"], priority: 1, kind: "native" },
-  { task_id: "T03", title: "Create online store", assigned_agent: "website", skill_id: "SK-014", deps: ["T02"], priority: 1, kind: "simulated" },
-  { task_id: "T04", title: "Create product landing page", assigned_agent: "website", skill_id: "SK-035", deps: ["T03"], priority: 2, kind: "simulated" },
-  { task_id: "T05", title: "Generate marketing strategy", assigned_agent: "marketing", skill_id: "SK-037", deps: ["T02"], priority: 2, kind: "native" },
-  { task_id: "T06", title: "Generate marketing assets", assigned_agent: "marketing", skill_id: "SK-046", deps: ["T05"], priority: 2, kind: "simulated" },
-  { task_id: "T07", title: "Prepare Hashmeta campaign", assigned_agent: "marketing", skill_id: "SK-051", deps: ["T04", "T06"], priority: 2, kind: "simulated" },
-  { task_id: "T08", title: "Request publishing approval", assigned_agent: "orchestrator", skill_id: null, deps: ["T07"], priority: 1, kind: "gate", gate: "approve_publish" },
-  { task_id: "T09", title: "Capture customer leads", assigned_agent: "crm", skill_id: "SK-001", deps: ["T04"], priority: 3, kind: "native" },
-  { task_id: "T10", title: "Create CRM records", assigned_agent: "crm", skill_id: "SK-001", deps: ["T09"], priority: 3, kind: "native" },
-  { task_id: "T11", title: "Execute authorized follow-ups", assigned_agent: "crm", skill_id: null, deps: ["T10"], priority: 3, kind: "gate", gate: "approve_customer_comms" },
-  { task_id: "T12", title: "Consolidate performance data", assigned_agent: "report", skill_id: "SK-014", deps: ["T08", "T11"], priority: 4, kind: "native" },
-  { task_id: "T13", title: "Generate executive business report", assigned_agent: "report", skill_id: null, deps: ["T12"], priority: 4, kind: "native" },
+  { task_id: "T01", title: "Validate product information", assigned_agent: "catalog", skill_id: "SK-021", handler: "plan_engine.runTask:T01 (store catalog name+price+currency validation)", deps: [], priority: 1, kind: "native" },
+  { task_id: "T02", title: "Prepare coffee product catalog", assigned_agent: "catalog", skill_id: "SK-009", handler: "plan_engine.runTask:T02 (catalog built from existing product set)", deps: ["T01"], priority: 1, kind: "native" },
+  { task_id: "T03", title: "Create online store", assigned_agent: "website", skill_id: "SK-047", handler: "plan_engine.runTask:T03 (Hashmeta page 29 draft; publication HELD)", deps: ["T02"], priority: 1, kind: "simulated" },
+  { task_id: "T04", title: "Create product landing page", assigned_agent: "website", skill_id: "SK-026", handler: "plan_engine.runTask:T04 (local draft landing artifact; not published)", deps: ["T03"], priority: 2, kind: "simulated" },
+  { task_id: "T05", title: "Generate marketing strategy", assigned_agent: "marketing", skill_id: "SK-007", handler: "plan_engine.runTask:T05 (organic-first strategy within spend ceiling)", deps: ["T02"], priority: 2, kind: "native" },
+  { task_id: "T06", title: "Generate marketing assets", assigned_agent: "marketing", skill_id: "SK-018", handler: "plan_engine.runTask:T06 (no media provider connected; SIMULATED, never fabricated)", deps: ["T05"], priority: 2, kind: "simulated" },
+  { task_id: "T07", title: "Prepare Hashmeta campaign", assigned_agent: "marketing", skill_id: "SK-056", handler: "plan_engine.runTask:T07 (draft only; CON-HASH-MKT BLOCKED in registry)", deps: ["T04", "T06"], priority: 2, kind: "simulated" },
+  { task_id: "T08", title: "Request publishing approval", assigned_agent: "orchestrator", skill_id: null, handler: "owner approval gate: approve_publish (no skill executes an approval)", deps: ["T07"], priority: 1, kind: "gate", gate: "approve_publish" },
+  { task_id: "T09", title: "Capture customer leads", assigned_agent: "crm", skill_id: "SK-002", handler: "plan_engine.runTask:T09 (leads.addLead → local CRM store)", deps: ["T04"], priority: 3, kind: "native" },
+  { task_id: "T10", title: "Create CRM records", assigned_agent: "crm", skill_id: "SK-006", handler: "plan_engine.runTask:T10 (CRM record persisted from T09 lead)", deps: ["T09"], priority: 3, kind: "native" },
+  { task_id: "T11", title: "Execute authorized follow-ups", assigned_agent: "crm", skill_id: null, handler: "owner approval gate: approve_customer_comms (external write NEVER without approval)", deps: ["T10"], priority: 3, kind: "gate", gate: "approve_customer_comms" },
+  { task_id: "T12", title: "Consolidate performance data", assigned_agent: "report", skill_id: "SK-017", handler: "plan_engine.runTask:T12 (consolidated from persisted task states)", deps: ["T08", "T11"], priority: 4, kind: "native" },
+  { task_id: "T13", title: "Generate executive business report", assigned_agent: "report", skill_id: "SK-040", handler: "plan_engine.runTask:T13 (report grounded in persisted task results; holds disclosed)", deps: ["T12"], priority: 4, kind: "native" },
 ];
 
 function newTask(t) {
@@ -148,7 +153,7 @@ function planView(obj) {
     objective_id: obj.objective_id, tenant_id: obj.tenant_id, state: obj.state,
     extracted: obj.extracted, created_at: obj.created_at, completed_at: obj.completed_at || null,
     progress: { total: obj.tasks.length, done: obj.tasks.filter((t) => t.status === "done").length, simulated: obj.tasks.filter((t) => t.status === "simulated").length, held: obj.tasks.filter((t) => t.status === "held").length, failed: obj.tasks.filter((t) => t.status === "failed").length, pending: obj.tasks.filter((t) => t.status === "pending" || t.status === "skipped").length },
-    tasks: obj.tasks.map((t) => ({ task_id: t.task_id, objective_id: t.objective_id, title: t.title, assigned_agent: t.assigned_agent, skill_id: t.skill_id, dependencies: t.deps, priority: t.priority, status: t.status, attempt_count: t.attempt_count, idempotency_key: t.idempotency_key, execution_result: t.execution_result, verification_result: t.verification_result, audit_event_id: t.audit_event_id })),
+    tasks: obj.tasks.map((t) => ({ task_id: t.task_id, objective_id: t.objective_id, title: t.title, assigned_agent: t.assigned_agent, skill_id: t.skill_id, handler: t.handler || null, kind: t.kind, dependencies: t.deps, priority: t.priority, status: t.status, attempt_count: t.attempt_count, idempotency_key: t.idempotency_key, execution_result: t.execution_result, verification_result: t.verification_result, audit_event_id: t.audit_event_id })),
     note: "skill_id/assigned_agent are registry LABELS; no runtime skill gateway exists — execution is native or clearly-SIMULATED; gated tasks HELD (external writes NEVER).",
   };
 }

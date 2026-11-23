@@ -452,3 +452,5 @@
 2026-11-23T03:00:44Z|ISSUE|WO-BASELINE|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,tools/,package.json,.gitignore,GuideBook/,odai/dev_docs/|minutes=120|budget=40|single_use=0|expires_at=2026-11-23T05:00:44Z
 2026-11-23T03:01:00Z|HOOK_ALLOW|WO-BASELINE|.gitignore+GuideBook/AIVORA_SUPABASE_MIGRATION_RUNBOOK.md+odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server/odai/inbox_testlab.mjs+server/odai/mail.mjs+server/odai/store_config.mjs+src/MyShopView.tsx+src/TestLabView.tsx+tests/storefront_paypal.test.mjs+tests/testlab.test.mjs+tools/guardian.mjs+tools/guardian/registry.json
 2026-11-23T03:01:34Z|REVOKE|WO-BASELINE|reason=clean acceptance baseline committed
+2026-11-23T03:01:35Z|HOOK_ALLOW|WO-BASELINE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-23T04:17:39Z|ISSUE|WO-B6DEF|ops=check,commit|paths=server.mjs,server/odai/,tests/,odai/dev_docs/|minutes=120|budget=40|single_use=0|expires_at=2026-11-23T06:17:39Z
