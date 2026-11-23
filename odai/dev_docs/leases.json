@@ -1334,6 +1334,23 @@
     "revoked_reason": "defect fixes committed",
     "revoked_at": "2026-11-23T04:18:34Z"
   },
+  "WO-B6DEF2": {
+    "issued_at": "2026-11-23T04:53:45Z",
+    "expires_at": "2026-11-23T06:23:45Z",
+    "minutes": 90,
+    "paths": [
+      "tools/",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 20,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-BASELINE": {
     "issued_at": "2026-11-23T03:00:44Z",
     "expires_at": "2026-11-23T05:00:44Z",

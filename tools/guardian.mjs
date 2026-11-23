@@ -58,7 +58,7 @@ const DEFAULT_REGISTRY = {
     runtime_adapter: "local-node",
     authorized_recovery_actions: ["restart_application_process"],
     recovery_level_max: 1,
-    restart_policy: { entry: "server.mjs", cwd: ROOT, max_attempts: 3, min_restart_interval_sec: 10, cooldown_sec: 120, restart_budget_per_hour: 10 },
+    restart_policy: { entry: "server.mjs", cwd: ROOT, max_attempts: 3, min_restart_interval_sec: 10, cooldown_sec: 120, restart_budget_per_hour: 10, env: { AIVORA_MEMORY_MODE: "1" }, env_basis: "owner-approved local demo runtime (explicit offline sandbox); production enrollment must declare its own env" },
     escalation_policy: { after_attempts: 3, to: "ai-development-agent" },
     resource_owner: "boss",
     monitoring_status: "enrolled",
@@ -101,7 +101,11 @@ const ADAPTERS = {
     recover(r, action) {
       if (action !== "restart_application_process") throw new Error("unauthorized action");
       const p = r.restart_policy;
-      const child = spawn(process.execPath, [p.entry], { cwd: p.cwd, detached: true, stdio: "ignore", env: { ...process.env, PORT: String(r.health_check.port), HOST: r.health_check.host } });
+      /* DEF-11 (Blueprint 6.0 acceptance): a restart that only re-runs the entry inherits the
+       * GUARDIAN's environment, so the recovered app came back without AIVORA_MEMORY_MODE and the
+       * offline demo plane was BLOCKED (inbox 1/8 READY). The enrolled resource may now declare the
+       * exact runtime env it must be recovered with; PORT/HOST stay derived from the health check. */
+      const child = spawn(process.execPath, [p.entry], { cwd: p.cwd, detached: true, stdio: "ignore", env: { ...process.env, ...(p.env || {}), PORT: String(r.health_check.port), HOST: r.health_check.host } });
       child.unref();
       return child.pid;
     },

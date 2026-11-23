@@ -26,7 +26,11 @@
         "max_attempts": 3,
         "min_restart_interval_sec": 10,
         "cooldown_sec": 120,
-        "restart_budget_per_hour": 10
+        "restart_budget_per_hour": 10,
+        "env": {
+          "AIVORA_MEMORY_MODE": "1"
+        },
+        "env_basis": "DEF-11: owner-approved local demo runtime (explicit offline sandbox). Recovery must restore the runtime environment, not just the process. A production enrollment must declare its own env here."
       },
       "escalation_policy": {
         "after_attempts": 3,
