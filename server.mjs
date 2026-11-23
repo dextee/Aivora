@@ -36,7 +36,8 @@ import { businessScope, businessView, importBatch, runAnalysis, purchaseOrderAct
 import { decodeWorkbookXlsx, purchaseOrderPdf, storeDocument, listDocuments, getDocument } from "./server/odai/po_document.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
-import { runWithToken, supabaseConfigured, isOffline, putUpload, approveUpload, requestCtx } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
+import { runWithToken, supabaseConfigured, isOffline, putUpload, approveUpload, requestCtx, dbAvailable } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
+import { onlineEnabled, persistOrderOnline, persistReceiptOnline, loadOrdersOnline } from "./server/odai/po_persistence.mjs";
 // ECOMMERCE (V43) coffee-storyboard modules — integrated additively into MAIN's existing dispatcher (no second dispatcher).
 import { storeSetup, storeIntent, hasSession as hasStoreSession, storeRecord, storeExport, resetStore } from "./server/odai/store_setup.mjs";
 import { submitCoffeePlan, getPlan as getPlanById } from "./server/odai/plan_engine.mjs";
@@ -395,15 +396,18 @@ async function odaiRoute(url, request, response) {
     return json({ error: "A signed-in user is required in Supabase mode", code: "AUTH_REQUIRED" }, 401);
   try {
     if (path === "/business" || path.startsWith("/business/") || path === "/customers" || path.startsWith("/customers/")) {
+      let onlinePo = false;
       if (isOffline()) {
         businessScope(tenant);
       } else {
-        /* Online: validate authenticated membership first (fail closed), then report the
-         * precise remaining gap (durable PO schema) instead of a generic block. */
+        /* Online: validate authenticated membership (fail closed), then require a live
+         * durable DB (migration 010) before any business/PO operation. No memory fallback. */
         let mctx;
         try { mctx = await validateInboxMembership({ workspaceId: tenant, requiredPermission: request.method === "GET" ? "read" : "approve" }); }
         catch (e) { return json({ error: e.message, code: e.code || "MEMBERSHIP_DENIED" }, e.status || 403); }
-        return json({ error: "Membership validated (" + mctx.role + ") but durable purchase-order/business schema is not yet integrated for online mode; no memory fallback", code: "PO_DURABLE_SCHEMA_PENDING", membership: { role: mctx.role, workspace_id: mctx.workspace_id } }, 503);
+        let dbOk = false; try { dbOk = await dbAvailable(); } catch { dbOk = false; }
+        if (!dbOk) return json({ error: "Membership validated (" + mctx.role + ") but the durable database is unreachable; business/PO operations fail closed (no memory fallback)", code: "PO_DB_UNAVAILABLE", membership: { role: mctx.role, workspace_id: mctx.workspace_id } }, 503);
+        onlinePo = true;
       }
       const bseg = path.split("/");
       if (path.startsWith("/business/orders/") && bseg[3] && bseg[4] === "pdf" && request.method === "GET") {
@@ -423,7 +427,7 @@ async function odaiRoute(url, request, response) {
       }
       if (path === "/business/documents" && request.method === "GET") return json({ documents: listDocuments(tenant) });
       if (path === "/business/documents/" && bseg[3] && request.method === "GET") { const d = getDocument(decodeURIComponent(bseg[3])); if (!d) return json({ error: "not found" }, 404); response.writeHead(200, { "content-type": "application/pdf", "content-disposition": `attachment; filename="${d.rec.name}"`, "x-content-type-options": "nosniff" }); response.end(d.buf); return; }
-      if (path === "/business" && request.method === "GET") return json(businessView(tenant, url.searchParams.get("reference_date") || undefined));
+      if (path === "/business" && request.method === "GET") { const v = businessView(tenant, url.searchParams.get("reference_date") || undefined); if (onlinePo) { try { const online = await loadOrdersOnline(tenant); if (online) { const ids = new Set(v.orders.map(o => o.id)); v.orders = [...v.orders, ...online.filter(o => !ids.has(o.po_id)).map(o => ({ id: o.po_id, product_id: o.sku, quantity: o.quantity, received_units: o.received_units, outstanding_units: o.outstanding_units, total: Number(o.total), version: o.version, status: o.status, config: o.config, evidence: o.evidence, is_sandbox: o.is_sandbox, created_at: o.created_at, approved_at: o.approved_at, action_hash: o.action_hash, status_history: [], receipts: [], durable: true }))]; } } catch (e) { return json({ error: e.message, ...(e.code ? { code: e.code } : {}) }, e.status || 503); } } return json(v); }
       if (path.startsWith("/business/") && request.method === "POST") {
         let raw = ""; for await (const c of request) { raw += c; if (raw.length > 8000000) return json({ error: "Import body too large" }, 413); }
         const body = JSON.parse(raw || "{}");
@@ -436,7 +440,7 @@ async function odaiRoute(url, request, response) {
             const file_hash = createHash("sha256").update(buf).digest("hex");
             return json(importBatch(tenant, { filename: "AIVORA_Coffee_SGD_Anomaly_and_Reorder.xlsx", file_hash, batch_id: body.batch_id || "xlsx-" + file_hash.slice(0, 16), customers: decoded.customers, purchases: decoded.purchases, inventory: decoded.inventory, native_xlsx: true, sheets: decoded.sheets }));
           }
-          if (path === "/business/orders") return json(purchaseOrderAction(tenant, body));
+          if (path === "/business/orders") { const order = purchaseOrderAction(tenant, body); if (onlinePo) { await persistOrderOnline(tenant, order); if (order.receipt) await persistReceiptOnline(tenant, order, order.receipt, order.movement); } return json(order); }
           return json({ error: "Unsupported business action" }, 400);
         } catch (e) { return json({ error: e.message }, e.status || 503); }
       }
