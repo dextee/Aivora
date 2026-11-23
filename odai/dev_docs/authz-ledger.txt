@@ -446,3 +446,5 @@
 2026-11-23T00:41:06Z|REVOKE|WO-PO010|reason=migration 010 shipped; revoke after commit
 2026-11-23T00:41:06Z|HOOK_ALLOW|WO-PO010|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-23T00:58:36Z|ISSUE|WO-GRPDF|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/dev_docs/|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T02:28:36Z
+2026-11-23T00:59:00Z|HOOK_ALLOW|WO-GRPDF|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package.json+server.mjs+server/odai/testlab_report.mjs+server/odai/trust_layer.mjs+src/SecurityView.tsx+tests/guardrail_report.test.mjs
+2026-11-23T00:59:03Z|REVOKE|WO-GRPDF|reason=guardrail report shipped; revoke after commit
