@@ -49,7 +49,7 @@ type UState = { objective: string | null; tasks_done?: string; whats_done: strin
 
 export type AppointmentDraft = { title: string; contact: string; phone: string; email: string; date: string; start: string; end: string; type: string; location: string; agenda: string; reminder: string; question?: string | null; objective_id?: string };
 
-export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness, onOpenAppointment, autoStart }: { onOpenBusiness(): void; onOpenInbox(): void; onOpenDocs(): void; onOpenStore(seed: { storeName?: string; products?: string; market?: string; language?: string }): void; onOpenAppointment?(draft: AppointmentDraft): void; autoStart?: boolean }) {
+export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness, onOpenAppointment, onOpenCommercial, autoStart }: { onOpenBusiness(): void; onOpenInbox(): void; onOpenDocs(): void; onOpenStore(seed: { storeName?: string; products?: string; market?: string; language?: string }): void; onOpenAppointment?(draft: AppointmentDraft): void; onOpenCommercial?(): void; autoStart?: boolean }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"idle" | "connecting" | "partner" | "interpreter">("idle");
   const [target, setTarget] = useState("en");
@@ -210,6 +210,27 @@ export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness,
       const m = utterance.match(/(?:to|send to|recipient)\s+([\w.+-]+@[\w-]+\.[\w.]+)/i);
       if (m) emailTo.current = m[1];
       else emailBuf.current.push(utterance);
+      return true;
+    }
+    /* Voice/typed KEYWORD → Commercial Studio: generate a 15s video AND a poster for the coffee
+     * store. Staged composer attachments travel with this turn as ids; the engine creates the job,
+     * grounds both specs in the real catalog and SAYS WHAT IS STILL MISSING. Nothing is rendered
+     * here and nothing is published: the landing-page write stays an explicit owner approval. */
+    if (/\b(generate|make|create|produce|render|do)\b[^.?!]{0,40}\b(video|commercial|poster|advert|advertisement|ad)\b/i.test(utterance) || /(做|生成|制作|拍|整).{0,12}(视频|影片|海报|广告|宣傳|宣传)/.test(utterance) || /(buat|hasilkan).{0,20}(video|poster|iklan)/i.test(utterance)) {
+      const ready = files.filter((f) => f.status === "ready" && f.id);
+      try {
+        const res = await api("/api/odai/submit", { method: "POST", body: JSON.stringify({ text: utterance, source: "voice", attachments: ready.map((f) => f.id) }) });
+        const j = await res.json();
+        if (res.ok && j.commercial) {
+          const d = j.deliverables || {};
+          setRows((r) => [...r, { who: "ai", text: j.spoken || `Commercial job ${j.job_id} is ${j.status}.` }]);
+          setRows((r) => [...r, { who: "sys", text: `🎞 ${j.job_id} · ${j.status}\n• video: ${d.video?.seconds ?? 15}s · ${d.video?.model || "provider"} · ${d.video?.state}\n• poster: ${d.poster?.model || "provider"} · ${d.poster?.state}\n• attached files: ${j.attachments?.received ?? 0} received, ${j.attachments?.mergeable ?? 0} mergeable · merge engine ${d.merge_engine}\n• landing page: ${j.publish_target?.url || "none"} · ${j.publish_target?.state || "?"} (publishing needs your explicit approval)${j.missing?.length ? `\n• still needed: ${j.missing.join(", ")}` : ""}` }]);
+          if (ready.length) setFiles((prev) => prev.filter((f) => !ready.some((x) => x.key === f.key)));
+          try { engRef.current?.stop(); } catch { /* handoff to the studio */ }
+          setState("idle");
+          window.setTimeout(() => onOpenCommercial?.(), 600);
+        } else setRows((r) => [...r, { who: "err", text: j.error || "Commercial Studio unavailable; nothing was generated." }]);
+      } catch { setRows((r) => [...r, { who: "err", text: "Commercial Studio unreachable; nothing was generated or published." }]); }
       return true;
     }
     if (/\b(read my email|read my mails|next email|go back|read that again|skip this|summarize it|who sent|reply to (this|the|him|her)|make it (more )?(professional|friendlier|shorter)|prepare (a |the )?(quotation|invoice|receipt)|send (him |her |the )?(invoice|reply)|arrange a meeting with (this|the) customer|brief me on (my )?email)\b/i.test(utterance) || /读.*邮件|回复.*客户/.test(utterance)) {

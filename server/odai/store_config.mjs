@@ -15,8 +15,12 @@ import { get, logEvent } from "./store.mjs";
 import { ingestEvent } from "./inbox.mjs";
 
 export const HASHMETA_STORE_URL = "https://aivora-voice-first-ai-assist.geo.hashmeta.tech/zh/coffee-store";
+/* Owner instruction 2026-11-23: generated coffee-store video/poster assets land on this page
+ * (live Hashmeta page id 22, slug "campaign1"). It is an approved DESTINATION constant —
+ * approving the destination is not approval to publish; publishing stays an explicit owner action. */
+export const HASHMETA_CAMPAIGN_URL = "https://aivora-voice-first-ai-assist.geo.hashmeta.tech/campaign1";
 export const PAYPAL_PAYMENT_URL = "https://paypal.me/AntimosSG?locale.x=en_GB&COUNTY.X=SG";
-Object.freeze({ HASHMETA_STORE_URL, PAYPAL_PAYMENT_URL });
+Object.freeze({ HASHMETA_STORE_URL, HASHMETA_CAMPAIGN_URL, PAYPAL_PAYMENT_URL });
 
 export const PAYMENT_STATUSES = ["PAYMENT_LINK_OPENED", "PAYMENT_PENDING", "PAYMENT_VERIFIED", "PAYMENT_FAILED", "PAYMENT_REFUNDED"];
 
@@ -28,7 +32,7 @@ function persist(t, s) { mkdirSync(root, { recursive: true }); const d = root + 
 
 /* Public, credential-free configuration for the frontend + all features. */
 export function getStoreConfig() {
-  return { store_url: HASHMETA_STORE_URL, paypal_url: PAYPAL_PAYMENT_URL, currency: "SGD", payment_statuses: PAYMENT_STATUSES, protected: true, note: "Storefront and payment destination are protected constants; AI agents cannot alter them." };
+  return { store_url: HASHMETA_STORE_URL, campaign_landing_url: HASHMETA_CAMPAIGN_URL, paypal_url: PAYPAL_PAYMENT_URL, currency: "SGD", payment_statuses: PAYMENT_STATUSES, protected: true, note: "Storefront, campaign landing page and payment destination are protected constants; AI agents cannot alter them. Approving a destination is not approval to publish." };
 }
 
 /* RogueAI: enforce the exact approved payment destination. Any alternative is blocked. */

@@ -18,6 +18,9 @@ import { dropshipList } from "./shop_setup.mjs";
 import { attachAsset } from "./marketing.mjs";
 import { ingestEvent } from "./inbox.mjs";
 import { verifyOutboundLink } from "./trust_layer.mjs";
+import { getUploadMeta } from "../uploads.mjs";
+import { mergeAttachments, mergeCapability, MAX_INPUTS } from "./video_merge.mjs";
+import { HASHMETA_CAMPAIGN_URL, HASHMETA_STORE_URL } from "./store_config.mjs";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const DIR = ROOT + "odai/data/commercial/";
@@ -89,16 +92,24 @@ export function attachInput(tenant, { kind, filename, data_base64, likeness_cons
 
 /* ---- 2. job creation: grounded script + provider spec, or an explicit BLOCKED reason ---- */
 export function createCommercial(tenant, input = {}) {
-  const { avatar_upload_id = null, product_id = null, product_upload_id = null, language = "English", aspect_ratio = "9:16", hook = null, campaign_id = null, distribution_url = null, product_facts = null } = input;
+  const { avatar_upload_id = null, product_id = null, product_upload_id = null, language = "English", aspect_ratio = "9:16", hook = null, campaign_id = null, distribution_url = null, product_facts = null, attachment_ids = null } = input;
   const missing = [];
   if (!avatar_upload_id) missing.push("avatar (self photo)");
   if (!product_id && !product_upload_id) missing.push("product (catalog item or product photo)");
   const job = {
     job_id: "COMM-" + randomUUID().slice(0, 8), tenant_id: tenant, objective: "Create commercial with avatar",
     status: "DRAFT_INPUTS_MISSING", created_at: now(), updated_at: now(),
-    inputs: { avatar_upload_id, product_id, product_upload_id },
+    inputs: { avatar_upload_id, product_id, product_upload_id, attachment_ids: Array.isArray(attachment_ids) ? attachment_ids.slice(0, MAX_INPUTS) : [] },
     language, aspect_ratio, hook: hook ? String(hook).slice(0, 200) : null, campaign_id,
-    provider: PROVIDER, product: null, spec: null, render: null, blockers: [], audit: [],
+    provider: PROVIDER, product: null, spec: null, render: null, poster: null, merged: null, blockers: [], audit: [],
+    attachments: resolveAttachments(attachment_ids),
+    /* The destination is an owner-approved constant, so it is declared even when the job is
+     * still blocked on inputs. Declaring a destination is NOT approval to publish to it. */
+    publish_target: {
+      url: CAMPAIGN_LANDING_URL, page_slug: "campaign1", page_id: 22, page_title: "Store 1 — Campaign 1",
+      state: "NOT_PUBLISHED",
+      requires: "explicit owner approval — publishing writes to a live public Hashmeta page (external write, never automatic)",
+    },
   };
   const push = (code, detail) => { job.blockers.push({ code, detail, at: now() }); job.audit.push({ at: now(), event: code, detail }); };
 
@@ -137,10 +148,24 @@ export function createCommercial(tenant, input = {}) {
   }
 
   job.spec = buildSpec(job);
+  job.poster_spec = buildPosterSpec(job);
   job.status = "READY_TO_RENDER";
-  job.audit.push({ at: now(), event: "SPEC_BUILT", detail: `${job.spec.duration_seconds}s ${job.spec.resolution} ${job.spec.aspect_ratio} references=${job.spec.reference_images.length}` });
-  ingestEvent(tenant, { kind: "COMMERCIAL_SPEC_READY", event_id: randomUUID(), ts: now(), actor: "commercial-studio", objective_id: job.job_id, note: `${job.job_id} 15s spec ready; provider=${PROVIDER.model}; no video generated yet` });
+  job.audit.push({ at: now(), event: "SPEC_BUILT", detail: `video ${job.spec.duration_seconds}s ${job.spec.resolution} ${job.spec.aspect_ratio} refs=${job.spec.reference_images.length}; poster ${job.poster_spec.aspect_ratio}; publish target ${job.publish_target.url} (NOT_PUBLISHED)` });
+  ingestEvent(tenant, { kind: "COMMERCIAL_SPEC_READY", event_id: randomUUID(), ts: now(), actor: "commercial-studio", objective_id: job.job_id, note: `${job.job_id} 15s video + poster specs ready; provider=${PROVIDER.model}; nothing generated or published yet` });
   return save(job);
+}
+
+/* Composer attachments (server/uploads.mjs) that the owner staged for this commercial. */
+function resolveAttachments(attachment_ids) {
+  const ids = [...new Set((Array.isArray(attachment_ids) ? attachment_ids : []).map(String).filter(Boolean))].slice(0, MAX_INPUTS);
+  const out = [];
+  for (const id of ids) {
+    const meta = getUploadMeta(id);
+    if (!meta) { out.push({ id, error: "not found in this workspace's upload store" }); continue; }
+    const p = ROOT + "odai/uploads/" + id + ".bin";
+    out.push({ id, name: meta.name, kind: meta.kind, bytes: meta.size, mime: meta.mime, path: existsSync(p) ? p : null, mergeable: ["image", "video"].includes(meta.kind) && existsSync(p) });
+  }
+  return out;
 }
 
 function findUpload(tenant, upload_id, kind) {
@@ -158,22 +183,79 @@ function findUpload(tenant, upload_id, kind) {
 }
 
 /* The prompt is grounded in verified product facts only; no invented claims or prices. */
+const CAMPAIGN_LANDING_URL = HASHMETA_CAMPAIGN_URL;
 function buildSpec(job) {
   const p = job.product;
   const price = `${p.currency} ${Number(p.approved_selling_price).toFixed(2)}`;
   const claims = (p.claims || []).length ? p.claims.join("; ") : `${p.category || p.name} from the approved catalog`;
   const lang = job.language;
+  const refs = [job.avatar.path, p.image || job.product_image?.path].filter(Boolean);
+  const roles = ["avatar (owner self photo, likeness consent recorded)", p.source === "catalog" ? "product (catalog image)" : "product (owner-supplied photo)"];
+  /* attached images join the reference set (the provider accepts up to 9); attached video clips
+   * cannot be references, so they are merged locally instead — see mergeCommercial(). */
+  for (const a of job.attachments || []) {
+    if (a.kind === "image" && a.path && refs.length < 9) { refs.push(a.path); roles.push(`attached image (${a.name})`); }
+  }
   return {
     engine: PROVIDER.engine, model: PROVIDER.model, mode: PROVIDER.mode,
     duration_seconds: PROVIDER.duration_seconds, resolution: PROVIDER.resolution, aspect_ratio: job.aspect_ratio,
     generate_audio: true,
-    reference_images: [job.avatar.path, p.image || job.product_image?.path].filter(Boolean),
-    reference_roles: ["avatar (owner self photo, likeness consent recorded)", p.source === "catalog" ? "product (catalog image)" : "product (owner-supplied photo)"],
+    reference_images: refs,
+    reference_roles: roles,
+    attached_video_clips: (job.attachments || []).filter(a => a.kind === "video").map(a => a.name),
     prompt: `15-second vertical retail commercial. A friendly local spokesperson (the avatar reference) presents ${p.name} to camera in ${lang}, holds the product (the product reference), and ends on a clear call to action. On-screen text states the verified price ${price}. Product facts: ${claims}. Warm kopi-shop lighting, handheld-to-locked-off camera move, one push-in on the product, cut to the spokesperson for the CTA. Do not add prices, claims, certifications or health benefits beyond the facts given. Do not distort the avatar's face.`,
     negative_prompt: "invented prices, unverified health or certification claims, extra text, distorted face, extra fingers, watermark, logo of another brand",
     grounded_in: { product_source: p.source, product_id: p.product_id || null, price, currency: p.currency, claims: p.claims || [], catalog_verified: p.source === "catalog" },
     honesty: "This is a REQUEST SPEC. No video exists until a provider render is attached with attachRender().",
   };
+}
+
+/* Poster spec — same grounding rules as the video: verified product facts, the approved
+ * destinations, and no invented claims. Rendered by the authorized image provider, never here. */
+function buildPosterSpec(job) {
+  const p = job.product;
+  const price = `${p.currency} ${Number(p.approved_selling_price).toFixed(2)}`;
+  return {
+    engine: "qwenwork_builtin_image_generate", aspect_ratio: job.aspect_ratio === "16:9" ? "3:2" : job.aspect_ratio === "1:1" ? "1:1" : "3:4",
+    language: job.language,
+    reference_images: [p.image || job.product_image?.path, ...(job.attachments || []).filter(a => a.kind === "image" && a.path).map(a => a.path)].filter(Boolean).slice(0, 6),
+    text_on_poster: { headline: p.name, price, call_to_action: "Order now", landing_page: CAMPAIGN_LANDING_URL, store: HASHMETA_STORE_URL },
+    prompt: `Retail poster for ${p.name}. Warm kopi-shop palette, bold headline "${p.name}", the verified price ${price} clearly legible, one call to action "Order now". Show the product from the reference image without altering its packaging or label. Leave clean space at the bottom for the link. No invented claims, certifications, health benefits, discounts or testimonials.`,
+    negative_prompt: "invented prices, fake discounts, health or certification claims, testimonials, extra brands, watermark, distorted product packaging, unreadable text",
+    grounded_in: { product_source: p.source, product_id: p.product_id || null, price, currency: p.currency, catalog_verified: p.source === "catalog" },
+    honesty: "This is a REQUEST SPEC. No poster exists until a provider image is attached with attachPoster().",
+  };
+}
+
+/* Attach the real provider-rendered poster (validated like the video render). */
+export function attachPoster(tenant, job_id, { file_path, provider_task_id = null, provider = "qwenwork_builtin_image_generate" }) {
+  const job = getCommercial(tenant, job_id);
+  const p = String(file_path || "");
+  if (!p) throw err("file_path required");
+  if (!existsSync(p)) throw err(`poster file not found: ${p}`, 404);
+  const buf = readFileSync(p);
+  if (buf.length < 512) throw err("poster file is too small to be a real image", 422);
+  const head = buf.subarray(0, 4).toString("base64");
+  const kind = head.startsWith("/9j/") ? "jpg" : head.startsWith("iVBOR") ? "png" : head.startsWith("UklGR") ? "webp" : null;
+  if (!kind) throw err("not a JPEG/PNG/WebP image (magic bytes checked)", 415);
+  const digest = sha(buf);
+  job.poster = { file_path: p, bytes: buf.length, sha256: digest, format: kind, provider, provider_task_id: provider_task_id || null, attached_at: now() };
+  job.updated_at = now();
+  job.audit.push({ at: now(), event: "POSTER_ATTACHED", detail: `${buf.length}B ${kind} sha256=${digest.slice(0, 16)}…` });
+  if (job.campaign_id) {
+    try { attachAsset(tenant, job.campaign_id, { kind: "static_advertisement", url: "/api/odai/commercial/" + job.job_id + "/poster", provider }); job.poster.campaign_attached = true; }
+    catch (e) { job.poster.campaign_attached = false; job.poster.campaign_error = String(e.message || e).slice(0, 120); }
+  }
+  ingestEvent(tenant, { kind: "COMMERCIAL_POSTER_ATTACHED", event_id: randomUUID(), ts: now(), actor: "commercial-studio", objective_id: job.job_id, note: `${job.job_id} real poster attached (${buf.length}B ${kind})` });
+  return save(job);
+}
+
+export function posterFile(tenant, job_id) {
+  const job = getCommercial(tenant, job_id);
+  const p = job.poster?.file_path;
+  if (!p || !existsSync(p)) throw err("no poster attached", 404);
+  const kind = job.poster.format === "png" ? "image/png" : job.poster.format === "webp" ? "image/webp" : "image/jpeg";
+  return { buf: readFileSync(p), type: kind, job };
 }
 
 /* ---- 3. handoff + attach the real render ---- */
@@ -217,4 +299,44 @@ export function renderFile(tenant, job_id) {
   const job = getCommercial(tenant, job_id);
   if (!job.render?.file_path || !existsSync(job.render.file_path)) throw err("no rendered file attached", 404);
   return { buf: readFileSync(job.render.file_path), job };
+}
+
+/* ---- 4. merge the owner's attached files into one local mp4 (real ffmpeg) ---- */
+export async function mergeCommercial(tenant, job_id, opts = {}) {
+  const job = getCommercial(tenant, job_id);
+  const ids = (job.inputs?.attachment_ids || []).filter(Boolean);
+  if (!ids.length) throw err("this job has no attached files to merge — attach images or video clips in the composer first", 422, { code: "NO_ATTACHMENTS" });
+  const cap = await mergeCapability();
+  const res = await mergeAttachments({
+    attachment_ids: ids,
+    duration_seconds: Number(opts.duration_seconds) || PROVIDER.duration_seconds,
+    aspect_ratio: job.aspect_ratio || "9:16",
+    resolution: opts.resolution || "1080p",
+    job_id: job.job_id,
+  });
+  job.merged = { ...res, at: now(), capability: cap.available ? { version: cap.version, source: cap.source } : cap };
+  job.updated_at = now();
+  job.audit.push({ at: now(), event: res.ok ? "ATTACHMENTS_MERGED" : "MERGE_" + String(res.status || "FAILED").toUpperCase(), detail: res.ok ? `${res.bytes}B ${res.measured_seconds}s sha256=${String(res.sha256).slice(0, 16)}… inputs=${res.inputs.length} rejected=${(res.rejected || []).length}` : String(res.reason || "").slice(0, 200) });
+  ingestEvent(tenant, { kind: res.ok ? "COMMERCIAL_MERGED" : "COMMERCIAL_MERGE_BLOCKED", event_id: randomUUID(), ts: now(), actor: "commercial-studio", objective_id: job.job_id, note: res.ok ? `${job.job_id} merged ${res.inputs.length} attachment(s) into ${res.measured_seconds}s mp4 (local ffmpeg)` : `${job.job_id} merge ${res.status}: ${String(res.reason || "").slice(0, 90)}` });
+  return save(job);
+}
+
+export function mergedFileFor(tenant, job_id) {
+  const job = getCommercial(tenant, job_id);
+  const p = job.merged?.file_path;
+  if (!p || !existsSync(p)) throw err("no merged file for this job", 404);
+  return { buf: readFileSync(p), job };
+}
+
+/* ---- 5. one short spoken line for the voice partner: what exists, what is still missing ---- */
+export function voiceSummary(job) {
+  const need = [];
+  if (!job.avatar) need.push("your own photo for the avatar");
+  if (!job.product) need.push("which product to feature");
+  const mergeable = (job.attachments || []).filter(a => a.mergeable).length;
+  if (job.status === "RENDERED") return `Your ${job.spec?.duration_seconds ?? 15} second commercial is ready and attached to job ${job.job_id}.`;
+  if (job.status === "PENDING_PROVIDER") return `The ${job.spec?.duration_seconds ?? 15} second spec for ${job.product?.name || "your product"} is with the video provider now. Nothing has been published or spent.`;
+  if (job.status === "READY_TO_RENDER") return `I built the ${job.spec?.duration_seconds ?? 15} second spec for ${job.product?.name} in ${job.language}, grounded in the catalog price. Say the word and I hand it to the video provider.`;
+  if (need.length) return `I opened commercial job ${job.job_id}, and I have ${mergeable} attached file${mergeable === 1 ? "" : "s"} to work with. I still need ${need.join(" and ")} before I can render.`;
+  return `Commercial job ${job.job_id} is ${String(job.status).replace(/_/g, " ").toLowerCase()}: ${(job.blockers || []).map(b => b.code).join(", ") || "no detail"}.`;
 }

@@ -105,7 +105,7 @@ export function App() {
       </header>
 
       {mode === "user" && <>
-      {view === "talk" && <TalkView key={`talk-${talkNonce}`} autoStart={talkAutoStart} onOpenBusiness={() => setView("intelligence")} onOpenInbox={() => setView("inbox")} onOpenDocs={() => setView("docs")} onOpenStore={() => setView("myshop")} onOpenAppointment={(draft) => { setAppointmentDraft(draft); setTalkAutoStart(false); setView("appointment"); }} />}
+      {view === "talk" && <TalkView key={`talk-${talkNonce}`} autoStart={talkAutoStart} onOpenBusiness={() => setView("intelligence")} onOpenInbox={() => setView("inbox")} onOpenDocs={() => setView("docs")} onOpenStore={() => setView("myshop")} onOpenCommercial={() => setView("commercial")} onOpenAppointment={(draft) => { setAppointmentDraft(draft); setTalkAutoStart(false); setView("appointment"); }} />}
       {(["contacts", "purchases", "orders", "intelligence"] as string[]).includes(view) && <BusinessView key={view} page={view as BusinessPage} onTalk={() => setView("talk")} />}
       {view === "docs" && <DocsView />}
       {view === "appointment" && <AppointmentView key={`appt-${appointmentDraft ? "draft" : "plain"}`} draft={appointmentDraft} onTalk={() => { setTalkAutoStart(false); setView("talk"); }} onSpeak={() => { setAppointmentDraft(null); setTalkAutoStart(true); setTalkNonce((n) => n + 1); setView("talk"); }} />}

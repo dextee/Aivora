@@ -38,7 +38,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
 import { runWithToken, supabaseConfigured, isOffline, putUpload, approveUpload, requestCtx, dbAvailable } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
 import { onlineEnabled, persistOrderOnline, persistReceiptOnline, loadOrdersOnline } from "./server/odai/po_persistence.mjs";
-import { listCommercial as commList, getCommercial as commGet, attachInput as commAttachInput, createCommercial as commCreate, markDispatched as commDispatch, attachRender as commAttachRender, renderFile as commRenderFile, PROVIDER as COMMERCIAL_PROVIDER } from "./server/odai/commercial.mjs";
+import { listCommercial as commList, getCommercial as commGet, attachInput as commAttachInput, createCommercial as commCreate, markDispatched as commDispatch, attachRender as commAttachRender, renderFile as commRenderFile, mergeCommercial as commMerge, mergedFileFor as commMergedFile, attachPoster as commAttachPoster, posterFile as commPosterFile, voiceSummary as commVoice, PROVIDER as COMMERCIAL_PROVIDER } from "./server/odai/commercial.mjs";
+import { mergeCapability as videoMergeCapability } from "./server/odai/video_merge.mjs";
 // ECOMMERCE (V43) coffee-storyboard modules — integrated additively into MAIN's existing dispatcher (no second dispatcher).
 import { storeSetup, storeIntent, hasSession as hasStoreSession, storeAwaitingInput, storeRecord, storeExport, resetStore } from "./server/odai/store_setup.mjs";
 import { submitCoffeePlan, getPlan as getPlanById } from "./server/odai/plan_engine.mjs";
@@ -574,6 +575,7 @@ async function odaiRoute(url, request, response) {
       const rd = async () => { let raw = ""; for await (const c of request) { raw += c; if (raw.length > 12_000_000) throw Object.assign(new Error("Body too large"), { status: 413 }); } try { return JSON.parse(raw || "{}"); } catch { return {}; } };
       try {
         if (path === "/commercial/provider" && request.method === "GET") return json(COMMERCIAL_PROVIDER);
+        if (path === "/commercial/capability" && request.method === "GET") return json({ video_provider: COMMERCIAL_PROVIDER, merge: await videoMergeCapability() });
         if (path === "/commercial" && request.method === "GET") return json(commList(tenant));
         if (path === "/commercial/input" && request.method === "POST") { const b = await rd(); return json(commAttachInput(tenant, b)); }
         if (path === "/commercial" && request.method === "POST") { const b = await rd(); return json(commCreate(tenant, b)); }
@@ -581,6 +583,18 @@ async function odaiRoute(url, request, response) {
         if (cseg[2] && cseg[3] === "spec" && request.method === "GET") { const cj = commGet(tenant, decodeURIComponent(cseg[2])); return json({ job_id: cj.job_id, status: cj.status, blockers: cj.blockers, spec: cj.spec }); }
         if (cseg[2] && cseg[3] === "dispatch" && request.method === "POST") { const b = await rd(); return json(commDispatch(tenant, decodeURIComponent(cseg[2]), b)); }
         if (cseg[2] && cseg[3] === "render" && request.method === "POST") { const b = await rd(); return json(commAttachRender(tenant, decodeURIComponent(cseg[2]), b)); }
+        if (cseg[2] && cseg[3] === "merge" && request.method === "POST") { const b = await rd(); return json(await commMerge(tenant, decodeURIComponent(cseg[2]), b)); }
+        if (cseg[2] && cseg[3] === "merged" && request.method === "GET") {
+          const f = commMergedFile(tenant, decodeURIComponent(cseg[2]));
+          response.writeHead(200, { "content-type": "video/mp4", "content-length": String(f.buf.length), "content-disposition": `inline; filename="${f.job.job_id}-merged.mp4"`, "x-content-type-options": "nosniff" });
+          response.end(f.buf); return;
+        }
+        if (cseg[2] && cseg[3] === "poster" && request.method === "POST") { const b = await rd(); return json(commAttachPoster(tenant, decodeURIComponent(cseg[2]), b)); }
+        if (cseg[2] && cseg[3] === "poster" && request.method === "GET") {
+          const f = commPosterFile(tenant, decodeURIComponent(cseg[2]));
+          response.writeHead(200, { "content-type": f.type, "content-length": String(f.buf.length), "content-disposition": `inline; filename="${f.job.job_id}-poster.${f.job.poster.format}"`, "x-content-type-options": "nosniff" });
+          response.end(f.buf); return;
+        }
         if (cseg[2] && cseg[3] === "file" && request.method === "GET") {
           const f = commRenderFile(tenant, decodeURIComponent(cseg[2]));
           response.writeHead(200, { "content-type": "video/mp4", "content-length": String(f.buf.length), "content-disposition": `inline; filename="${f.job.job_id}-15s.mp4"`, "x-content-type-options": "nosniff" });
@@ -766,6 +780,35 @@ async function odaiRoute(url, request, response) {
        * completes, so every later utterance was captured by the store branch and the intake stopped
        * creating objectives (Judge Mode check 1 fails if run after the store demo). Only an
        * in-progress wizard owns the turn; a finished session is reached via POST /store {action:sync}. */
+      /* Voice/typed KEYWORD → Commercial Studio (owner instruction 2026-11-23): "generate a video
+       * and poster for the coffee store". Creates the job immediately, uses any attached files as
+       * merge material / references, and SAYS WHAT IS STILL MISSING (owner's choice of behaviour).
+       * Nothing is rendered and nothing is published here: the video and poster come from the
+       * authorized media provider and are attached back, and the landing page write needs approval. */
+      if (objective_id == null && (/\b(generate|make|create|produce|render|do)\b[^.?!]{0,40}\b(video|commercial|poster|advert|advertisement|ad)\b/i.test(statement) || /(做|生成|制作|拍|整).{0,12}(视频|影片|海报|广告|宣傳|宣传)/.test(statement) || /(buat|hasilkan).{0,20}(video|poster|iklan)/i.test(statement))) {
+        const sb = JSON.parse(raw || "{}");
+        const att = Array.isArray(sb.attachments) ? sb.attachments.map(String).slice(0, 9) : [];
+        const said = statement.toLowerCase();
+        const named = dropshipList().find(p => said.includes(String(p.name || "").toLowerCase()));
+        const job = commCreate(tenant, {
+          avatar_upload_id: sb.avatar_upload_id || null,
+          product_id: sb.product_id || (named ? named.product_id : null),
+          product_upload_id: sb.product_upload_id || null,
+          attachment_ids: att,
+          language: sb.language || (/hokkien|闽南/i.test(said) ? "Hokkien" : /malay|bahasa/i.test(said) ? "Bahasa Melayu" : /mandarin|中文|普通话/i.test(said) ? "Mandarin" : "English"),
+          aspect_ratio: sb.aspect_ratio || "9:16",
+          hook: sb.hook || null,
+        });
+        const merge = await videoMergeCapability();
+        return json({
+          commercial: true, job_id: job.job_id, status: job.status, spoken: commVoice(job),
+          missing: (job.blockers || []).map(b => b.code),
+          attachments: { received: att.length, mergeable: (job.attachments || []).filter(a => a.mergeable).length, rejected: (job.attachments || []).filter(a => a.error || !a.mergeable).length },
+          deliverables: { video: { seconds: job.spec?.duration_seconds ?? 15, model: job.spec?.model ?? null, state: job.spec ? "SPEC_READY" : "BLOCKED" }, poster: { model: job.poster_spec?.engine ?? null, state: job.poster_spec ? "SPEC_READY" : "BLOCKED" }, merge_engine: merge.available ? "ffmpeg " + String(merge.version || "").split(" ")[2] : "BLOCKED (" + merge.reason + ")" },
+          publish_target: job.publish_target || null,
+          note: "Specs only. The provider render and poster are attached back with attachRender/attachPoster; publishing to the landing page is a separate explicit owner approval.",
+        });
+      }
       if (objective_id == null && (storeAwaitingInput(tenant) || storeIntent(statement))) return json(await storeSetup(tenant, { text: statement, request_id, source }));
       if (objective_id == null && /launch .*coffee business|start .*coffee business|coffee business/i.test(statement)) return json(await submitCoffeePlan(tenant, statement, request_id));
       if (objective_id == null && /set up my online (coffee )?shop|help me (set up|open) .*shop|open (an?|my|another) (online )?shop|online coffee shop|set up my shop|my online shop/i.test(statement)) return json(await runShop(tenant, { name: "AIVORA Coffee", language: "English", objective_id: request_id }));

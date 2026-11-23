@@ -2539,6 +2539,27 @@
     "revoked_reason": "WO-V42PREP SHIPPED (state sync only, no source changes; no publish)",
     "revoked_at": "2026-11-21T06:19:33Z"
   },
+  "WO-VOICEVID": {
+    "issued_at": "2026-11-23T09:09:43Z",
+    "expires_at": "2026-11-23T11:09:43Z",
+    "minutes": 120,
+    "paths": [
+      "server.mjs",
+      "server/odai/",
+      "src/",
+      "tests/",
+      "package.json",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 40,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-WIN-PORT": {
     "issued_at": "2026-11-21T16:54:35Z",
     "expires_at": "2026-11-21T19:54:35Z",
