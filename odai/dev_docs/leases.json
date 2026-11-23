@@ -1332,8 +1332,12 @@
     ],
     "budget": 40,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 11
+    },
+    "revoked": true,
+    "revoked_reason": "clean acceptance baseline committed",
+    "revoked_at": "2026-11-23T03:01:34Z"
   },
   "WO-BETA-BRAND": {
     "issued_at": "2026-11-22T15:16:47Z",
