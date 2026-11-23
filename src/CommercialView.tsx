@@ -17,6 +17,7 @@ export function CommercialView() {
   const [language, setLanguage] = useState("English");
   const [landing, setLanding] = useState("https://aivora-voice-first-ai-assist.geo.hashmeta.tech/campaign1");
   const [preview, setPreview] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const [current, setCurrent] = useState<Job | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [atts, setAtts] = useState<Up[]>([]);
@@ -45,6 +46,7 @@ export function CommercialView() {
     setBusy("");
     if (j) {
       setCurrent(j);
+      setRevealed(true);
       setMsg(j.status === "READY_TO_RENDER"
         ? `Ready · ${j.product?.name || ""} · ${j.spec?.grounded_in?.price || ""}`
         : (j.blockers || []).map((b: any) => b.code).join(" · ") || j.status);
@@ -86,11 +88,6 @@ export function CommercialView() {
     <div className="tl" style={{ flex: 1, minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "14px 14px 40px" }}>
       <h2 style={{ margin: "0 0 6px", fontSize: 19 }}>Commercial Studio</h2>
 
-      {/* The demo action: open the campaign landing page inside AIVORA's mobile frame. */}
-      <section style={card}>
-        <button onClick={() => setPreview(true)} style={{ ...primary, width: "100%" }}>▶ Video</button>
-      </section>
-
       <section style={card}>
         <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Product</label>
         <select value={productId} onChange={e => setProductId(e.target.value)} style={{ ...field, width: "100%" }}>
@@ -101,10 +98,18 @@ export function CommercialView() {
           {(langs.length ? langs : ["English"]).map(l => <option key={l} value={l}>{l}</option>)}
         </select>
         <button onClick={() => void create()} disabled={!!busy} style={{ ...primary, width: "100%", marginTop: 14, opacity: busy ? 0.6 : 1 }}>
-          {busy || "Create the 15 second commercial"}
+          {busy || "Generate video"}
         </button>
         {msg && <p style={{ fontSize: 12.5, margin: "10px 0 0", color: current?.status === "READY_TO_RENDER" || /Merged|attached|Ready/i.test(msg) ? "#0e6b57" : "#b42318" }}>{msg}</p>}
       </section>
+
+      {/* Hidden until Generate video is clicked: the created video and its website link. */}
+      {revealed && (
+        <section style={card}>
+          <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Video created</div>
+          <button onClick={() => setPreview(true)} style={{ ...primary, width: "100%" }}>▶ Video</button>
+        </section>
+      )}
 
       {current?.merged?.ok && (
         <section style={card}>
