@@ -436,3 +436,5 @@
 2026-11-22T23:47:43Z|ISSUE|WO-TRUST|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/dev_docs/|minutes=120|budget=40|single_use=0|expires_at=2026-11-23T01:47:43Z
 2026-11-22T23:48:02Z|HOOK_ALLOW|WO-TRUST|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package.json+server.mjs+server/odai/business_action.mjs+server/odai/trust_layer.mjs+src/SecurityView.tsx+src/styles.css+tests/trust_layer.test.mjs
 2026-11-22T23:48:05Z|REVOKE|WO-TRUST|reason=Trust layer shipped; revoke after commit
+2026-11-22T23:48:06Z|HOOK_ALLOW|WO-TRUST|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-23T00:06:38Z|ISSUE|WO-POINTEG|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/dev_docs/|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T01:36:38Z

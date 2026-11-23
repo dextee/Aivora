@@ -1876,6 +1876,27 @@
     "revoked_reason": "livestream button shipped; live audio needs DASHSCOPE_API_KEY+mic (not verifiable here); revoke after commit",
     "revoked_at": "2026-11-22T12:43:15Z"
   },
+  "WO-POINTEG": {
+    "issued_at": "2026-11-23T00:06:38Z",
+    "expires_at": "2026-11-23T01:36:38Z",
+    "minutes": 90,
+    "paths": [
+      "server.mjs",
+      "server/odai/",
+      "src/",
+      "tests/",
+      "package.json",
+      "odai/dev_docs/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 30,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-REMOVE-V441": {
     "issued_at": "2026-11-22T16:46:24Z",
     "expires_at": "2026-11-22T17:46:24Z",

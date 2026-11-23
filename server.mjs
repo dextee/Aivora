@@ -21,7 +21,7 @@ import { modeAccess, POLICY_VERSION, UNAVAILABLE_RULE_SETS } from "./server/odai
 import { get, DEMO_TENANT } from "./server/odai/store.mjs";
 import { createObjective, approve, resume, finalReport, project, listObjectives, view as objView, salesReport, setDemoSales, requestBoost, applyConstraint } from "./server/odai/objectives.mjs";
 import { publicIntents, matchIntent } from "./server/odai/intents.mjs";
-import { listInbox, updateInbox, inboxIntent } from "./server/odai/inbox.mjs";
+import { listInbox, updateInbox, inboxIntent, ingestEvent } from "./server/odai/inbox.mjs";
 import { gmailStatus, seedDemo as mailSeed, listEmails, briefing as mailBriefing, navigate as mailNavigate, composeReply as mailReply, composeNew as mailComposeNew, amend as mailAmend, prepareDocument as mailDocument, draftFingerprint as mailFingerprint, confirmDispatch as mailDispatch, scanEmail as mailScan, mailContext, resetContext as mailReset, mailIntent, handleMail } from "./server/odai/mail.mjs";
 import { listCases as labCases, runCase as labRunCase, runAll as labRunAll, dev11Verify, consolidate as labConsolidate, storeReport as labStore, getReport as labGetReport, newRunId, sandboxTenant } from "./server/odai/inbox_testlab.mjs";
 import { reportPdf, reportXlsx } from "./server/odai/testlab_report.mjs";
@@ -32,7 +32,9 @@ import { listRules as trustRules, trustStats, evaluateAction as trustEvaluate, p
 import { validateInboxMembership, listNotifications as nbList, getNotification as nbGet, getUnreadCount as nbUnread, markAsRead as nbMarkRead, markAllAsRead as nbMarkAll, archiveNotification as nbArchive, resolveApproval as nbResolve, healthCheck as nbHealth } from "./server/odai/notifications.mjs";
 import { appointmentIntent, extractAppointment, listAppointments, saveAppointment, confirmAppointment, calendarStatus, appointmentIcs, getAppointment, rescheduleAppointment, cancelAppointment, reconcileAppointment, deliverDueReminders, recordAppointmentSecurityIncident, requestReminder, findAppointmentByObjective } from "./server/odai/appointments.mjs";
 import { connectionStatus, resolveAudience, correctAppointment, checkAvailability, prepareInvitations, authorizeAndDispatch, attemptAudienceExpansion, recordRsvp, attendanceReport } from "./server/odai/appt_workflow.mjs";
-import { businessScope, businessView, importBatch, runAnalysis, purchaseOrderAction } from "./server/odai/business.mjs";
+import { businessScope, businessView, importBatch, runAnalysis, purchaseOrderAction, poHistoryView } from "./server/odai/business.mjs";
+import { decodeWorkbookXlsx, purchaseOrderPdf, storeDocument, listDocuments, getDocument } from "./server/odai/po_document.mjs";
+import { createHash, randomUUID } from "node:crypto";
 import { registrySummary } from "./server/odai/registry.mjs"; // WO-A1 registry read surface (data plane)
 import { runWithToken, supabaseConfigured, isOffline, putUpload, approveUpload, requestCtx } from "./server/odai/db.mjs"; // feat: request-scoped Supabase bearer + Storage (RLS-enforced)
 // ECOMMERCE (V43) coffee-storyboard modules — integrated additively into MAIN's existing dispatcher (no second dispatcher).
@@ -393,13 +395,47 @@ async function odaiRoute(url, request, response) {
     return json({ error: "A signed-in user is required in Supabase mode", code: "AUTH_REQUIRED" }, 401);
   try {
     if (path === "/business" || path.startsWith("/business/") || path === "/customers" || path.startsWith("/customers/")) {
-      businessScope(tenant);
+      if (isOffline()) {
+        businessScope(tenant);
+      } else {
+        /* Online: validate authenticated membership first (fail closed), then report the
+         * precise remaining gap (durable PO schema) instead of a generic block. */
+        let mctx;
+        try { mctx = await validateInboxMembership({ workspaceId: tenant, requiredPermission: request.method === "GET" ? "read" : "approve" }); }
+        catch (e) { return json({ error: e.message, code: e.code || "MEMBERSHIP_DENIED" }, e.status || 403); }
+        return json({ error: "Membership validated (" + mctx.role + ") but durable purchase-order/business schema is not yet integrated for online mode; no memory fallback", code: "PO_DURABLE_SCHEMA_PENDING", membership: { role: mctx.role, workspace_id: mctx.workspace_id } }, 503);
+      }
+      const bseg = path.split("/");
+      if (path.startsWith("/business/orders/") && bseg[3] && bseg[4] === "pdf" && request.method === "GET") {
+        const order = poHistoryView(tenant).orders.find(o => o.id === decodeURIComponent(bseg[3]));
+        if (!order) return json({ error: "order not found" }, 404);
+        const buf = purchaseOrderPdf(order, dropshipList());
+        response.writeHead(200, { "content-type": "application/pdf", "content-disposition": `attachment; filename="PO-${order.id.slice(0, 8)}.pdf"`, "x-content-type-options": "nosniff" });
+        response.end(buf); return;
+      }
+      if (path.startsWith("/business/orders/") && bseg[3] && bseg[4] === "document" && request.method === "POST") {
+        const order = poHistoryView(tenant).orders.find(o => o.id === decodeURIComponent(bseg[3]));
+        if (!order) return json({ error: "order not found" }, 404);
+        const buf = purchaseOrderPdf(order, dropshipList());
+        const rec = storeDocument(tenant, `PO-${order.id.slice(0, 8)}.pdf`, buf, { order_id: order.id, status: order.status, version: order.version });
+        ingestEvent(tenant, { kind: "SYSTEM_NOTICE", event_id: randomUUID(), ts: new Date().toISOString(), actor: "ai-procurement", objective_id: order.id, note: `Purchase order PDF stored in My Documents (${rec.id})` });
+        return json(rec);
+      }
+      if (path === "/business/documents" && request.method === "GET") return json({ documents: listDocuments(tenant) });
+      if (path === "/business/documents/" && bseg[3] && request.method === "GET") { const d = getDocument(decodeURIComponent(bseg[3])); if (!d) return json({ error: "not found" }, 404); response.writeHead(200, { "content-type": "application/pdf", "content-disposition": `attachment; filename="${d.rec.name}"`, "x-content-type-options": "nosniff" }); response.end(d.buf); return; }
       if (path === "/business" && request.method === "GET") return json(businessView(tenant, url.searchParams.get("reference_date") || undefined));
       if (path.startsWith("/business/") && request.method === "POST") {
-        let raw = ""; for await (const c of request) { raw += c; if (raw.length > 2000000) return json({ error: "Import body too large" }, 413); }
+        let raw = ""; for await (const c of request) { raw += c; if (raw.length > 8000000) return json({ error: "Import body too large" }, 413); }
         const body = JSON.parse(raw || "{}");
         try {
           if (path === "/business/import") return json(importBatch(tenant, body));
+          if (path === "/business/import-xlsx") {
+            const buf = Buffer.from(String(body.base64 || ""), "base64");
+            if (!buf.length) return json({ error: "base64 workbook required" }, 400);
+            const decoded = await decodeWorkbookXlsx(buf, dropshipList());
+            const file_hash = createHash("sha256").update(buf).digest("hex");
+            return json(importBatch(tenant, { filename: "AIVORA_Coffee_SGD_Anomaly_and_Reorder.xlsx", file_hash, batch_id: body.batch_id || "xlsx-" + file_hash.slice(0, 16), customers: decoded.customers, purchases: decoded.purchases, inventory: decoded.inventory, native_xlsx: true, sheets: decoded.sheets }));
+          }
           if (path === "/business/orders") return json(purchaseOrderAction(tenant, body));
           return json({ error: "Unsupported business action" }, 400);
         } catch (e) { return json({ error: e.message }, e.status || 503); }
