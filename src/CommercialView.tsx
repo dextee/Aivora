@@ -46,8 +46,8 @@ export function CommercialView() {
     if (j) {
       setCurrent(j);
       setMsg(j.status === "READY_TO_RENDER"
-        ? `Ready: a 15 second ${language} commercial for ${j.product?.name || "your product"} at ${j.spec?.grounded_in?.price || ""}.`
-        : (j.blockers || []).map((b: any) => b.detail || b.code).join(" · ") || j.status);
+        ? `Ready · ${j.product?.name || ""} · ${j.spec?.grounded_in?.price || ""}`
+        : (j.blockers || []).map((b: any) => b.code).join(" · ") || j.status);
     }
   }
   async function uploadOne(f: File) {
@@ -71,7 +71,7 @@ export function CommercialView() {
     setBusy("Merging…");
     const j = await api(`/${current.job_id}/merge`, {});
     setBusy("");
-    if (j) { setCurrent(j); const m = j.merged || {}; setMsg(m.ok ? `Merged ${m.inputs?.length} file(s) into a ${m.measured_seconds}s ${m.resolution} mp4.` : `Merge ${m.status}: ${m.reason}`); }
+    if (j) { setCurrent(j); const m = j.merged || {}; setMsg(m.ok ? `Merged · ${m.measured_seconds}s` : `Merge ${m.status}`); }
   }
   async function attachUploaded(kind: "poster" | "render", f: File) {
     setBusy("Attaching…");
@@ -79,18 +79,16 @@ export function CommercialView() {
     if (!up) { setBusy(""); return; }
     const j = await api(`/${current?.job_id}/${kind}`, { upload_id: up.id, ...(kind === "render" ? { duration_seconds: 15 } : {}) });
     setBusy("");
-    if (j) { setCurrent(j); setMsg(kind === "poster" ? `Poster attached (${j.poster?.bytes} B ${j.poster?.format}).` : `Video attached (${j.render?.bytes} B, ${j.render?.duration_seconds ?? "?"}s).`); }
+    if (j) { setCurrent(j); setMsg(kind === "poster" ? "Poster attached" : "Video attached"); }
   }
 
   return (
     <div className="tl" style={{ flex: 1, minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "14px 14px 40px" }}>
       <h2 style={{ margin: "0 0 6px", fontSize: 19 }}>Commercial Studio</h2>
-      <p style={{ margin: 0, fontSize: 12.5, color: "#8a93a3" }}>A 15 second commercial for your coffee store. No photo needed.</p>
 
       {/* The demo action: open the campaign landing page inside AIVORA's mobile frame. */}
       <section style={card}>
         <button onClick={() => setPreview(true)} style={{ ...primary, width: "100%" }}>▶ Video</button>
-        <p style={{ fontSize: 11.5, color: "#8a93a3", margin: "10px 0 0", wordBreak: "break-all" }}>{landing}</p>
       </section>
 
       <section style={card}>
@@ -106,13 +104,11 @@ export function CommercialView() {
           {busy || "Create the 15 second commercial"}
         </button>
         {msg && <p style={{ fontSize: 12.5, margin: "10px 0 0", color: current?.status === "READY_TO_RENDER" || /Merged|attached|Ready/i.test(msg) ? "#0e6b57" : "#b42318" }}>{msg}</p>}
-        <p style={{ fontSize: 11, color: "#8a93a3", margin: "10px 0 0" }}>Prices and claims come from your catalog. Nothing is published and nothing is spent.</p>
       </section>
 
       {current?.merged?.ok && (
         <section style={card}>
           <video src={`/api/odai/commercial/${current.job_id}/merged`} controls style={{ width: "100%", maxWidth: 320, borderRadius: 12, background: "#000" }} />
-          <p style={{ fontSize: 11.5, color: "#8a93a3", margin: "8px 0 0" }}>{current.merged.measured_seconds}s · {current.merged.resolution} · your attached files, merged on this computer.</p>
         </section>
       )}
       {current?.poster && (
@@ -123,7 +119,6 @@ export function CommercialView() {
       {current?.render && (
         <section style={card}>
           <video src={`/api/odai/commercial/${current.job_id}/file`} controls style={{ width: "100%", maxWidth: 320, borderRadius: 12, background: "#000" }} />
-          <p style={{ fontSize: 11.5, color: "#8a93a3", margin: "8px 0 0" }}>{current.render.duration_seconds ?? "?"}s · {current.render.bytes} B · provider {current.render.provider}</p>
         </section>
       )}
 
@@ -131,7 +126,7 @@ export function CommercialView() {
       <details style={{ marginTop: 12 }}>
         <summary style={{ fontSize: 12, color: "#8a93a3", cursor: "pointer" }}>Advanced</summary>
         <section style={card}>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Your files (images or mp4, up to 9)</label>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Files</label>
           <input type="file" multiple accept="image/*,video/mp4,video/*" onChange={e => void attachFiles(e.target.files)} />
           {atts.length > 0 && (
             <ul style={{ margin: "8px 0 0", paddingLeft: 18, fontSize: 12 }}>
@@ -149,16 +144,8 @@ export function CommercialView() {
                 Attach video
                 <input type="file" accept="video/mp4,video/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) void attachUploaded("render", f); }} />
               </label>
-              <button onClick={async () => { const j = await api(`/${current.job_id}/dispatch`, {}); if (j) { setCurrent(j); setMsg("Handed to the video provider."); } }} style={ghost}>Hand to provider</button>
+              <button onClick={async () => { const j = await api(`/${current.job_id}/dispatch`, {}); if (j) { setCurrent(j); setMsg("Sent"); } }} style={ghost}>Hand to provider</button>
             </div>
-          )}
-          {current?.spec && (
-            <details style={{ fontSize: 12, marginTop: 12 }}>
-              <summary style={{ cursor: "pointer", color: "#8a93a3" }}>Video and poster specs</summary>
-              <p style={{ margin: "6px 0" }}>{current.spec.model} · {current.spec.duration_seconds}s · {current.spec.resolution} · {current.spec.aspect_ratio} · references {current.spec.reference_images?.length ?? 0}</p>
-              <pre style={{ whiteSpace: "pre-wrap", background: "#f6f7f9", padding: 8, borderRadius: 8, fontSize: 11 }}>{current.spec.prompt}</pre>
-              {current.poster_spec && <pre style={{ whiteSpace: "pre-wrap", background: "#f6f7f9", padding: 8, borderRadius: 8, fontSize: 11 }}>{current.poster_spec.prompt}</pre>}
-            </details>
           )}
           {jobs.length > 0 && (
             <div style={{ marginTop: 12 }}>

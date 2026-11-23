@@ -495,3 +495,5 @@
 2026-11-23T10:16:26Z|ISSUE|WO-CLEAN|ops=check,commit|paths=src/,server/odai/,tests/,odai/dev_docs/|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T11:46:26Z
 2026-11-23T10:16:27Z|HOOK_ALLOW|WO-CLEAN|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server/odai/commercial.mjs+src/CommercialView.tsx+tests/commercial.test.mjs
 2026-11-23T10:16:29Z|REVOKE|WO-CLEAN|reason=studio simplified
+2026-11-23T10:16:30Z|HOOK_ALLOW|WO-CLEAN|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-23T10:34:18Z|ISSUE|WO-TERSE|ops=check,commit|paths=src/,odai/dev_docs/|minutes=60|budget=20|single_use=0|expires_at=2026-11-23T11:34:18Z
