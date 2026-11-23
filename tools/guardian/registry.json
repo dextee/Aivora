@@ -1,0 +1,39 @@
+{
+  "resources": [
+    {
+      "resource_id": "aivora-mainfix-backend",
+      "resource_name": "AIVORA MAIN-FIX backend + frontend",
+      "resource_type": "nodejs-application",
+      "operating_system": "windows",
+      "environment": "local-dev",
+      "network_address": "127.0.0.1:8081",
+      "health_check": {
+        "port": 8081,
+        "host": "127.0.0.1",
+        "path": "/api/health",
+        "interval_sec": 5,
+        "failure_threshold": 2
+      },
+      "service_dependencies": [],
+      "runtime_adapter": "local-node",
+      "authorized_recovery_actions": [
+        "restart_application_process"
+      ],
+      "recovery_level_max": 1,
+      "restart_policy": {
+        "entry": "server.mjs",
+        "cwd": "D:\\AIVORA\\main-fix",
+        "max_attempts": 3,
+        "min_restart_interval_sec": 10,
+        "cooldown_sec": 120,
+        "restart_budget_per_hour": 10
+      },
+      "escalation_policy": {
+        "after_attempts": 3,
+        "to": "ai-development-agent"
+      },
+      "resource_owner": "boss",
+      "monitoring_status": "enrolled"
+    }
+  ]
+}

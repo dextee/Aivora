@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import { isOffline } from "./db.mjs";
 import { get, logEvent } from "./store.mjs";
 import { ingestEvent } from "./inbox.mjs";
-import { searchCustomers, createCustomer } from "./customers.mjs";
+import { searchCustomers, createCustomer, getCustomer } from "./customers.mjs";
 import { extractAppointment } from "./appointments.mjs";
 
 const root = fileURLToPath(new URL("../../odai/mail/", import.meta.url));
@@ -79,15 +79,15 @@ export function seedDemo(tenant) {
   const state = load(tenant);
   if (state.emails.length) return { ok: true, seeded: false, count: state.emails.length };
   const people = [
-    ["Tan Wei Ming", "tan.weiming@example.test", "6591000001"],
-    ["Lim Ah Hua", "lim.ahhua@example.test", "6591000002"],
-    ["Siti Nurhaliza", "siti.n@example.test", "6591000003"],
-    ["John Pereira", "john.pereira@example.test", "6591000004"],
-    ["Kopi Suppliers Pte Ltd", "orders@kopisuppliers.example.test", "6591000005"],
+    ["Tan Wei Ming", "tan.weiming@example.test", "6591000001", "coffee distributor"],
+    ["Lim Ah Hua", "lim.ahhua@example.test", "6591000002", "coffee distributor"],
+    ["Siti Nurhaliza", "siti.n@example.test", "6591000003", "retail customer"],
+    ["John Pereira", "john.pereira@example.test", "6591000004", "coffee distributor"],
+    ["Kopi Suppliers Pte Ltd", "orders@kopisuppliers.example.test", "6591000005", "coffee supplier"],
   ];
   const custIds = {};
-  for (const [name, email, phone] of people) {
-    const c = createCustomer(tenant, { customer_name: name, email_address: email, phone_number: phone, marketing_consent: true, customer_notes: "demo mailbox contact", is_mock_data: true });
+  for (const [name, email, phone, group] of people) {
+    const c = createCustomer(tenant, { customer_name: name, email_address: email, phone_number: phone, marketing_consent: true, customer_notes: "demo mailbox contact · " + group, is_mock_data: true });
     custIds[email] = c.customer_id;
   }
   const samples = [
@@ -302,6 +302,23 @@ export async function confirmDispatch(tenant, { approved, expected_fingerprint, 
     try { logEvent(get(tenant), e); ingestEvent(tenant, { ...e, mode: "TEST_SIMULATED" }); } catch { /* best-effort */ }
     throw Object.assign(new Error(guard.malicious ? "Send blocked: untrusted content detected." : "Send blocked: recipient is not a verified contact/thread sender."), { status: 403 });
   }
+  /* Document privacy: an attachment must belong to the recipient, never another customer. */
+  for (const att of d.attachments || []) {
+    const doc = state.documents.find((x) => x.document_id === att.document_id);
+    if (doc && doc.customer_id && state.context.active_customer_id && doc.customer_id !== state.context.active_customer_id) {
+      const e = { kind: "ROGUEAI_BLOCK", event_id: randomUUID(), ts: new Date().toISOString(), actor: "guardrails", decision: "BLOCK", objective_id: state.context.objective_id };
+      try { logEvent(get(tenant), e); ingestEvent(tenant, { ...e, mode: "TEST_SIMULATED" }); } catch { /* best-effort */ }
+      ev(tenant, "ROGUEAI_POLICY_EVALUATED", "BLOCK — attachment belongs to a different customer", state.context.objective_id);
+      throw Object.assign(new Error("Send blocked: the attached document belongs to a different customer (privacy protection)."), { status: 403 });
+    }
+  }
+  /* Automation healing / idempotency: a confirmed prior submission of this exact draft is recovered, never resent. */
+  const prior = state.history.find((h) => h.fingerprint === fp && /submitted/.test(h.status));
+  if (prior) {
+    ev(tenant, "SEND_RESULT_RECONCILED", `Recovered existing submission ${prior.message_id}; no resend`, state.context.objective_id);
+    persist(tenant, state);
+    return { ok: true, recovered: true, spoken: `Already sent (message ${prior.message_id}). Recovered the existing record; no duplicate was sent.`, gmail: gmailStatus(), result: prior, draft: d, history: state.history, delivery_note: "Gmail acceptance is not delivery." };
+  }
   state.context.approval_status = "approved"; state.context.approval_fingerprint = fp;
   ev(tenant, "VOICE_APPROVAL_RECEIVED", "Owner approved draft " + d.draft_id, state.context.objective_id);
   ev(tenant, "ROGUEAI_POLICY_EVALUATED", "ALLOW — owner, verified recipient, bound to draft version", state.context.objective_id);
@@ -391,4 +408,145 @@ export async function handleMail(tenant, text) {
   if (/arrange a meeting with (this|the) customer/i.test(t)) return { kind: "appointment", ...voiceAppointment(tenant, t) };
   if (/who sent|what is the customer asking|summarize|read that again|read the (first|next|entire|full)|next email|go back|skip this|translate/i.test(t)) return { kind: "navigate", ...navigate(tenant, t) };
   return { kind: "navigate", ...navigate(tenant, t) };
+}
+
+/* ---- email search (actual records; quarantined flagged, never silently dropped) ---- */
+export function searchEmails(tenant, q) {
+  scope(tenant);
+  const state = load(tenant);
+  const needle = String(q || "").toLowerCase();
+  const matches = state.emails.filter((e) => `${e.from_name} ${e.from_email} ${e.subject} ${e.body}`.toLowerCase().includes(needle));
+  return { ok: true, query: q, count: matches.length, matches: matches.map((e) => ({ message_id: e.message_id, from_name: e.from_name, from_email: e.from_email, subject: e.subject, category: e.category, quarantined: !!e.quarantined })), spoken: matches.length ? `Found ${matches.length} email${matches.length === 1 ? "" : "s"} matching "${q}".` : `No emails match "${q}".` };
+}
+
+/* ---- voice recipient resolution (verified contact; ask when ambiguous; never invent) ---- */
+export function resolveRecipient(tenant, text) {
+  scope(tenant);
+  const t = String(text || "");
+  const state = load(tenant);
+  const group = /distributor|分销|经销/i.test(t) ? "distributor" : /supplier|供应商/i.test(t) ? "supplier" : /vip/i.test(t) ? "vip" : null;
+  let candidates = [];
+  if (group) {
+    candidates = (searchCustomers(tenant, { pageSize: 1000 }).customers || []).filter((c) => `${c.customer_notes || ""} ${c.customer_source || ""} ${c.customer_name || ""}`.toLowerCase().includes(group) && c.email_address);
+  } else {
+    const nm = t.match(/(?:write (?:an? )?email to|email to|\bto)\s+(?:my\s+|the\s+)?([A-Za-z][\w ]{1,40}?)(?:\s+(?:about|regarding|and|please)|[,.]|$)/i);
+    const name = nm ? nm[1].trim() : t.replace(/^(write|compose|send)\s+(an?\s+)?email\s+(to\s+)?/i, "").trim();
+    candidates = (searchCustomers(tenant, { q: name, pageSize: 10 }).customers || []).filter((c) => c.email_address);
+  }
+  if (candidates.length === 0) return { ok: true, resolved: false, candidates: [], question: `I could not find a verified contact for "${group || text}". Who exactly should I email?`, spoken: "No verified contact found; I will not invent an address." };
+  if (candidates.length > 1) return { ok: true, resolved: false, candidates: candidates.map((c) => ({ customer_id: c.customer_id, name: c.customer_name, email: c.email_address })), question: `I found ${candidates.length} matches: ${candidates.map((c) => c.customer_name).join(", ")}. Which one?`, spoken: "Multiple matches; please clarify." };
+  const c = candidates[0];
+  state.context.active_customer_id = c.customer_id; state.context.active_customer_name = c.customer_name; state.context.active_customer_email = c.email_address;
+  persist(tenant, state);
+  ev(tenant, "CONTACT_RETRIEVED", `Resolved recipient ${c.customer_name}`, state.context.objective_id);
+  return { ok: true, resolved: true, recipient: { customer_id: c.customer_id, name: c.customer_name, email: c.email_address }, spoken: `Recipient resolved: ${c.customer_name} (${c.email_address}).` };
+}
+
+/* ---- purchase extraction (a request is NOT an accepted order or verified payment) ---- */
+export function extractPurchase(tenant, text) {
+  scope(tenant);
+  const t = String(text || "");
+  const state = load(tenant);
+  const qtyM = t.match(/(\d+)\s*(?:packs?|boxes?|units?|cartons?)/i);
+  const quantity = qtyM ? Number(qtyM[1]) : null;
+  const product = CATALOG.products.find((p) => t.toLowerCase().includes(p.name.toLowerCase())) || CATALOG.products.find((p) => p.name.split(" ").some((w) => w.length > 3 && t.toLowerCase().includes(w.toLowerCase())));
+  const customer = state.context.active_customer_id ? { customer_id: state.context.active_customer_id, name: state.context.active_customer_name } : null;
+  const unit_price = product ? product.price : null;
+  const total = product && quantity ? +(product.price * quantity).toFixed(2) : null;
+  const result = { ok: true, intent: "purchase_request", accepted_order: false, payment_verified: false, customer, product_id: product?.id || null, product_name: product?.name || null, quantity, unit_price, total, currency: CATALOG.currency, delivery: /deliver|ship|send to/i.test(t) ? "requested" : "not specified", missing: [] };
+  if (!product) result.missing.push("product");
+  if (!quantity) result.missing.push("quantity");
+  ev(tenant, "CUSTOMER_INTENT_IDENTIFIED", `Purchase request extracted (not an accepted order): ${product?.name || "?"} x${quantity ?? "?"}`, state.context.objective_id);
+  result.spoken = product && quantity ? `Extracted a purchase request: ${quantity} × ${product.name} at ${CATALOG.currency} ${unit_price} each, total ${CATALOG.currency} ${total}. This is a request, not an accepted order or verified payment.` : "I need the product and quantity to extract the purchase request.";
+  return result;
+}
+
+/* ---- sandbox auto-reply (explicit policy; one reply per message; loop prevention) ---- */
+export function autoReply(tenant, { message_id, policy } = {}) {
+  scope(tenant);
+  const state = load(tenant);
+  if (!policy || policy.enabled !== true || policy.sandbox !== true) throw Object.assign(new Error("Auto-reply requires an explicitly authorized sandbox policy (enabled + sandbox)."), { status: 403 });
+  const email = state.emails.find((e) => e.message_id === message_id);
+  if (!email) throw Object.assign(new Error("Message not found."), { status: 404 });
+  state.replied_message_ids = state.replied_message_ids || [];
+  if (email.quarantined || email.category === "security_alert") return { ok: true, skipped: "quarantined", spoken: "Quarantined message; no auto-reply." };
+  if (state.replied_message_ids.includes(message_id)) return { ok: true, skipped: "already_replied", spoken: "Already replied; loop prevented." };
+  if (email.from_email === (process.env.GMAIL_ACCOUNT || "owner@aivora.test")) return { ok: true, skipped: "own_message", spoken: "Own message; loop prevented." };
+  const eligible = ["product_enquiry", "quotation_request"].includes(email.category);
+  if (!eligible || !(policy.categories || ["product_enquiry", "quotation_request"]).includes(email.category)) return { ok: true, skipped: "not_eligible", spoken: "Category not in the approved auto-reply policy." };
+  const guard = scanUntrusted(`${email.subject} ${email.body}`);
+  if (guard.malicious) return { ok: true, skipped: "untrusted", spoken: "Untrusted content; no auto-reply." };
+  setActive(state, email);
+  const draft = newDraft(state, email.from_email, "Re: " + email.subject, `Dear ${email.from_name},\n\nThank you for your enquiry. Our approved range:\n\n${priceList()}\n\nPrices in ${CATALOG.currency}. Order via WhatsApp ${CATALOG.whatsapp}.\n\nAIVORA Coffee`);
+  const fp = fingerprint(draft);
+  const mid = "SANDBOX-gmail." + randomUUID().replace(/-/g, "").slice(0, 16);
+  state.history.push({ draft_id: draft.draft_id, to: draft.to, subject: draft.subject, version: draft.version, fingerprint: fp, status: "submitted_sandbox", message_id: mid, auto_reply: true, source_message_id: message_id, ts: new Date().toISOString() });
+  state.replied_message_ids.push(message_id);
+  state.context.pending_action = null;
+  persist(tenant, state);
+  ev(tenant, "GMAIL_MESSAGE_SUBMITTED", `auto-reply ${mid} to ${email.from_email}`, state.context.objective_id);
+  return { ok: true, sent: true, mode: "sandbox", message_id: mid, draft, spoken: `Authorized sandbox auto-reply sent to ${email.from_name} (${mid}). One reply per message; loops prevented.` };
+}
+
+/* ---- order confirmation (verified accepted order; dedup; invoice attach; sandbox) ---- */
+export function orderConfirmation(tenant, order) {
+  scope(tenant);
+  const state = load(tenant);
+  if (!order || order.accepted !== true) throw Object.assign(new Error("Order confirmation requires a verified accepted order."), { status: 403 });
+  state.confirmed_orders = state.confirmed_orders || [];
+  if (state.confirmed_orders.includes(order.order_id)) return { ok: true, deduped: true, spoken: "Order already confirmed; no duplicate notification or invoice." };
+  const product = CATALOG.products.find((p) => p.id === order.product_id || p.sku === order.product_id);
+  if (!product) throw Object.assign(new Error("Unknown product on order."), { status: 400 });
+  const total = +(product.price * order.quantity).toFixed(2);
+  const doc = { document_id: "doc-" + randomUUID().slice(0, 8), type: "invoice", customer: order.customer_name, customer_id: order.customer_id, items: [{ sku: product.sku, name: product.name, qty: order.quantity, unit_price: product.price, line_total: total }], total, currency: CATALOG.currency, payment_verified: false, created_at: new Date().toISOString() };
+  doc.content_hash = sha(JSON.stringify({ type: doc.type, customer: doc.customer, items: doc.items, total: doc.total }));
+  state.documents.push(doc);
+  const to = order.customer_email;
+  const draft = newDraft(state, to, `Order confirmation ${order.order_id}`, `Dear ${order.customer_name},\n\nYour order ${order.order_id} is confirmed: ${order.quantity} × ${product.name} at ${CATALOG.currency} ${product.price} each. Total ${CATALOG.currency} ${total}. Invoice attached.\n\nAIVORA Coffee`);
+  draft.attachments = [{ document_id: doc.document_id, type: "invoice", content_hash: doc.content_hash, total }];
+  draft.amount = total;
+  state.context.active_customer_id = order.customer_id;
+  const fp = fingerprint(draft);
+  const mid = "SANDBOX-gmail." + randomUUID().replace(/-/g, "").slice(0, 16);
+  state.history.push({ draft_id: draft.draft_id, to, subject: draft.subject, version: draft.version, fingerprint: fp, status: "submitted_sandbox", message_id: mid, order_id: order.order_id, ts: new Date().toISOString() });
+  state.confirmed_orders.push(order.order_id);
+  persist(tenant, state);
+  ev(tenant, "COMMUNICATION_HISTORY_UPDATED", `Order ${order.order_id} confirmed; invoice ${doc.document_id}`, state.context.objective_id);
+  return { ok: true, mode: "sandbox", message_id: mid, invoice: doc, draft, total, spoken: `Order ${order.order_id} confirmed; invoice ${doc.content_hash.slice(0, 10)} attached and sandbox-sent to ${order.customer_name}. No duplicate.` };
+}
+
+/* ---- automation healing: reconcile a dispatch intent; recover or bounded retry ---- */
+export function reconcileDispatch(tenant, { fingerprint: fp, inject_lost = false } = {}) {
+  scope(tenant);
+  const state = load(tenant);
+  const existing = state.history.find((h) => h.fingerprint === fp && /submitted/.test(h.status));
+  if (existing) {
+    ev(tenant, "SEND_RESULT_RECONCILED", `Confirmed prior submission ${existing.message_id}; recovered without resend`, state.context.objective_id);
+    return { ok: true, outcome: "recovered", message_id: existing.message_id, resent: false, exactly_one: state.history.filter((h) => h.fingerprint === fp && /submitted/.test(h.status)).length === 1, spoken: "Submission confirmed; recovered the existing message. No resend." };
+  }
+  if (inject_lost) {
+    ev(tenant, "SEND_RESULT_RECONCILED", "Lost response after submission; reconciling actual state", state.context.objective_id);
+    return { ok: true, outcome: "paused_escalated", resent: false, spoken: "Outcome unresolved; paused and escalated. No blind retry." };
+  }
+  return { ok: true, outcome: "not_submitted", resent: false, spoken: "Verified not submitted; an authorized bounded retry is safe." };
+}
+
+/* Test helper: build a draft to `recipientId` carrying an invoice that belongs to
+ * `docOwnerId` (a DIFFERENT customer) so the privacy guard can be exercised. */
+export function privacyScenario(tenant, { recipientId, docOwnerId }) {
+  scope(tenant);
+  const state = load(tenant);
+  const rc = getCustomer(tenant, recipientId), oc = getCustomer(tenant, docOwnerId);
+  if (!rc || rc.error || !oc || oc.error) throw Object.assign(new Error("Both customers must exist."), { status: 400 });
+  const product = CATALOG.products[0];
+  const doc = { document_id: "doc-" + randomUUID().slice(0, 8), type: "invoice", customer: oc.customer_name, customer_id: oc.customer_id, items: [{ sku: product.sku, name: product.name, qty: 1, unit_price: product.price, line_total: product.price }], total: product.price, currency: CATALOG.currency, payment_verified: false, created_at: new Date().toISOString() };
+  doc.content_hash = sha(JSON.stringify({ type: doc.type, customer: doc.customer, items: doc.items, total: doc.total }));
+  state.documents.push(doc);
+  const draft = newDraft(state, rc.email_address, "Invoice for " + oc.customer_name, "Please find the invoice attached.");
+  draft.attachments = [{ document_id: doc.document_id, type: "invoice", content_hash: doc.content_hash, total: doc.total }];
+  draft.amount = doc.total;
+  state.context.active_customer_id = rc.customer_id;
+  state.context.active_customer_email = rc.email_address;
+  persist(tenant, state);
+  return { ok: true, fingerprint: fingerprint(draft), draft, document: doc, recipient: rc.email_address, document_customer: oc.customer_id };
 }

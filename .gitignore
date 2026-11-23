@@ -22,3 +22,14 @@ logs/
 # local backups and probe artifacts
 *.bak*
 .probe*
+# Blueprint 6.0 acceptance baseline: runtime stores written by the engines (never committed)
+odai/payments/
+odai/testlab/
+odai/data/trust/
+odai/data/bizlab/
+odai/data/documents/
+# local fixtures, media and session artefacts (large binaries, kept outside git)
+DB/
+workflow/
+artefacts/
+Ecommerce store/

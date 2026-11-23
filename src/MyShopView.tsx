@@ -41,13 +41,18 @@ export function MyShopView() {
   const [showCompletion, setShowCompletion] = useState(false);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [qr, setQr] = useState<{ url: string; data_url: string } | null>(null);
+  const [paypal, setPaypal] = useState("https://paypal.me/AntimosSG?locale.x=en_GB&COUNTY.X=SG");
+  const [payments, setPayments] = useState<{ payments: any[]; incidents: any[]; revenue: any } | null>(null);
+  const [payMsg, setPayMsg] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [storeOpen, setStoreOpen] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   async function loadShop() { try { const j = await (await fetch(`/api/odai/shop?_t=${Date.now()}`)).json(); if (j && !j.error) { setShop(j); setRevealed((j.console_events || []).length); } } catch {} }
   async function loadMaster() { try { const j = await (await fetch(`/api/odai/shop/products?_t=${Date.now()}`)).json(); setMaster(j.products || []); setPicked(new Set((j.products || []).map((p: DSProduct) => p.product_id))); } catch {} }
-  useEffect(() => { void loadShop(); void loadMaster(); }, []);
+  async function loadConfig() { try { const j = await (await fetch(`/api/odai/shop/config?_t=${Date.now()}`)).json(); if (j.paypal_url) setPaypal(j.paypal_url); } catch {} }
+  async function loadPayments() { try { setPayments(await (await fetch(`/api/odai/shop/payments?_t=${Date.now()}`)).json()); } catch {} }
+  useEffect(() => { void loadShop(); void loadMaster(); void loadConfig(); void loadPayments(); }, []);
 
   const events = shop?.console_events || [];
   const total = events.length;
@@ -81,6 +86,18 @@ export function MyShopView() {
   async function remove(id: string) { const j = await (await fetch(`/api/odai/shop/remove`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ product_id: id }) })).json(); if (j.store_id) { setShop(j); setSec("Removed from this shop only — master product preserved."); } }
   async function priceTest() { if (!shop) return; const t = shop.products.find((p) => /tongkat/i.test(p.name)) || shop.products[0]; const j = await (await fetch(`/api/odai/shop/price-test`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ agent: "mkt-untrusted", product_id: t.product_id, new_price: 15, approved: false }) })).json(); setSec(j.blocked ? `🛡 RogueAI BLOCKED ${t.name} → SGD ${j.incident.attempted}; preserved approved SGD ${j.preserved_price}; agent quarantined.` : `Allowed: SGD ${j.price}`); await loadShop(); }
   async function genQr() { if (qr) { setQr(null); return; } try { const j = await (await fetch(`/api/odai/shop/qr`)).json(); setQr({ url: j.url, data_url: j.data_url }); } catch { setSec("QR generation unavailable."); } }
+  async function buyNow(p: ShopProduct) {
+    /* record the link open (NOT proof of payment), then open the approved PayPal URL */
+    try { await fetch(`/api/odai/shop/payment`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ product_id: p.product_id, action: "open_link" }) }); } catch {}
+    window.open(paypal, "_blank", "noopener,noreferrer");
+    setPayMsg(`BUY NOW opened PayPal for ${p.name}. Status: PAYMENT_PENDING — opening the link is not proof of payment.`);
+    await loadPayments();
+  }
+  async function paymentGuardTest() {
+    const j = await (await fetch(`/api/odai/shop/payment-guard-test`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ agent_id: "mkt-untrusted", proposed_url: "https://paypal.me/evil-attacker" }) })).json();
+    setPayMsg(j.blocked ? `🛡 RogueAI BLOCKED payment-destination change; approved PayPal preserved; incident ${j.incident.incident_id} recorded.` : "No change attempted.");
+    await loadPayments();
+  }
 
   // weighted progress climbs with actually-revealed events, capped at the engine's real progress
   const pct = total ? Math.round((revealed / total) * (shop?.progress ?? 100)) : 0;
@@ -209,6 +226,7 @@ export function MyShopView() {
               {p.image ? <img src={p.image} alt={p.name} style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover" }} /> : <div style={{ width: 44, height: 44, borderRadius: 8, background: "#eef0f4" }} />}
               <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 700 }}>{p.name}</div><div style={{ fontSize: 11, color: "#8a93a3" }}>{p.category || ""}{p.supplier ? ` · ${p.supplier}` : ""} · {p.listing_status}</div></div>
               <div style={{ fontSize: 13, fontWeight: 800, color: "#0e6b57" }}>{p.currency} {p.approved_selling_price.toFixed(2)}</div>
+              <button onClick={() => void buyNow(p)} title="Buy now with PayPal" style={{ border: 0, background: "#0e6b57", color: "#fff", borderRadius: 8, padding: "5px 10px", fontSize: 11, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}>🛒 BUY NOW</button>
               <button onClick={() => void remove(p.product_id)} style={{ border: "1px solid #e0655f", color: "#e0655f", background: "#fff", borderRadius: 8, padding: "3px 8px", fontSize: 11, cursor: "pointer" }}>Remove</button>
             </div>
           ))}
@@ -236,6 +254,21 @@ export function MyShopView() {
               <button onClick={() => void addSel()} disabled={busy} style={{ width: "100%", marginTop: 10, padding: "10px", borderRadius: 10, border: 0, background: "#0e6b57", color: "#fff", fontWeight: 800, cursor: "pointer" }}>Add Selected Products to My Shop</button>
             </div>
           )}
+        </section>
+      )}
+      {shop && showProducts && (
+        <section style={{ background: "#fff", borderRadius: 16, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,.06)" }}>
+          <h3 style={{ margin: "0 0 8px", fontSize: 15 }}>PayPal Payments</h3>
+          <div style={{ fontSize: 11, color: "#8a93a3", marginBottom: 8 }}>Approved destination (protected): <span style={{ wordBreak: "break-all" }}>{paypal}</span></div>
+          <button onClick={() => void paymentGuardTest()} style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #8b5cf6", background: "#fff", color: "#8b5cf6", fontWeight: 700, fontSize: 12, cursor: "pointer", marginBottom: 10 }}>🛡 RogueAI payment-guard test</button>
+          {payments && payments.payments.length > 0 ? payments.payments.map((p) => (
+            <div key={p.payment_id} style={{ fontSize: 12, padding: "5px 0", borderTop: "1px solid #eef0f4" }}>
+              <b>{p.product_id}</b> · <span style={{ color: p.status === "PAYMENT_VERIFIED" ? "#0e6b57" : p.status === "PAYMENT_FAILED" ? "#e0655f" : "#e0a23a", fontWeight: 700 }}>{p.status}</span>{p.verified ? " ✓ verified" : " · not verified"}
+            </div>
+          )) : <div style={{ fontSize: 12, color: "#8a93a3" }}>No payment events yet. Click BUY NOW to open PayPal (recorded as PAYMENT_PENDING, not paid).</div>}
+          {payments && <div style={{ fontSize: 12, marginTop: 8 }}>Collected revenue (verified only): <b>{payments.revenue.currency} {payments.revenue.collected_revenue.toFixed(2)}</b> · pending: {payments.revenue.pending_count}</div>}
+          {payments && payments.incidents.length > 0 && <div style={{ fontSize: 11, color: "#b03a2e", marginTop: 6 }}>🛡 {payments.incidents.length} payment-protection incident(s) recorded.</div>}
+          {payMsg && <div style={{ fontSize: 12, color: "#0e6b57", marginTop: 8 }}>{payMsg}</div>}
         </section>
       )}
       {showProducts && <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 30, padding: "12px 16px calc(12px + env(safe-area-inset-bottom))", background: "var(--bg, #eeeade)", borderTop: "1px solid var(--line, #d7dbe3)" }}>
