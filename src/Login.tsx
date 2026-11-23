@@ -55,6 +55,7 @@ export function Login() {
           onClick={() => { setMode((m) => (m === "in" ? "up" : "in")); setErr(null); setNote(null); setShowPassword(false); }}>
           {mode === "in" ? "Create an account" : "Already have an account? Sign in"}
         </button>
+        <a className="login-alt" href="/">Project overview</a>
       </form>
     </main>
   );

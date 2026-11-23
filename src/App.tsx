@@ -155,7 +155,7 @@ export function App() {
           <WorkspaceIcon name="menu" />
         </button>
         <div className="workspace-name">
-          <strong>{title}</strong>
+          <strong>{assistant ? <a className="workspace-overview-link" href="/" aria-label="AIVORA project overview">AIVORA</a> : title}</strong>
           {mode === "user" && (
             <button type="button" className="workspace-connection" aria-haspopup="dialog" onClick={(event) => {
               overlayOpener.current = event.currentTarget;

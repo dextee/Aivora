@@ -594,7 +594,7 @@ export function TalkView({ onOpenDocs, onOpenStore, onOpenInbox, onOpenBusiness,
             <div className="workspace-welcome">
               <div className="workspace-mark"><img src="/logo.png" alt="" width="62" height="62" /></div>
               <h1>How can I help<br className="workspace-title-break" /> today?</h1>
-              <p>Tell AIVORA what you need. Schedule a meeting, translate a conversation, or ask a question.</p>
+              <p>Say or type a goal, such as “Grow sales 10% in 30 days.” You can also schedule a meeting or translate a conversation.</p>
               {odaiU?.company && <p className="workspace-company">
                 {odaiU.company.name}{odaiU.company.synthetic ? " · Sample workspace" : ""}
               </p>}

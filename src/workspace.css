@@ -70,6 +70,8 @@ body { background: #e8efea; }
 }
 .workspace-icon-button:hover { background: var(--workspace-tint); }
 .workspace-name { flex: 1 1 auto; min-width: 0; }
+.workspace-overview-link { color: inherit; text-decoration: none; text-underline-offset: 4px; }
+.workspace-overview-link:hover { text-decoration: underline; }
 .workspace-name strong {
   display: block;
   overflow: hidden;
@@ -394,6 +396,7 @@ body { background: #e8efea; }
 .workspace-login .workspace-login-field input { width: 100%; min-height: 44px; min-width: 0; font-size: 16px; }
 .workspace-login-password { display: flex; align-items: center; gap: 6px; }
 .workspace-login .login-alt { min-height: 44px; }
+.workspace-login a.login-alt { display: grid; place-items: center; min-height: 30px; }
 .workspace-loading { align-items: center; text-align: center; }
 .workspace-loading p { color: var(--workspace-muted); font-size: 14px; }
 

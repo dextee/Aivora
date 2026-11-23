@@ -1,0 +1,23 @@
+{
+  "statement": "Sell 30 Lumen Wellness products via FNYGlobal.",
+  "state": "AWAITING_SPEND_APPROVAL",
+  "criterion": {"kind":"units_sold","target_units":30,"via_catalog":"FNYGlobal","brand":"Lumen Wellness (synthetic demo brand)","measurable":true},
+  "tasks": [
+    {"id":"intake","state":"done","specialist":"orchestrator"},
+    {"id":"plan","state":"done","specialist":"orchestrator"},
+    {"id":"research_demand","state":"done","specialist":"research"},
+    {"id":"catalog_prepare","state":"done","specialist":"catalog"},
+    {"id":"storefront_draft","state":"done","specialist":"website"},
+    {"id":"marketing_plan","state":"pending","specialist":"marketing"},
+    {"id":"schedule","state":"pending","specialist":"orchestrator"},
+    {"id":"watch_verify","state":"pending","specialist":"watch"},
+    {"id":"channel_package","state":"pending","specialist":"marketing"},
+    {"id":"fulfillment_sim","state":"pending","specialist":"report"},
+    {"id":"final_report","state":"pending","specialist":"report"}
+  ],
+  "gates": [
+    {"id":"approve_spend","scope":"advertising spend","state":"awaiting_owner"},
+    {"id":"approve_publish","scope":"external publishing (Shopee/Facebook)","state":"awaiting_owner"},
+    {"id":"approve_customer_comms","scope":"customer messages (WhatsApp/email)","state":"awaiting_owner"}
+  ]
+}
