@@ -53,6 +53,9 @@ export type LiveEvent =
   | { kind: "interpret"; target: string }
   | { kind: "route_docs" }
   | { kind: "store"; data: { store_name?: string; products?: string; market?: string; language?: string } }
+  /* remote audio autoplay blocked by the browser → UI must offer a real tap
+   * that retries play() inside the user gesture (rtc.ts unlockAudio) */
+  | { kind: "audio"; blocked: boolean }
   | { kind: "error"; msg: string }
   | { kind: "closed" };
 

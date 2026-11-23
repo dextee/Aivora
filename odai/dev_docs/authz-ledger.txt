@@ -511,3 +511,4 @@
 2026-11-23T11:02:08Z|ISSUE|WO-MENU4|ops=check,commit|paths=src/,odai/dev_docs/|minutes=60|budget=20|single_use=0|expires_at=2026-11-23T12:02:08Z
 2026-11-23T11:02:43Z|HOOK_ALLOW|WO-MENU4|src/App.tsx+src/BusinessActionView.tsx+src/BusinessView.tsx+src/Menu.tsx
 2026-11-23T11:02:45Z|REVOKE|WO-MENU4|reason=Menu restructure shipped
+2026-11-23T11:02:46Z|HOOK_ALLOW|WO-MENU4|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
