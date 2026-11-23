@@ -37,7 +37,7 @@ export function BusinessActionView() {
 
   async function preparePo(d: Decision) {
     setBusy(d.decision_id); setNote(""); setError("");
-    try { const r = await api("/api/odai/action/prepare-po", { method: "POST", body: JSON.stringify({ decision_id: d.decision_id }) }); setNote(`Purchase order ${r.order_id.slice(0, 8)} ${r.deduped ? "(existing, no duplicate)" : "created"} — ${r.quantity} units, S$${r.total}, status ${r.status}. See Purchase Orders.`); }
+    try { const r = await api("/api/odai/action/prepare-po", { method: "POST", body: JSON.stringify({ decision_id: d.decision_id }) }); setNote(`Purchase order ${r.order_id.slice(0, 8)} ${r.deduped ? "(existing, no duplicate)" : "created"} — ${r.quantity} units, S$${r.total}, status ${r.status}. See Procurement.`); }
     catch (e) { setError((e as Error).message); } finally { setBusy(""); }
   }
   async function prepareEmails(ids: string[]) {

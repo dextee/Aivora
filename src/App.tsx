@@ -23,7 +23,7 @@ const TITLES: Record<View, { t: string; s: string }> = {
   appointment: { t: "AIVORA Appointment", s: "local organizer · Calendly" },
   contacts: { t: "Customer Contacts", s: "AIVORA ODAI V0.9BETA" },
   purchases: { t: "Purchase History", s: "AIVORA ODAI V0.9BETA" },
-  orders: { t: "Purchase Orders", s: "AIVORA ODAI V0.9BETA" },
+  orders: { t: "Procurement", s: "AIVORA ODAI V0.9BETA" },
   intelligence: { t: "Business Intelligence", s: "AIVORA ODAI V0.9BETA" },
   action: { t: "Business Action", s: "decision plan · who to contact" },
   talk: { t: "AIVORA ODAI V0.9BETA", s: "Objective-Driven Autonomous Intelligence" },

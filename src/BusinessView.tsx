@@ -49,7 +49,7 @@ export function BusinessView({ page, onTalk }: { page: BusinessPage; onTalk(): v
   useEffect(()=>{const timer=setInterval(()=>setRevealed(n=>Math.min(n+1,data?.events?.length || 0)),50);return ()=>clearInterval(timer);},[data]);
   useEffect(()=>{if(consoleRef.current) consoleRef.current.scrollTop=consoleRef.current.scrollHeight;},[revealed]);
   async function action(path:string, body:unknown) {setBusy(true);try{const j=await request(path,body);if(j.business){setData(j);setRevealed(0);}else await refresh();setError('');}catch(e){setError((e as Error).message);}finally{setBusy(false);} }
-  const titles={contacts:'Customer Contacts',purchases:'Purchase History',orders:'Purchase Orders',intelligence:'Business Intelligence'};
+  const titles={contacts:'Customer Contacts',purchases:'Purchase History',orders:'Procurement',intelligence:'Business Intelligence'};
   const match=(value:unknown)=>JSON.stringify(value).toLowerCase().includes(q.toLowerCase());
   const rows=(data?.records || []).filter((r:any)=>match(r.original)&&(!filter||r.status===filter)&&(!customer||r.original.customer_id===customer));
   const contacts=(data?.customers || []).filter((c:any)=>match(c)&&(!filter||c.customer_category===filter)).sort((a:any,b:any)=>sort==='value'?b.total_purchase_amount-a.total_purchase_amount:String(a.customer_name).localeCompare(String(b.customer_name)));
