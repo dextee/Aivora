@@ -2557,8 +2557,12 @@
     ],
     "budget": 40,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 8
+    },
+    "revoked": true,
+    "revoked_reason": "voice video/poster + merge shipped",
+    "revoked_at": "2026-11-23T09:10:35Z"
   },
   "WO-WIN-PORT": {
     "issued_at": "2026-11-21T16:54:35Z",

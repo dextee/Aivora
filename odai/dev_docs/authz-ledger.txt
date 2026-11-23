@@ -478,3 +478,5 @@
 2026-11-23T07:57:26Z|REVOKE|WO-MENU2|reason=menu entries removed
 2026-11-23T07:57:26Z|HOOK_ALLOW|WO-MENU2|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-23T09:09:43Z|ISSUE|WO-VOICEVID|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/dev_docs/|minutes=120|budget=40|single_use=0|expires_at=2026-11-23T11:09:43Z
+2026-11-23T09:10:32Z|HOOK_ALLOW|WO-VOICEVID|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package.json+server.mjs+server/odai/commercial.mjs+server/odai/store_config.mjs+server/odai/video_merge.mjs+src/App.tsx+src/TalkView.tsx+tests/video_commercial.test.mjs
+2026-11-23T09:10:35Z|REVOKE|WO-VOICEVID|reason=voice video/poster + merge shipped
