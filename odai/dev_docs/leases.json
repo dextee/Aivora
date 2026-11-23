@@ -1894,8 +1894,12 @@
     ],
     "budget": 30,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 5
+    },
+    "revoked": true,
+    "revoked_reason": "PO integration shipped; revoke after commit",
+    "revoked_at": "2026-11-23T00:07:09Z"
   },
   "WO-REMOVE-V441": {
     "issued_at": "2026-11-22T16:46:24Z",

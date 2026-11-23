@@ -438,3 +438,5 @@
 2026-11-22T23:48:05Z|REVOKE|WO-TRUST|reason=Trust layer shipped; revoke after commit
 2026-11-22T23:48:06Z|HOOK_ALLOW|WO-TRUST|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-23T00:06:38Z|ISSUE|WO-POINTEG|ops=check,commit|paths=server.mjs,server/odai/,src/,tests/,package.json,odai/dev_docs/|minutes=90|budget=30|single_use=0|expires_at=2026-11-23T01:36:38Z
+2026-11-23T00:07:07Z|HOOK_ALLOW|WO-POINTEG|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+package.json+server.mjs+server/odai/po_document.mjs+src/BusinessView.tsx+tests/po_document.test.mjs
+2026-11-23T00:07:09Z|REVOKE|WO-POINTEG|reason=PO integration shipped; revoke after commit
