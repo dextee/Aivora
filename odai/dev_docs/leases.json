@@ -1327,8 +1327,12 @@
     ],
     "budget": 40,
     "single_use": false,
-    "used_by_op": {},
-    "revoked": false
+    "used_by_op": {
+      "commit": 5
+    },
+    "revoked": true,
+    "revoked_reason": "defect fixes committed",
+    "revoked_at": "2026-11-23T04:18:34Z"
   },
   "WO-BASELINE": {
     "issued_at": "2026-11-23T03:00:44Z",

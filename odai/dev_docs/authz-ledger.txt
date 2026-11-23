@@ -454,3 +454,5 @@
 2026-11-23T03:01:34Z|REVOKE|WO-BASELINE|reason=clean acceptance baseline committed
 2026-11-23T03:01:35Z|HOOK_ALLOW|WO-BASELINE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-23T04:17:39Z|ISSUE|WO-B6DEF|ops=check,commit|paths=server.mjs,server/odai/,tests/,odai/dev_docs/|minutes=120|budget=40|single_use=0|expires_at=2026-11-23T06:17:39Z
+2026-11-23T04:18:01Z|HOOK_ALLOW|WO-B6DEF|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+server.mjs+server/odai/marketing.mjs+server/odai/objectives.mjs+server/odai/plan_engine.mjs+server/odai/store_setup.mjs
+2026-11-23T04:18:34Z|REVOKE|WO-B6DEF|reason=defect fixes committed
