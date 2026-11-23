@@ -458,3 +458,5 @@
 2026-11-23T04:18:34Z|REVOKE|WO-B6DEF|reason=defect fixes committed
 2026-11-23T04:18:34Z|HOOK_ALLOW|WO-B6DEF|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
 2026-11-23T04:53:45Z|ISSUE|WO-B6DEF2|ops=check,commit|paths=tools/,odai/dev_docs/|minutes=90|budget=20|single_use=0|expires_at=2026-11-23T06:23:45Z
+2026-11-23T04:53:45Z|HOOK_ALLOW|WO-B6DEF2|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+tools/guardian.mjs+tools/guardian/registry.json
+2026-11-23T04:54:20Z|REVOKE|WO-B6DEF2|reason=DEF-11 committed
