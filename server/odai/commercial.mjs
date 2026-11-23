@@ -94,7 +94,8 @@ export function attachInput(tenant, { kind, filename, data_base64, likeness_cons
 export function createCommercial(tenant, input = {}) {
   const { avatar_upload_id = null, product_id = null, product_upload_id = null, language = "English", aspect_ratio = "9:16", hook = null, campaign_id = null, distribution_url = null, product_facts = null, attachment_ids = null } = input;
   const missing = [];
-  if (!avatar_upload_id) missing.push("avatar (self photo)");
+  /* Owner instruction 2026-11-23: a self photo is OPTIONAL — the studio must not require it.
+   * The likeness-consent gate still applies whenever a photo IS supplied (control G12). */
   if (!product_id && !product_upload_id) missing.push("product (catalog item or product photo)");
   const job = {
     job_id: "COMM-" + randomUUID().slice(0, 8), tenant_id: tenant, objective: "Create commercial with avatar",
@@ -115,11 +116,16 @@ export function createCommercial(tenant, input = {}) {
 
   if (missing.length) { push("INPUTS_MISSING", "Required before a render can be requested: " + missing.join(", ")); job.status = "BLOCKED"; return save(job); }
 
-  /* avatar must exist on disk and carry consent */
-  const avatar = findUpload(tenant, avatar_upload_id, "avatar");
-  if (!avatar) { push("AVATAR_NOT_FOUND", `avatar upload ${avatar_upload_id} is not stored for this workspace`); job.status = "BLOCKED"; return save(job); }
-  if (avatar.likeness_consent !== true) { push("LIKENESS_CONSENT_REQUIRED", "avatar stored without recorded likeness consent"); job.status = "BLOCKED"; return save(job); }
-  job.avatar = { upload_id: avatar.upload_id, ext: avatar.ext, bytes: avatar.bytes, sha256: avatar.sha256, path: avatar.path };
+  /* avatar is optional; when supplied it must exist in this workspace and carry consent */
+  if (avatar_upload_id) {
+    const avatar = findUpload(tenant, avatar_upload_id, "avatar");
+    if (!avatar) { push("AVATAR_NOT_FOUND", `avatar upload ${avatar_upload_id} is not stored for this workspace`); job.status = "BLOCKED"; return save(job); }
+    if (avatar.likeness_consent !== true) { push("LIKENESS_CONSENT_REQUIRED", "avatar stored without recorded likeness consent"); job.status = "BLOCKED"; return save(job); }
+    job.avatar = { upload_id: avatar.upload_id, ext: avatar.ext, bytes: avatar.bytes, sha256: avatar.sha256, path: avatar.path };
+  } else {
+    job.avatar = null;
+    job.audit.push({ at: now(), event: "NO_AVATAR", detail: "product-only commercial; no likeness used or required" });
+  }
 
   /* product facts must come from the real catalog, or be stated explicitly by the owner */
   if (product_id) {
@@ -189,8 +195,10 @@ function buildSpec(job) {
   const price = `${p.currency} ${Number(p.approved_selling_price).toFixed(2)}`;
   const claims = (p.claims || []).length ? p.claims.join("; ") : `${p.category || p.name} from the approved catalog`;
   const lang = job.language;
-  const refs = [job.avatar.path, p.image || job.product_image?.path].filter(Boolean);
-  const roles = ["avatar (owner self photo, likeness consent recorded)", p.source === "catalog" ? "product (catalog image)" : "product (owner-supplied photo)"];
+  const refs = [job.avatar?.path, p.image || job.product_image?.path].filter(Boolean);
+  const roles = [];
+  if (job.avatar?.path) roles.push("avatar (owner self photo, likeness consent recorded)");
+  roles.push(p.source === "catalog" ? "product (catalog image)" : "product (owner-supplied photo)");
   /* attached images join the reference set (the provider accepts up to 9); attached video clips
    * cannot be references, so they are merged locally instead — see mergeCommercial(). */
   for (const a of job.attachments || []) {
@@ -344,12 +352,12 @@ export function mergedFileFor(tenant, job_id) {
 /* ---- 5. one short spoken line for the voice partner: what exists, what is still missing ---- */
 export function voiceSummary(job) {
   const need = [];
-  if (!job.avatar) need.push("your own photo for the avatar");
   if (!job.product) need.push("which product to feature");
   const mergeable = (job.attachments || []).filter(a => a.mergeable).length;
+  const avatarLine = job.avatar ? " with your photo as the avatar" : " product-only (no photo needed)";
   if (job.status === "RENDERED") return `Your ${job.spec?.duration_seconds ?? 15} second commercial is ready and attached to job ${job.job_id}.`;
   if (job.status === "PENDING_PROVIDER") return `The ${job.spec?.duration_seconds ?? 15} second spec for ${job.product?.name || "your product"} is with the video provider now. Nothing has been published or spent.`;
-  if (job.status === "READY_TO_RENDER") return `I built the ${job.spec?.duration_seconds ?? 15} second spec for ${job.product?.name} in ${job.language}, grounded in the catalog price. Say the word and I hand it to the video provider.`;
-  if (need.length) return `I opened commercial job ${job.job_id}, and I have ${mergeable} attached file${mergeable === 1 ? "" : "s"} to work with. I still need ${need.join(" and ")} before I can render.`;
+  if (job.status === "READY_TO_RENDER") return `I built the ${job.spec?.duration_seconds ?? 15} second spec for ${job.product?.name}${avatarLine}, grounded in the catalog price. Say the word and I hand it to the video provider.`;
+  if (need.length) return `I opened commercial job ${job.job_id}${mergeable ? `, and I have ${mergeable} attached file${mergeable === 1 ? "" : "s"} to work with` : ""}. I still need ${need.join(" and ")} before I can render.`;
   return `Commercial job ${job.job_id} is ${String(job.status).replace(/_/g, " ").toLowerCase()}: ${(job.blockers || []).map(b => b.code).join(", ") || "no detail"}.`;
 }

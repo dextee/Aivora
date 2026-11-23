@@ -27,13 +27,13 @@ test("CM-01 provider declaration: built-in seedance-2.0, 15s, no third-party SDK
   assert.match(body.note, /NOT used|never/i);
 });
 
-test("CM-02 missing inputs are BLOCKED with an explicit reason — nothing is generated", async () => {
+test("CM-02 missing product is BLOCKED with an explicit reason — nothing is generated", async () => {
   const { status, body } = await post("/api/odai/commercial", {});
   assert.equal(status, 200);
   assert.equal(body.status, "BLOCKED");
   assert.equal(body.blockers[0].code, "INPUTS_MISSING");
-  assert.match(body.blockers[0].detail, /avatar/);
   assert.match(body.blockers[0].detail, /product/);
+  assert.ok(!/avatar/.test(body.blockers[0].detail), "a self photo is optional now (owner instruction 2026-11-23)");
   assert.equal(body.render, null, "no fabricated render");
 });
 
@@ -154,6 +154,23 @@ test("CM-13 a real mp4 render attaches, verifies and is served as video/mp4", as
   assert.equal(buf.subarray(4, 8).toString("latin1"), "ftyp");
 });
 
+test("CM-15 a product-only commercial needs no self photo (owner instruction 2026-11-23)", async () => {
+  const { status, body } = await post("/api/odai/commercial", { product_id: PRODUCT, language: "English", aspect_ratio: "9:16" });
+  assert.equal(status, 200);
+  assert.equal(body.status, "READY_TO_RENDER", JSON.stringify(body.blockers));
+  assert.equal(body.avatar, null, "no avatar was required or invented");
+  assert.equal(body.spec.reference_images.length, 1, "product image only");
+  assert.match(body.spec.reference_roles.join(" "), /product/);
+  assert.ok(!/avatar/i.test(body.spec.reference_roles.join(" ")), "no avatar reference claimed");
+  assert.match(body.spec.prompt, /SGD 21\.90/);
+  assert.ok(body.audit.some(a => a.event === "NO_AVATAR"), "the choice is recorded in the audit trail");
+});
+
+test("CM-16 supplying a photo still requires likeness consent (control G12 unchanged)", async () => {
+  const { status, body } = await post("/api/odai/commercial/input", { kind: "avatar", filename: "me.png", data_base64: PNG_1x1 });
+  assert.equal(status, 403);
+  assert.equal(body.code, "LIKENESS_CONSENT_REQUIRED");
+});
 test("CM-14 another workspace cannot read or create commercial jobs", async () => {
   const a = await getj("/api/odai/commercial?tenant=other-workspace-cm");
   assert.equal(a.status, 403);
