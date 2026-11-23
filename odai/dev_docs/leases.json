@@ -1883,6 +1883,22 @@
     "revoked_reason": "menu entries removed",
     "revoked_at": "2026-11-23T07:57:26Z"
   },
+  "WO-MENU3": {
+    "issued_at": "2026-11-23T10:37:17Z",
+    "expires_at": "2026-11-23T11:07:17Z",
+    "minutes": 30,
+    "paths": [
+      "src/"
+    ],
+    "ops": [
+      "check",
+      "commit"
+    ],
+    "budget": 10,
+    "single_use": false,
+    "used_by_op": {},
+    "revoked": false
+  },
   "WO-MENUBOTTOM": {
     "issued_at": "2026-11-22T23:07:09Z",
     "expires_at": "2026-11-22T23:37:09Z",

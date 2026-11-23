@@ -10,8 +10,8 @@ const NAV: { id: View; icon: string; label: string; sub: string; section?: strin
   { id: "inbox", icon: "AI", label: "Inbox", sub: "stored messages · approvals · security" },
   { id: "myshop", icon: "🛍", label: "My Shop", sub: "dropshipping catalog · live setup" },
   { id: "commercial", icon: "🎞", label: "Commercial Studio", sub: "your photo + product → 15s ad (provider render)" },
-  { id: "contacts", icon: "AI", label: "Customer", sub: "contacts · purchase records · orders · intelligence" },
-  { id: "orders", icon: "AI", label: "Purchase Orders", sub: "sandbox procurement review", children: [
+  { id: "contacts", icon: "AI", label: "Customer", sub: "contacts · purchase records · orders · intelligence", children: [
+    { id: "orders", label: "Purchase Orders", sub: "sandbox procurement review" },
     { id: "purchases", label: "Purchase History", sub: "original records and validation" },
   ] },
   { id: "intelligence", icon: "AI", label: "Business Intelligence", sub: "validated 30-day comparisons", children: [

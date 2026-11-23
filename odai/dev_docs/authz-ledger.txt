@@ -499,3 +499,5 @@
 2026-11-23T10:34:18Z|ISSUE|WO-TERSE|ops=check,commit|paths=src/,odai/dev_docs/|minutes=60|budget=20|single_use=0|expires_at=2026-11-23T11:34:18Z
 2026-11-23T10:34:18Z|HOOK_ALLOW|WO-TERSE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json+src/CommercialView.tsx
 2026-11-23T10:34:19Z|REVOKE|WO-TERSE|reason=prose stripped
+2026-11-23T10:34:20Z|HOOK_ALLOW|WO-TERSE|odai/dev_docs/authz-ledger.txt+odai/dev_docs/leases.json
+2026-11-23T10:37:17Z|ISSUE|WO-MENU3|ops=check,commit|paths=src/|minutes=30|budget=10|single_use=0|expires_at=2026-11-23T11:07:17Z
